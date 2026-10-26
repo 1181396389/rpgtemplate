@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "phase=0": {
+      "model": "rpgtemplate:block/fullbottle_fabricator"
+    },
+    "phase=1": {
+      "model": "rpgtemplate:block/fullbottle_fabricator_1"
+    },
+    "phase=2": {
+      "model": "rpgtemplate:block/fullbottle_fabricator_2"
+    },
+    "phase=3": {
+      "model": "rpgtemplate:block/fullbottle_fabricator_3"
+    }
+  }
+}

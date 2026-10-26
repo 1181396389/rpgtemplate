@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "complete=false": {
+      "model": "rpgtemplate:block/pandora_box"
+    },
+    "complete=true": {
+      "model": "rpgtemplate:block/pandora_box_complete"
+    }
+  }
+}

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "rabbit",
+    "name": "兔子",
+    "kind": "organic",
+    "pair": 0,
+    "material": "minecraft:rabbit_foot",
+    "skill": "跃进",
+    "description": "向视线方向跃进，空中可小幅转向。"
+  },
+  {
+    "id": "gorilla",
+    "name": "大猩猩",
+    "kind": "organic",
+    "pair": 1,
+    "material": "minecraft:beef",
+    "skill": "重拳",
+    "description": "下一次近战增加冲击与击退。"
+  },
+  {
+    "id": "eagle",
+    "name": "鹰",
+    "kind": "organic",
+    "pair": 2,
+    "material": "minecraft:feather",
+    "skill": "滑翔",
+    "description": "短时缓降滑翔并标记前方可见目标。"
+  },
+  {
+    "id": "hedgehog",
+    "name": "刺猬",
+    "kind": "organic",
+    "pair": 3,
+    "material": "minecraft:sweet_berries",
+    "skill": "棘甲",
+    "description": "短时棘刺护体，对近身攻击者反刺。"
+  },
+  {
+    "id": "turtle",
+    "name": "海龟",
+    "kind": "organic",
+    "pair": 4,
+    "material": "minecraft:scute",
+    "skill": "甲壳",
+    "description": "短时减轻正面攻击并抵抗击退。"
+  },
+  {
+    "id": "octopus",
+    "name": "章鱼",
+    "kind": "organic",
+    "pair": 5,
+    "material": "minecraft:ink_sac",
+    "skill": "墨汁",
+    "description": "干扰近敌视线，并短时获得贴墙攀附。"
+  },
+  {
+    "id": "wolf",
+    "name": "狼",
+    "kind": "organic",
+    "pair": 6,
+    "material": "minecraft:bone",
+    "skill": "追猎",
+    "description": "标记前方目标，向标记目标移动时加速。"
+  },
+  {
+    "id": "firefly",
+    "name": "萤火虫",
+    "kind": "organic",
+    "pair": 7,
+    "material": "minecraft:glow_ink_sac",
+    "skill": "附光",
+    "description": "给前方目标附着发光标记。"
+  },
+  {
+    "id": "vine",
+    "name": "藤蔓",
+    "kind": "organic",
+    "pair": 8,
+    "material": "minecraft:vine",
+    "skill": "藤索",
+    "description": "向命中的地形牵引自身，命中生物则短暂拖缓。"
+  },
+  {
+    "id": "bat",
+    "name": "蝙蝠",
+    "kind": "organic",
+    "pair": 9,
+    "material": "minecraft:phantom_membrane",
+    "skill": "回声",
+    "description": "显示附近移动实体的短暂方位与距离。"
+  },
+  {
+    "id": "tank",
+    "name": "坦克",
+    "kind": "inorganic",
+    "pair": 0,
+    "material": "minecraft:iron_ingot",
+    "skill": "冲击炮",
+    "description": "释放直线冲击并产生后坐力。"
+  },
+  {
+    "id": "diamond",
+    "name": "钻石",
+    "kind": "inorganic",
+    "pair": 1,
+    "material": "minecraft:diamond",
+    "skill": "晶盾",
+    "description": "抵挡有限次数的正面攻击。"
+  },
+  {
+    "id": "gatling",
+    "name": "加特林",
+    "kind": "inorganic",
+    "pair": 2,
+    "material": "minecraft:copper_ingot",
+    "skill": "弹幕",
+    "description": "连续短促射击，热量提高时停止发射。"
+  },
+  {
+    "id": "magnet",
+    "name": "磁铁",
+    "kind": "inorganic",
+    "pair": 3,
+    "material": "minecraft:raw_iron",
+    "skill": "磁力",
+    "description": "收拢掉落物，排斥铁傀儡或穿铁/锁链装备的目标。"
+  },
+  {
+    "id": "submarine",
+    "name": "潜水艇",
+    "kind": "inorganic",
+    "pair": 4,
+    "material": "minecraft:prismarine_shard",
+    "skill": "潜航",
+    "description": "在水中定向推进并短时改善水下活动。"
+  },
+  {
+    "id": "smoke",
+    "name": "烟雾",
+    "kind": "inorganic",
+    "pair": 5,
+    "material": "minecraft:gunpowder",
+    "skill": "烟幕",
+    "description": "产生小范围烟雾，干扰附近实体。"
+  },
+  {
+    "id": "motorcycle",
+    "name": "摩托",
+    "kind": "inorganic",
+    "pair": 6,
+    "material": "minecraft:redstone",
+    "skill": "冲刺",
+    "description": "沿地面向前冲刺，保留惯性。"
+  },
+  {
+    "id": "battery",
+    "name": "电池",
+    "kind": "inorganic",
+    "pair": 7,
+    "material": "minecraft:quartz",
+    "skill": "放电",
+    "description": "对近距离目标释放一次电击。"
+  },
+  {
+    "id": "chain",
+    "name": "锁链",
+    "kind": "inorganic",
+    "pair": 8,
+    "material": "minecraft:chain",
+    "skill": "锚链",
+    "description": "建立可被距离或遮挡打断的短时牵引。"
+  },
+  {
+    "id": "radar",
+    "name": "雷达",
+    "kind": "inorganic",
+    "pair": 9,
+    "material": "minecraft:compass",
+    "skill": "扫描",
+    "description": "报告前方可见目标的方向和距离。"
+  }
+]

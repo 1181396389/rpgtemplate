@@ -1,0 +1,3717 @@
+[
+  {
+    "id": "bottle_bio_1",
+    "name": "兔跃满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 1,
+    "effect": "jump",
+    "source": "minecraft:rabbit",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:rabbit"
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_2",
+    "name": "游鱼满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 2,
+    "effect": "water",
+    "source": "minecraft:salmon",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:salmon"
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_3",
+    "name": "追猎满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 3,
+    "effect": "speed",
+    "source": "minecraft:wolf",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 4
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:wolf"
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_4",
+    "name": "甲壳满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 4,
+    "effect": "resist",
+    "source": "minecraft:turtle",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 5
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:turtle"
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_5",
+    "name": "振翅满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 5,
+    "effect": "slowfall",
+    "source": "minecraft:bee",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 6
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:bee"
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_6",
+    "name": "烈焰满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 6,
+    "effect": "fire",
+    "source": "minecraft:blaze",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 7
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:blaze"
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_7",
+    "name": "弹性满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 7,
+    "effect": "absorb",
+    "source": "minecraft:slime",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 8
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:slime"
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_8",
+    "name": "潜影满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 8,
+    "effect": "night",
+    "source": "minecraft:enderman",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 9
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:enderman"
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_bio_9",
+    "name": "幻翼满装瓶罐",
+    "role": "build",
+    "school": "bio",
+    "rank": 9,
+    "effect": "invisible",
+    "source": "minecraft:phantom",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 10
+      },
+      {
+        "item": "rpgtemplate:research_sample",
+        "count": 1,
+        "sample": "minecraft:phantom"
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_1",
+    "name": "钢铁满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 1,
+    "effect": "resist",
+    "source": "minecraft:iron_ingot",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_2",
+    "name": "导流满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 2,
+    "effect": "speed",
+    "source": "minecraft:copper_ingot",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      },
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_3",
+    "name": "红石满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 3,
+    "effect": "strength",
+    "source": "minecraft:redstone",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 4
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_4",
+    "name": "晶振满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 4,
+    "effect": "haste",
+    "source": "minecraft:quartz",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 5
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_5",
+    "name": "紫晶满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 5,
+    "effect": "night",
+    "source": "minecraft:amethyst_shard",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 6
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_6",
+    "name": "黑曜满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 6,
+    "effect": "fire",
+    "source": "minecraft:obsidian",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 7
+      },
+      {
+        "item": "minecraft:obsidian",
+        "count": 1
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_7",
+    "name": "海晶满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 7,
+    "effect": "water",
+    "source": "minecraft:prismarine_crystals",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 8
+      },
+      {
+        "item": "minecraft:prismarine_crystals",
+        "count": 1
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_8",
+    "name": "末地满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 8,
+    "effect": "slowfall",
+    "source": "minecraft:end_stone",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 9
+      },
+      {
+        "item": "minecraft:end_stone",
+        "count": 1
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "bottle_matter_9",
+    "name": "合金满装瓶罐",
+    "role": "build",
+    "school": "matter",
+    "rank": 9,
+    "effect": "absorb",
+    "source": "minecraft:netherite_ingot",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 10
+      },
+      {
+        "item": "minecraft:netherite_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      }
+    ],
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。",
+    "aux": true
+  },
+  {
+    "id": "weapon_tech_1",
+    "name": "科技·枝刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 1,
+    "effect": "tech",
+    "source": "minecraft:stick",
+    "costs": [
+      {
+        "item": "minecraft:stick",
+        "count": 1
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "description": "主体默认：stick；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_2",
+    "name": "科技·咬刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 2,
+    "effect": "tech",
+    "source": "minecraft:cod",
+    "costs": [
+      {
+        "item": "minecraft:cod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "description": "主体默认：cod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_3",
+    "name": "科技·骨剑",
+    "role": "smith",
+    "school": "tech",
+    "rank": 3,
+    "effect": "tech",
+    "source": "minecraft:bone",
+    "costs": [
+      {
+        "item": "minecraft:bone",
+        "count": 1
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 4
+      }
+    ],
+    "description": "主体默认：bone；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_4",
+    "name": "科技·节刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 4,
+    "effect": "tech",
+    "source": "minecraft:bamboo",
+    "costs": [
+      {
+        "item": "minecraft:bamboo",
+        "count": 1
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 5
+      }
+    ],
+    "description": "主体默认：bamboo；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_5",
+    "name": "科技·炎刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 5,
+    "effect": "tech",
+    "source": "minecraft:blaze_rod",
+    "costs": [
+      {
+        "item": "minecraft:blaze_rod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 6
+      }
+    ],
+    "description": "主体默认：blaze_rod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_6",
+    "name": "科技·潮刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 6,
+    "effect": "tech",
+    "source": "minecraft:prismarine_shard",
+    "costs": [
+      {
+        "item": "minecraft:prismarine_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 7
+      }
+    ],
+    "description": "主体默认：prismarine_shard；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_7",
+    "name": "科技·鸣刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 7,
+    "effect": "tech",
+    "source": "minecraft:echo_shard",
+    "costs": [
+      {
+        "item": "minecraft:echo_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 8
+      }
+    ],
+    "description": "主体默认：echo_shard；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_8",
+    "name": "科技·光刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 8,
+    "effect": "tech",
+    "source": "minecraft:end_rod",
+    "costs": [
+      {
+        "item": "minecraft:end_rod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 9
+      }
+    ],
+    "description": "主体默认：end_rod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_tech_9",
+    "name": "科技·龙息刃",
+    "role": "smith",
+    "school": "tech",
+    "rank": 9,
+    "effect": "tech",
+    "source": "minecraft:dragon_breath",
+    "costs": [
+      {
+        "item": "minecraft:dragon_breath",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 10
+      }
+    ],
+    "description": "主体默认：dragon_breath；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。普通攻击积蓄3点后，可右键释放一次额外物理脉冲。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "drug_tech_1",
+    "name": "科技·应急制剂",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 1,
+    "effect": "aid",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 2
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "立即恢复20%最大系统HP，并恢复4点原版生命。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_2",
+    "name": "科技·咒力补充剂",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 2,
+    "effect": "mp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 3
+      },
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "立即恢复20%最大MP。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_3",
+    "name": "科技·体力补给剂",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 3,
+    "effect": "sp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 4
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "立即恢复30%最大SP。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_4",
+    "name": "科技·战术制剂",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 4,
+    "effect": "buff",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 5
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "30秒急迫。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_5",
+    "name": "科技·生命调理剂",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 5,
+    "effect": "perm_hp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 6
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "永久提高对应最大系统属性5%；同属性跨流派共享3次上限（总计15%），卸载模板不丢失。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_6",
+    "name": "科技·咒力调理剂",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 6,
+    "effect": "perm_mp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 7
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "永久提高对应最大系统属性5%；同属性跨流派共享3次上限（总计15%），卸载模板不丢失。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_7",
+    "name": "科技·能力赋予·初式",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 7,
+    "effect": "ability_tech_7",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 8
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「推进冲刺」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_8",
+    "name": "科技·能力赋予·复式",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 8,
+    "effect": "ability_tech_8",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 9
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「光学感知」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_tech_9",
+    "name": "科技·能力赋予·极式",
+    "role": "pharma",
+    "school": "tech",
+    "rank": 9,
+    "effect": "ability_tech_9",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 10
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「应急屏障」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "weapon_magic_1",
+    "name": "魔法·枝刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 1,
+    "effect": "magic",
+    "source": "minecraft:stick",
+    "costs": [
+      {
+        "item": "minecraft:stick",
+        "count": 1
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 2
+      }
+    ],
+    "description": "主体默认：stick；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_2",
+    "name": "魔法·咬刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 2,
+    "effect": "magic",
+    "source": "minecraft:cod",
+    "costs": [
+      {
+        "item": "minecraft:cod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 3
+      }
+    ],
+    "description": "主体默认：cod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_3",
+    "name": "魔法·骨剑",
+    "role": "smith",
+    "school": "magic",
+    "rank": 3,
+    "effect": "magic",
+    "source": "minecraft:bone",
+    "costs": [
+      {
+        "item": "minecraft:bone",
+        "count": 1
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 4
+      }
+    ],
+    "description": "主体默认：bone；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_4",
+    "name": "魔法·节刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 4,
+    "effect": "magic",
+    "source": "minecraft:bamboo",
+    "costs": [
+      {
+        "item": "minecraft:bamboo",
+        "count": 1
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 5
+      }
+    ],
+    "description": "主体默认：bamboo；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_5",
+    "name": "魔法·炎刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 5,
+    "effect": "magic",
+    "source": "minecraft:blaze_rod",
+    "costs": [
+      {
+        "item": "minecraft:blaze_rod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 6
+      }
+    ],
+    "description": "主体默认：blaze_rod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_6",
+    "name": "魔法·潮刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 6,
+    "effect": "magic",
+    "source": "minecraft:prismarine_shard",
+    "costs": [
+      {
+        "item": "minecraft:prismarine_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 7
+      }
+    ],
+    "description": "主体默认：prismarine_shard；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_7",
+    "name": "魔法·鸣刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 7,
+    "effect": "magic",
+    "source": "minecraft:echo_shard",
+    "costs": [
+      {
+        "item": "minecraft:echo_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 8
+      }
+    ],
+    "description": "主体默认：echo_shard；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_8",
+    "name": "魔法·光刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 8,
+    "effect": "magic",
+    "source": "minecraft:end_rod",
+    "costs": [
+      {
+        "item": "minecraft:end_rod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 9
+      }
+    ],
+    "description": "主体默认：end_rod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_magic_9",
+    "name": "魔法·龙息刃",
+    "role": "smith",
+    "school": "magic",
+    "rank": 9,
+    "effect": "magic",
+    "source": "minecraft:dragon_breath",
+    "costs": [
+      {
+        "item": "minecraft:dragon_breath",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count": 10
+      }
+    ],
+    "description": "主体默认：dragon_breath；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。命中附加短暂迟缓；右键以8%最大MP释放一次魔法斩。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "drug_magic_1",
+    "name": "魔法·应急制剂",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 1,
+    "effect": "aid",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 2
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "10秒内累计恢复20%最大系统HP，并获得短暂原版再生。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_2",
+    "name": "魔法·咒力补充剂",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 2,
+    "effect": "mp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 3
+      },
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "5秒内累计恢复20%最大MP。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_3",
+    "name": "魔法·体力补给剂",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 3,
+    "effect": "sp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 4
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "5秒内累计恢复30%最大SP，并获得短暂缓降。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_4",
+    "name": "魔法·战术制剂",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 4,
+    "effect": "buff",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 5
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "30秒抗性提升。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_5",
+    "name": "魔法·生命调理剂",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 5,
+    "effect": "perm_hp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 6
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "永久提高对应最大系统属性5%；同属性跨流派共享3次上限（总计15%），卸载模板不丢失。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_6",
+    "name": "魔法·咒力调理剂",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 6,
+    "effect": "perm_mp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 7
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "永久提高对应最大系统属性5%；同属性跨流派共享3次上限（总计15%），卸载模板不丢失。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_7",
+    "name": "魔法·能力赋予·初式",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 7,
+    "effect": "ability_magic_7",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 8
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「浮空跃升」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_8",
+    "name": "魔法·能力赋予·复式",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 8,
+    "effect": "ability_magic_8",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 9
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「净化术」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_magic_9",
+    "name": "魔法·能力赋予·极式",
+    "role": "pharma",
+    "school": "magic",
+    "rank": 9,
+    "effect": "ability_magic_9",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 10
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「短距闪现」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "weapon_odd_1",
+    "name": "特异·枝刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 1,
+    "effect": "odd",
+    "source": "minecraft:stick",
+    "costs": [
+      {
+        "item": "minecraft:stick",
+        "count": 1
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 2
+      }
+    ],
+    "description": "主体默认：stick；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_2",
+    "name": "特异·咬刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 2,
+    "effect": "odd",
+    "source": "minecraft:cod",
+    "costs": [
+      {
+        "item": "minecraft:cod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 3
+      }
+    ],
+    "description": "主体默认：cod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_3",
+    "name": "特异·骨剑",
+    "role": "smith",
+    "school": "odd",
+    "rank": 3,
+    "effect": "odd",
+    "source": "minecraft:bone",
+    "costs": [
+      {
+        "item": "minecraft:bone",
+        "count": 1
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 4
+      }
+    ],
+    "description": "主体默认：bone；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_4",
+    "name": "特异·节刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 4,
+    "effect": "odd",
+    "source": "minecraft:bamboo",
+    "costs": [
+      {
+        "item": "minecraft:bamboo",
+        "count": 1
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 5
+      }
+    ],
+    "description": "主体默认：bamboo；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_5",
+    "name": "特异·炎刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 5,
+    "effect": "odd",
+    "source": "minecraft:blaze_rod",
+    "costs": [
+      {
+        "item": "minecraft:blaze_rod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 6
+      }
+    ],
+    "description": "主体默认：blaze_rod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_6",
+    "name": "特异·潮刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 6,
+    "effect": "odd",
+    "source": "minecraft:prismarine_shard",
+    "costs": [
+      {
+        "item": "minecraft:prismarine_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 7
+      }
+    ],
+    "description": "主体默认：prismarine_shard；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_7",
+    "name": "特异·鸣刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 7,
+    "effect": "odd",
+    "source": "minecraft:echo_shard",
+    "costs": [
+      {
+        "item": "minecraft:echo_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 8
+      }
+    ],
+    "description": "主体默认：echo_shard；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_8",
+    "name": "特异·光刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 8,
+    "effect": "odd",
+    "source": "minecraft:end_rod",
+    "costs": [
+      {
+        "item": "minecraft:end_rod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 9
+      }
+    ],
+    "description": "主体默认：end_rod；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "weapon_odd_9",
+    "name": "特异·龙息刃",
+    "role": "smith",
+    "school": "odd",
+    "rank": 9,
+    "effect": "odd",
+    "source": "minecraft:dragon_breath",
+    "costs": [
+      {
+        "item": "minecraft:dragon_breath",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:chorus_fruit",
+        "count": 10
+      }
+    ],
+    "description": "主体默认：dragon_breath；可用副手的安全非容器物品替代主体。最终为近战武器。可选择轻巧/均衡/重型结构并强化至+3。首次命中为目标留下印记，再次命中同一目标时追加小额伤害并束缚；右键震退近敌。同品基础攻击一致，结构与触发方式形成不同风格。"
+  },
+  {
+    "id": "drug_odd_1",
+    "name": "特异·应急制剂",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 1,
+    "effect": "aid",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 2
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "获得30秒伤害吸收；生命低于一半时额外恢复15%最大系统HP。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_2",
+    "name": "特异·咒力补充剂",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 2,
+    "effect": "mp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 3
+      },
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "基础恢复10%最大MP；当前MP低于25%时改为30%。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_3",
+    "name": "特异·体力补给剂",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 3,
+    "effect": "sp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 4
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "恢复20%最大SP，另获得10秒速度。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_4",
+    "name": "特异·战术制剂",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 4,
+    "effect": "buff",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 5
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "30秒跳跃提升。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_5",
+    "name": "特异·生命调理剂",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 5,
+    "effect": "perm_hp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 6
+      },
+      {
+        "item": "minecraft:quartz",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "永久提高对应最大系统属性5%；同属性跨流派共享3次上限（总计15%），卸载模板不丢失。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_6",
+    "name": "特异·咒力调理剂",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 6,
+    "effect": "perm_mp",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 7
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "永久提高对应最大系统属性5%；同属性跨流派共享3次上限（总计15%），卸载模板不丢失。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_7",
+    "name": "特异·能力赋予·初式",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 7,
+    "effect": "ability_odd_7",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 8
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「水行适应」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_8",
+    "name": "特异·能力赋予·复式",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 8,
+    "effect": "ability_odd_8",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 9
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「短暂隐匿」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "drug_odd_9",
+    "name": "特异·能力赋予·极式",
+    "role": "pharma",
+    "school": "odd",
+    "rank": 9,
+    "effect": "ability_odd_9",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 10
+      },
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      }
+    ],
+    "description": "永久学会「生命回响」，通过工坊选择后按O主动发动，消耗资源并受冷却限制。使用不再受本体品级限制；仅直接作用于使用者。所有药物共享15秒服用间隔，满额恢复/重复能力/达到永久上限时不消耗。"
+  },
+  {
+    "id": "body_adapter",
+    "name": "本体瓶罐适配组件",
+    "role": "build",
+    "school": "aux",
+    "rank": 3,
+    "effect": "adapter",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 4
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 8
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 2
+      }
+    ],
+    "aux": true,
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。"
+  },
+  {
+    "id": "bottle_emitter",
+    "name": "瓶罐辅助发射器",
+    "role": "build",
+    "school": "aux",
+    "rank": 2,
+    "effect": "emitter",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 3
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 4
+      }
+    ],
+    "aux": true,
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。"
+  },
+  {
+    "id": "bottle_saber",
+    "name": "瓶罐驱动剑",
+    "role": "build",
+    "school": "aux",
+    "rank": 3,
+    "effect": "saber",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 5
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 6
+      }
+    ],
+    "aux": true,
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。"
+  },
+  {
+    "id": "bottle_charger",
+    "name": "便携瓶罐补充器",
+    "role": "build",
+    "school": "aux",
+    "rank": 1,
+    "effect": "charger",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 3
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": true,
+    "description": "旧版兼容保留，不再参与新Build能力、研究或手术资格；不自动清除旧存档中的物品。"
+  },
+  {
+    "id": "fullbottle_rabbit",
+    "name": "兔子满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "rabbit",
+    "description": "MC非变身适配：向前跃进、短暂空中操控。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:rabbit_foot",
+    "costs": [
+      {
+        "item": "minecraft:rabbit_foot",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_gorilla",
+    "name": "大猩猩满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "gorilla",
+    "description": "MC非变身适配：短时强化下一阶段近战。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:beef",
+    "costs": [
+      {
+        "item": "minecraft:beef",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_eagle",
+    "name": "鹰满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "eagle",
+    "description": "MC非变身适配：缓降、滑翔与目标标记。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:feather",
+    "costs": [
+      {
+        "item": "minecraft:feather",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_hedgehog",
+    "name": "刺猬满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "hedgehog",
+    "description": "MC非变身适配：短时反伤防护。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:sweet_berries",
+    "costs": [
+      {
+        "item": "minecraft:sweet_berries",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_turtle",
+    "name": "海龟满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "turtle",
+    "description": "MC非变身适配：短时甲壳防护。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:scute",
+    "costs": [
+      {
+        "item": "minecraft:scute",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_octopus",
+    "name": "章鱼满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "octopus",
+    "description": "MC非变身适配：墨雾干扰与攀爬。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:ink_sac",
+    "costs": [
+      {
+        "item": "minecraft:ink_sac",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_wolf",
+    "name": "狼满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "wolf",
+    "description": "MC非变身适配：追踪标记与追击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:bone",
+    "costs": [
+      {
+        "item": "minecraft:bone",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_bat",
+    "name": "蝙蝠满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "bat",
+    "description": "MC非变身适配：探测移动目标。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:phantom_membrane",
+    "costs": [
+      {
+        "item": "minecraft:phantom_membrane",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_tank",
+    "name": "坦克满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "tank",
+    "description": "MC非变身适配：远程冲击并产生轻微后坐力。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:iron_ingot",
+    "costs": [
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_diamond",
+    "name": "钻石满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "diamond",
+    "description": "MC非变身适配：有限次数晶体护盾。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:diamond",
+    "costs": [
+      {
+        "item": "minecraft:diamond",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_gatling",
+    "name": "加特林满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "gatling",
+    "description": "MC非变身适配：有限次数连射。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:copper_ingot",
+    "costs": [
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_magnet",
+    "name": "磁铁满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "magnet",
+    "description": "MC非变身适配：吸引掉落物，并排斥近处铁质装备目标。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:raw_iron",
+    "costs": [
+      {
+        "item": "minecraft:raw_iron",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_submarine",
+    "name": "潜水艇满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "submarine",
+    "description": "MC非变身适配：水中推进与水下呼吸。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:prismarine_shard",
+    "costs": [
+      {
+        "item": "minecraft:prismarine_shard",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_motorcycle",
+    "name": "摩托满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "motorcycle",
+    "description": "MC非变身适配：落地推进与短时行驶强化。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "minecraft:redstone",
+    "costs": [
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 3
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "nebula_gas",
+    "name": "星云气体注入器",
+    "role": "build",
+    "school": "medical",
+    "rank": 1,
+    "effect": "nebula_gas",
+    "description": "右键自己或右键玩家开始注入QTE；首次感染危险等级1。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 4
+      }
+    ],
+    "aux": true
+  },
+  {
+    "id": "hazard_catalyst",
+    "name": "危险等级培养剂",
+    "role": "build",
+    "school": "medical",
+    "rank": 1,
+    "effect": "hazard_catalyst",
+    "description": "对自己或其他玩家进行培养操作；缓慢吸收，过量会积累感染负荷。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 4
+      },
+      {
+        "item": "minecraft:nether_wart",
+        "count": 2
+      }
+    ],
+    "aux": true
+  },
+  {
+    "id": "infection_cure",
+    "name": "感染负荷抑制剂",
+    "role": "build",
+    "school": "medical",
+    "rank": 1,
+    "effect": "infection_cure",
+    "description": "解除感染负荷与持续掉血，不降低危险等级或移除手术资格。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:honey_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": true
+  },
+  {
+    "id": "surgery_kit",
+    "name": "瓶罐改造手术包",
+    "role": "build",
+    "school": "medical",
+    "rank": 1,
+    "effect": "surgery_kit",
+    "description": "右键其他玩家提出手术请求，受术者明确同意后开始；失败直接死亡。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 8
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_bottle",
+        "count": 2
+      }
+    ],
+    "aux": true
+  },
+  {
+    "id": "fabricator_batch",
+    "name": "随机满装合成",
+    "role": "build",
+    "school": "fabricator",
+    "rank": 1,
+    "effect": "batch",
+    "description": "成功产出1有机＋1无机。每池优先未发现瓶，集齐该池后允许重复；副手有效研究样本额外消耗1份，对应候选瓶权重×4。失败按既有材料和生命规则结算。",
+    "source": "",
+    "costs": [
+      {
+        "item": "rpgtemplate:empty_fullbottle",
+        "count": 2
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 6
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      }
+    ],
+    "aux": true
+  },
+  {
+    "id": "fullbottle_ninja",
+    "name": "忍者满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "ninja",
+    "description": "MC非变身适配：短时隐身、加速与突进。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:ender_pearl",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_comic",
+    "name": "漫画满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "comic",
+    "description": "MC非变身适配：烟幕干扰、短暂隐身并清除附近生物的当前攻击目标；不生成分身实体。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:book",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_panda",
+    "name": "熊猫满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "panda",
+    "description": "MC非变身适配：短时拳力强化与防护。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:bamboo",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_rocket",
+    "name": "火箭满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "rocket",
+    "description": "MC非变身适配：沿视线推进，并获得缓降。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:firework_rocket",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_fire_engine",
+    "name": "消防车满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "fire_engine",
+    "description": "MC非变身适配：熄灭自身与近处目标的火焰、获得抗火并吹退目标；不放置水方块。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:water_bucket",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_lion",
+    "name": "狮子满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "lion",
+    "description": "MC非变身适配：使近处目标虚弱，前扑并攻击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:leather",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_vacuum",
+    "name": "吸尘器满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "vacuum",
+    "description": "MC非变身适配：吸引附近掉落物和生物；不吞噬或删除实体。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:hopper",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_dragon",
+    "name": "龙满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "dragon",
+    "description": "MC非变身适配：强化拳击、冲击与蓝焰粒子，点燃视线目标。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:blaze_powder",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_lock",
+    "name": "锁满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "lock",
+    "description": "MC非变身适配：减速并标记视线目标。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:tripwire_hook",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_pirate",
+    "name": "海盗满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "pirate",
+    "description": "MC非变身适配：近距斩击与水下呼吸。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:prismarine_crystals",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_train",
+    "name": "列车满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "train",
+    "description": "MC非变身适配：高速突进与正面冲击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:rail",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_light",
+    "name": "电灯满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "light",
+    "description": "MC非变身适配：自身夜视、近处致盲与闪光粒子；不放置光源。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_phoenix",
+    "name": "凤凰满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "phoenix",
+    "description": "MC非变身适配：抗火、上升、缓降并少量恢复身体生命；不提供复活。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:blaze_rod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_robot",
+    "name": "机器人满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "robot",
+    "description": "MC非变身适配：晶体拳力与短时防护。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:iron_block",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_smartphone",
+    "name": "智能手机满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "smartphone",
+    "description": "MC非变身适配：长时间标记与目标探测。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:redstone_torch",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_bear",
+    "name": "熊满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "bear",
+    "description": "MC非变身适配：短时防护与拳击强化。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:honeycomb",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_television",
+    "name": "电视满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "television",
+    "description": "MC非变身适配：前方探测并削弱视线目标。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:glass",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_unicorn",
+    "name": "独角兽满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "unicorn",
+    "description": "MC非变身适配：突进与尖角冲击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_eraser",
+    "name": "橡皮擦满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "eraser",
+    "description": "MC非变身适配：移除自身一个负面状态，并尝试移除视线目标一个正面状态；不是删除方块或实体。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:white_wool",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_rose",
+    "name": "玫瑰满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "rose",
+    "description": "MC非变身适配：荆棘冲击并减速目标。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:rose_bush",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_helicopter",
+    "name": "直升机满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "helicopter",
+    "description": "MC非变身适配：向上推进、缓降并吹退近处目标。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:iron_nugget",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_watch",
+    "name": "手表满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "watch",
+    "description": "MC非变身适配：减速近处目标；不是全局时间停止。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:clock",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_beetle",
+    "name": "独角仙满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "beetle",
+    "description": "MC非变身适配：防护、挑飞与冲击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:brown_dye",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_camera",
+    "name": "照相机满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "camera",
+    "description": "MC非变身适配：长时间标记及短暂闪光致盲。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:spyglass",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_spider",
+    "name": "蜘蛛满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "spider",
+    "description": "MC非变身适配：短时攀爬并减速目标；不放置蛛网。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:spider_eye",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_refrigerator",
+    "name": "冰箱满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "refrigerator",
+    "description": "MC非变身适配：冷气减速和轻微吹退；不冻结世界。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:ice",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_dog",
+    "name": "狗满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "dog",
+    "description": "MC非变身适配：探测移动目标并追踪标记。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:rabbit_hide",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_microphone",
+    "name": "麦克风满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "microphone",
+    "description": "MC非变身适配：扇形声浪吹退及近处虚弱。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:note_block",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_santa",
+    "name": "圣诞老人满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "santa",
+    "description": "MC非变身适配：少量恢复身体生命并获得吸收护盾；不刷取礼物。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:red_wool",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_cake",
+    "name": "蛋糕满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "cake",
+    "description": "MC非变身适配：恢复身体生命并获得短时再生。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:cake",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_tiger",
+    "name": "老虎满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "tiger",
+    "description": "MC非变身适配：前扑与近战强化。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:orange_dye",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_ufo",
+    "name": "飞碟满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "ufo",
+    "description": "MC非变身适配：使目标短暂漂浮、吸引掉落物并获得缓降。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:ender_eye",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_whale",
+    "name": "鲸鱼满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "whale",
+    "description": "MC非变身适配：水下呼吸、吹退与冲击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:cod",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_jet",
+    "name": "喷气机满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "jet",
+    "description": "MC非变身适配：沿视线高速推进与缓降。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:fire_charge",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_deer",
+    "name": "鹿满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "deer",
+    "description": "MC非变身适配：高跳、前冲与近距攻击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:oak_sapling",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_pyramid",
+    "name": "金字塔满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "pyramid",
+    "description": "MC非变身适配：短时防护与驱退近处目标；不生成建筑。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:chiseled_sandstone",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_giraffe",
+    "name": "长颈鹿满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "giraffe",
+    "description": "MC非变身适配：较远距离的定向攻击与标记。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:acacia_leaves",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_fan",
+    "name": "电风扇满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "fan",
+    "description": "MC非变身适配：远距扇形风压击退。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:birch_trapdoor",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_penguin",
+    "name": "企鹅满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "penguin",
+    "description": "MC非变身适配：加速、水下呼吸与滑行。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:salmon",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_skateboard",
+    "name": "滑板满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "skateboard",
+    "description": "MC非变身适配：落地时快速推进，并获得跳跃提升。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:oak_slab",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_shark",
+    "name": "鲨鱼满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "shark",
+    "description": "MC非变身适配：近距咬击；水中获得海豚恩惠及额外推进。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:prismarine_shard",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_bee",
+    "name": "蜜蜂满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "bee",
+    "description": "MC非变身适配：短促上升、缓降及毒刺。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:honey_bottle",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_rhino",
+    "name": "犀牛满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "rhino",
+    "description": "MC非变身适配：防护、冲锋与重击。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:gray_dye",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_hairdryer",
+    "name": "吹风机满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "hairdryer",
+    "description": "MC非变身适配：热风吹退并点燃目标；不破坏地形。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:magma_cream",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_ghost",
+    "name": "幽灵满装瓶罐",
+    "role": "build",
+    "school": "organic",
+    "rank": 1,
+    "effect": "ghost",
+    "description": "MC非变身适配：短时隐身与缓降；不穿墙、不无敌。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:ghast_tear",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "fullbottle_engine",
+    "name": "引擎满装瓶罐",
+    "role": "build",
+    "school": "inorganic",
+    "rank": 1,
+    "effect": "engine",
+    "description": "MC非变身适配：短时加速与近战强化。危险等级影响发挥；右键发动，潜行右键选配。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:piston",
+        "count": 1
+      },
+      {
+        "item": "minecraft:glass",
+        "count": 2
+      },
+      {
+        "item": "minecraft:redstone",
+        "count": 2
+      }
+    ],
+    "aux": false
+  },
+  {
+    "id": "hazard_trigger",
+    "name": "危险扳机",
+    "role": "build",
+    "school": "enhancer",
+    "rank": 1,
+    "effect": "hazard_trigger",
+    "description": "短时强化瓶罐与近战输出。持续使用累积负荷，失控会引发无差别近距离攻击；主动解除可停止。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:iron_ingot",
+        "count": 8
+      },
+      {
+        "item": "minecraft:redstone_block",
+        "count": 2
+      },
+      {
+        "item": "rpgtemplate:nebula_gas",
+        "count": 1
+      },
+      {
+        "item": "minecraft:netherite_scrap",
+        "count": 1
+      }
+    ],
+    "aux": true
+  },
+  {
+    "id": "evol_trigger",
+    "name": "黑洞扳机（Evol扳机）",
+    "role": "build",
+    "school": "enhancer",
+    "rank": 1,
+    "effect": "evol_trigger",
+    "description": "需要连接齐套60瓶魔盒进行制造。引力黑洞持续牵引并伤害目标；潜行右键短距安全跃迁。范围与时间有上限。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:crying_obsidian",
+        "count": 8
+      },
+      {
+        "item": "minecraft:ender_eye",
+        "count": 4
+      },
+      {
+        "item": "minecraft:netherite_ingot",
+        "count": 1
+      }
+    ],
+    "aux": true
+  },
+  {
+    "id": "genius_fullbottle",
+    "name": "天才满装瓶罐",
+    "role": "build",
+    "school": "enhancer",
+    "rank": 1,
+    "effect": "genius_fullbottle",
+    "description": "需要连接齐套60瓶魔盒进行制造，不消耗收藏瓶。潜行右键打开能力库，选择60种能力或净化；使用共用身体能量和冷却。",
+    "source": "",
+    "costs": [
+      {
+        "item": "minecraft:nether_star",
+        "count": 1
+      },
+      {
+        "item": "minecraft:diamond",
+        "count": 6
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count": 16
+      },
+      {
+        "item": "minecraft:gold_ingot",
+        "count": 8
+      }
+    ],
+    "aux": true
+  }
+]

@@ -1,0 +1,9 @@
+package com.rpgtemplate.forge.production.client;
+import com.rpgtemplate.forge.production.Pandora;import net.minecraft.client.Minecraft;import net.minecraft.client.renderer.blockentity.*;import net.minecraft.client.renderer.MultiBufferSource;import net.minecraft.world.item.ItemDisplayContext;import com.mojang.blaze3d.vertex.PoseStack;import net.minecraftforge.fml.common.Mod;import net.minecraftforge.api.distmarker.Dist;import net.minecraftforge.eventbus.api.SubscribeEvent;import net.minecraftforge.client.event.EntityRenderersEvent;
+@Mod.EventBusSubscriber(modid="rpgtemplate",bus=Mod.EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
+public final class PandoraRenderer implements BlockEntityRenderer<Pandora.Slate> {
+ public PandoraRenderer(BlockEntityRendererProvider.Context c){}
+ @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers e){e.registerBlockEntityRenderer(Pandora.BOX_TILE.get(),PandoraRenderer::new);}
+ @Override public int m_142163_(){return 32;}
+ @Override public void m_6922_(Pandora.Slate tile,float partial,PoseStack poses,MultiBufferSource buffers,int light,int overlay){for(int i=0;i<tile.items.length;i++)if(!tile.items[i].m_41619_()){poses.m_85836_();if(tile.items.length==60){int face=i/10,slot=i%10;poses.m_252880_(.5f,.5f,.5f);if(face<4)poses.m_252781_(com.mojang.math.Axis.f_252436_.m_252977_(face==0?0:face==1?180:face==2?90:270));else poses.m_252781_(com.mojang.math.Axis.f_252529_.m_252977_(face==4?90:-90));poses.m_252880_(-.36f+(slot/2)*.18f,.22f-(slot%2)*.44f,.502f);poses.m_85841_(.19f,.35f,.19f);}else{poses.m_252880_(.14f+(i%5)*.18f,.82f-(i/5)*.20f,.631f);poses.m_85841_(.17f,.17f,.17f);}Minecraft.m_91087_().m_91291_().m_269128_(tile.items[i],ItemDisplayContext.FIXED,light,overlay,poses,buffers,tile.m_58904_(),i);poses.m_85849_();}}
+}

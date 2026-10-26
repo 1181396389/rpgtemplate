@@ -1,0 +1,572 @@
+{
+  "processing": "Transparent RGBA PNG; 128x128; no hue changes. Source filenames and URLs retained.",
+  "sources": {
+    "rabbit": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/b/b7/KRBu-Rabbit_Fullbottle.png/revision/latest",
+      "file": "KRBu-Rabbit_Fullbottle.png",
+      "size": [
+        197,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "gorilla": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/a/a0/KRBu-Gorilla_Fullbottle.png/revision/latest",
+      "file": "KRBu-Gorilla_Fullbottle.png",
+      "size": [
+        195,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "eagle": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/7/77/KRBu-Taka_Fullbottle.png/revision/latest",
+      "file": "KRBu-Taka_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "ninja": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/6/6c/KRBu-Ninjya_Fullbottle.png/revision/latest",
+      "file": "KRBu-Ninjya_Fullbottle.png",
+      "size": [
+        195,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "panda": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/e/ee/KRBu-Panda_Fullbottle.png/revision/latest",
+      "file": "KRBu-Panda_Fullbottle.png",
+      "size": [
+        198,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "hedgehog": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/3/39/KRBu-Harinezumi_Fullbottle.png/revision/latest",
+      "file": "KRBu-Harinezumi_Fullbottle.png",
+      "size": [
+        200,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "lion": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/3/38/KRBu-Lion_Fullbottle.png/revision/latest",
+      "file": "KRBu-Lion_Fullbottle.png",
+      "size": [
+        198,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "dragon": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/6/6e/KRBu-Dragon_Fullbottle.png/revision/latest",
+      "file": "KRBu-Dragon_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "pirate": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/d/db/KRBu-Kaizoku_Fullbottle.png/revision/latest",
+      "file": "KRBu-Kaizoku_Fullbottle.png",
+      "size": [
+        197,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "octopus": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/b/b9/KRBu-Octopus_Fullbottle.png/revision/latest",
+      "file": "KRBu-Octopus_Fullbottle.png",
+      "size": [
+        196,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "tank": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/0/04/KRBu-Tank_Fullbottle.png/revision/latest",
+      "file": "KRBu-Tank_Fullbottle.png",
+      "size": [
+        197,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "diamond": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/c/c6/KRBu-Diamond_Fullbottle.png/revision/latest",
+      "file": "KRBu-Diamond_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "gatling": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/f/f7/KRBu-Gatling_Fullbottle.png/revision/latest",
+      "file": "KRBu-Gatling_Fullbottle.png",
+      "size": [
+        197,
+        455
+      ],
+      "status": "downloaded"
+    },
+    "comic": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/1/1c/KRBu-Comic_Fullbottle.png/revision/latest",
+      "file": "KRBu-Comic_Fullbottle.png",
+      "size": [
+        200,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "rocket": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/a/ac/KRBu-Rocket_Fullbottle.png/revision/latest",
+      "file": "KRBu-Rocket_Fullbottle.png",
+      "size": [
+        196,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "fire_engine": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/7/74/KRBu-Syoubousya_Fullbottle.png/revision/latest",
+      "file": "KRBu-Syoubousya_Fullbottle.png",
+      "size": [
+        193,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "vacuum": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/e/e8/KRBu-Soujiki_Fullbottle.png/revision/latest",
+      "file": "KRBu-Soujiki_Fullbottle.png",
+      "size": [
+        199,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "lock": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/c/c9/KRBu-Lock_Fullbottle.png/revision/latest",
+      "file": "KRBu-Lock_Fullbottle.png",
+      "size": [
+        201,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "train": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/7/72/KRBu-Densya_Fullbottle.png/revision/latest",
+      "file": "KRBu-Densya_Fullbottle.png",
+      "size": [
+        196,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "light": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/3/36/KRBu-Light_Fullbottle.png/revision/latest",
+      "file": "KRBu-Light_Fullbottle.png",
+      "size": [
+        199,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "phoenix": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/b/bc/KRBu-Phoenix_Fullbottle.png/revision/latest",
+      "file": "KRBu-Phoenix_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "wolf": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/b/ba/KRBu-Wolf_Fullbottle.png/revision/latest",
+      "file": "KRBu-Wolf_Fullbottle.png",
+      "size": [
+        198,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "bear": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/c/c6/KRBu-Kuma_Fullbottle.png/revision/latest",
+      "file": "KRBu-Kuma_Fullbottle.png",
+      "size": [
+        202,
+        470
+      ],
+      "status": "downloaded"
+    },
+    "unicorn": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/e/ef/KRBu-Unicorn_Fullbottle.png/revision/latest",
+      "file": "KRBu-Unicorn_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "rose": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/2/2b/KRBu-Rose_Fullbottle.png/revision/latest",
+      "file": "KRBu-Rose_Fullbottle.png",
+      "size": [
+        195,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "turtle": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/4/4b/KRBu-Turtle_Fullbottle.png/revision/latest",
+      "file": "KRBu-Turtle_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "beetle": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/3/33/KRBu-Kabutomushi_Fullbottle.png/revision/latest",
+      "file": "KRBu-Kabutomushi_Fullbottle.png",
+      "size": [
+        203,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "spider": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/f/f6/KRBu-Spider_Fullbottle.png/revision/latest",
+      "file": "KRBu-Spider_Fullbottle.png",
+      "size": [
+        201,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "dog": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/a/a0/KRBu-Dog_Fullbottle.png/revision/latest",
+      "file": "KRBu-Dog_Fullbottle.png",
+      "size": [
+        204,
+        471
+      ],
+      "status": "downloaded"
+    },
+    "santa": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/0/02/KRBu-Santa_Claus_Fullbottle.png/revision/latest",
+      "file": "KRBu-Santa_Claus_Fullbottle.png",
+      "size": [
+        200,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "robot": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/6/68/KRBu-Robot_Fullbottle.png/revision/latest",
+      "file": "KRBu-Robot_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "smartphone": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/5/56/KRBu-Smapho_Fullbottle.png/revision/latest",
+      "file": "KRBu-Smapho_Fullbottle.png",
+      "size": [
+        196,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "television": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/0/09/KRBu-TV_Fullbottle.png/revision/latest",
+      "file": "KRBu-TV_Fullbottle.png",
+      "size": [
+        204,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "eraser": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/1/12/KRBu-Keshigomu_Fullbottle.png/revision/latest",
+      "file": "KRBu-Keshigomu_Fullbottle.png",
+      "size": [
+        193,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "helicopter": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/2/28/KRBu-Helicopter_Fullbottle.png/revision/latest",
+      "file": "KRBu-Helicopter_Fullbottle.png",
+      "size": [
+        196,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "watch": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/8/86/KRBu-Watch_Fullbottle.png/revision/latest",
+      "file": "KRBu-Watch_Fullbottle.png",
+      "size": [
+        195,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "camera": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/d/d8/KRBu-Camera_Fullbottle.png/revision/latest",
+      "file": "KRBu-Camera_Fullbottle.png",
+      "size": [
+        205,
+        468
+      ],
+      "status": "downloaded"
+    },
+    "refrigerator": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/c/c1/KRBu-Reizoko_Fullbottle.png/revision/latest",
+      "file": "KRBu-Reizoko_Fullbottle.png",
+      "size": [
+        197,
+        467
+      ],
+      "status": "downloaded"
+    },
+    "microphone": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/4/48/KRBu-Mic_Fullbottle.png/revision/latest",
+      "file": "KRBu-Mic_Fullbottle.png",
+      "size": [
+        207,
+        468
+      ],
+      "status": "downloaded"
+    },
+    "cake": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/8/8c/KRBu-Cake_Fullbottle.png/revision/latest",
+      "file": "KRBu-Cake_Fullbottle.png",
+      "size": [
+        203,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "tiger": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/d/d2/KRBu-Tora_Fullbottle.png/revision/latest",
+      "file": "KRBu-Tora_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "whale": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/5/56/KRBu-Kujira_Fullbottle.png/revision/latest",
+      "file": "KRBu-Kujira_Fullbottle.png",
+      "size": [
+        192,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "deer": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/5/5d/KRBu-Shika_Fullbottle.png/revision/latest",
+      "file": "KRBu-Shika_Fullbottle.png",
+      "size": [
+        207,
+        470
+      ],
+      "status": "downloaded"
+    },
+    "giraffe": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/1/1d/KRBu-Kirin_Fullbottle.png/revision/latest",
+      "file": "KRBu-Kirin_Fullbottle.png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "penguin": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/3/3c/KRBu-Penguin_Fullbottle.png/revision/latest",
+      "file": "KRBu-Penguin_Fullbottle.png",
+      "size": [
+        200,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "shark": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/e/ea/KRBu-Same_Fullbottle.png/revision/latest",
+      "file": "KRBu-Same_Fullbottle.png",
+      "size": [
+        202,
+        472
+      ],
+      "status": "downloaded"
+    },
+    "bee": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/5/5e/KRBu-Hachi_Fullbottle.png/revision/latest",
+      "file": "KRBu-Hachi_Fullbottle.png",
+      "size": [
+        208,
+        467
+      ],
+      "status": "downloaded"
+    },
+    "rhino": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/8/8c/KRBu-Sai_Fullbottle.png/revision/latest",
+      "file": "KRBu-Sai_Fullbottle.png",
+      "size": [
+        202,
+        470
+      ],
+      "status": "downloaded"
+    },
+    "ghost": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/0/09/KRBu-Obake_Fullbottle.png/revision/latest",
+      "file": "KRBu-Obake_Fullbottle.png",
+      "size": [
+        202,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "bat": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/e/e0/KRBu-Bat_Fullbottle_(Normal).png/revision/latest",
+      "file": "KRBu-Bat_Fullbottle_(Normal).png",
+      "size": [
+        194,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "ufo": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/0/01/KRBu-UFO_Fullbottle.png/revision/latest",
+      "file": "KRBu-UFO_Fullbottle.png",
+      "size": [
+        195,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "jet": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/7/73/KRBu-Jet_Fullbottle.png/revision/latest",
+      "file": "KRBu-Jet_Fullbottle.png",
+      "size": [
+        195,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "pyramid": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/b/b1/KRBu-Pyramid_Fullbottle.png/revision/latest",
+      "file": "KRBu-Pyramid_Fullbottle.png",
+      "size": [
+        201,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "fan": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/f/f3/KRBu-Senpuki_Fullbottle.png/revision/latest",
+      "file": "KRBu-Senpuki_Fullbottle.png",
+      "size": [
+        193,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "skateboard": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/5/58/KRBu-Sukebo_Fullbottle.png/revision/latest",
+      "file": "KRBu-Sukebo_Fullbottle.png",
+      "size": [
+        202,
+        468
+      ],
+      "status": "downloaded"
+    },
+    "motorcycle": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/a/af/KRBu-Bike_Fullbottle.png/revision/latest",
+      "file": "KRBu-Bike_Fullbottle.png",
+      "size": [
+        203,
+        469
+      ],
+      "status": "downloaded"
+    },
+    "submarine": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/4/4f/KRBu-Sensuikan_Fullbottle.png/revision/latest",
+      "file": "KRBu-Sensuikan_Fullbottle.png",
+      "size": [
+        204,
+        468
+      ],
+      "status": "downloaded"
+    },
+    "hairdryer": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/9/94/KRBu-Dryer_Fullbottle.png/revision/latest",
+      "file": "KRBu-Dryer_Fullbottle.png",
+      "size": [
+        204,
+        471
+      ],
+      "status": "downloaded"
+    },
+    "magnet": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/5/55/KRBu-Magnet_Fullbottle.png/revision/latest",
+      "file": "KRBu-Magnet_Fullbottle.png",
+      "size": [
+        204,
+        468
+      ],
+      "status": "downloaded"
+    },
+    "engine": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/0/08/KRBu-Engine_Fullbottle.png/revision/latest",
+      "file": "KRBu-Engine_Fullbottle.png",
+      "size": [
+        192,
+        460
+      ],
+      "status": "downloaded"
+    },
+    "hazard_trigger": {
+      "status": "downloaded",
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/1/1e/KRBu-Hazard_Trigger_Closed.png/revision/latest",
+      "file": "KRBu-Hazard_Trigger_Closed.png",
+      "size": [
+        530,
+        398
+      ]
+    },
+    "evol_trigger": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/b/bd/KRBu-Evol-Trigger.png/revision/latest",
+      "file": "KRBu-Evol-Trigger.png",
+      "size": [
+        530,
+        395
+      ],
+      "status": "downloaded"
+    },
+    "genius_fullbottle": {
+      "url": "https://static.wikia.nocookie.net/kamenrider/images/3/3c/KRBu-Genius_Fullbottle.png/revision/latest",
+      "file": "KRBu-Genius_Fullbottle.png",
+      "size": [
+        308,
+        530
+      ],
+      "status": "downloaded"
+    }
+  }
+}

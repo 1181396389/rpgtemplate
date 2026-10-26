@@ -1,0 +1,10 @@
+# Build outputs / local tooling
+*.class
+*.jar
+.gradle/
+build/
+.cache/
+run/
+.idea/
+*.iml
+.DS_Store

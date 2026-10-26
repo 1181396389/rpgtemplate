@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "rpgtemplate:block/pandora_box_green",
+    "north": "rpgtemplate:block/pandora_box_green",
+    "south": "rpgtemplate:block/pandora_box_green",
+    "west": "rpgtemplate:block/pandora_box_blue",
+    "east": "rpgtemplate:block/pandora_box_blue",
+    "up": "rpgtemplate:block/pandora_box_red",
+    "down": "rpgtemplate:block/pandora_box_red"
+  }
+}

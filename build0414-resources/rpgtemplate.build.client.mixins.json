@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.rpgtemplate.forge.production.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "BuildPlayerModelMixin",
+    "BuildPlayerRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
