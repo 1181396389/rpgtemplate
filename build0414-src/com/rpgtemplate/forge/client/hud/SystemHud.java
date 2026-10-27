@@ -265,7 +265,7 @@ public final class SystemHud {
             UiTheme.right(g, font, UiTheme.fit(font, value, 66), RES_W - 10, y, UiTheme.E_INK);
         }
         UiTheme.seam(g, 10, 84, RES_W - 20, UiTheme.alpha(0.5f, UiTheme.E_VIOLET));
-        UiTheme.text(g, font, "DEF", 10, 90, UiTheme.E_FAINT);
+        UiTheme.text(g, font, tr("ui.def"), 10, 90, UiTheme.E_FAINT);
         UiTheme.text(g, font, NumberFormatter.format(ClientSystemData.derived("defense", 0.0)), 34, 90, UiTheme.E_INK);
         // live heartbeat trace between DEF and the key hint
         Fx.ecg(g, 66, 88, 56, 10, UiTheme.E_RED, 0.7f, 1.1);
@@ -318,7 +318,7 @@ public final class SystemHud {
             if (seam > 0) {
                 g.m_280509_(x + seam - 1, y + 10, x + seam + 1, y + 13, UiTheme.alpha(fade, UiTheme.E_WHITE));
             }
-            int ink = UiTheme.alpha(fade * 0.95f, UiTheme.E_INK);
+            int ink = UiTheme.alpha(fade * 0.95f, UiTheme.E_SHADOW);
             g.m_280056_(font, popup.text(), x - 1, y + 2, ink, false);
             g.m_280056_(font, popup.text(), x + 1, y + 2, ink, false);
             g.m_280056_(font, popup.text(), x, y + 1, ink, false);
@@ -345,7 +345,7 @@ public final class SystemHud {
         int cy = g.m_280206_() / 2 - 34 - lift;
         int w = font.m_92895_(text);
         int x = -w / 2;
-        int ink = UiTheme.alpha(fade * 0.95f, UiTheme.E_INK);
+        int ink = UiTheme.alpha(fade * 0.95f, UiTheme.E_SHADOW);
         g.m_280168_().m_85836_();
         g.m_280168_().m_252880_((float) cx, (float) cy, 0.0f);
         g.m_280168_().m_85841_(s, s, 1.0f);
@@ -441,8 +441,8 @@ public final class SystemHud {
             : (sealed || burnout || !affordable ? UiTheme.E_DEEP_RED : (cooldown > 0.0 ? UiTheme.E_GOLD_TEXT : UiTheme.E_JADE));
         int iconColour = locked ? UiTheme.E_FAINT : (skill.costType() == CostType.SP ? UiTheme.E_JADE : UiTheme.E_INDIGO);
 
-        g.m_280509_(x, y, x + TILE_W, y + h, UiTheme.alpha(1f, UiTheme.E_INK));
-        g.m_280509_(x + 1, y + 1, x + TILE_W - 1, y + h - 1, UiTheme.alpha(1f, UiTheme.E_CARD));
+        g.m_280509_(x, y, x + TILE_W, y + h, UiTheme.alpha(0.5f, UiTheme.E_EDGE));
+        g.m_280509_(x + 1, y + 1, x + TILE_W - 1, y + h - 1, UiTheme.alpha(UiTheme.GLASS, UiTheme.E_CARD));
         g.m_280509_(x + 1, y + 1, x + TILE_W - 1, y + 3, UiTheme.alpha(1f, stateColour));
 
         UiTheme.key(g, font, UiTheme.fit(font, ClientKeys.physicalKeyLabel(index), 20), x + 4, y + 6);

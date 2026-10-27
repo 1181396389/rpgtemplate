@@ -202,7 +202,7 @@ vec4 surface(vec2 p) {
     float sheen = (0.5 - (p.y - uInner.y) / max(uInner.w, 1.0)) * 0.10;
     float diag = exp(-abs((q.x - q.y) * K_SQ - sin(t * 0.35) * b.x * 0.9) * 0.035) * 0.06;
     vec2 rf = gr * bevel * 6.0;
-    float pat = step(0.5, fract((q.x + rf.x * 3.0 + q.y + rf.y * 3.0) * 0.045)) * 0.035;
+    float pat = 0.0;   // diagonal stripe texture removed: repeated stripes read as decoration
     float frost = (fbm(q * 0.035 + vec2(t * 0.02, 0.0)) - 0.5) * 0.08;
 
     vec3 col = uFace.rgb + vec3(sheen + diag + frost + pat);

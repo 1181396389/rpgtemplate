@@ -47,22 +47,25 @@ public final class UiTheme {
     public static final int MOTE = 0x9AA6C4;
 
     // ---- v4 palette: 次元 × 空间 × 维度 ----
-    public static final int E_INK = 0x0D0B1E;        // void navy, outlines and body text
-    public static final int E_PAPER = 0xEEF2FB;      // starlight ground
-    public static final int E_CARD = 0xFFFFFF;       // card face
-    public static final int E_INSET = 0xE2E8F6;      // wells and tracks
-    public static final int E_EDGE = 0x8E9AC0;       // hairlines
-    public static final int E_MUTED = 0x343B5C;      // secondary text
-    public static final int E_FAINT = 0x4E5780;      // tertiary text
+    public static final int E_INK = 0xF1F4FF;   // primary text and light hairlines on glass
+    public static final int E_PAPER = 0x07061A;   // deep surface
+    public static final int E_CARD = 0x0C0A24;   // glass base (translucent when drawn)
+    public static final int E_INSET = 0x1B1948;   // wells and tracks
+    public static final int E_EDGE = 0x6F7ED0;   // hairlines
+    public static final int E_MUTED = 0xB7C2EC;   // secondary text
+    public static final int E_FAINT = 0x8C99D2;   // tertiary text
     public static final int E_RED = 0xD4127A;        // rift magenta (alert)
-    public static final int E_DEEP_RED = 0x9E0A5C;   // rift magenta, text-safe
+    public static final int E_DEEP_RED = 0xFF6FB6;   // rift magenta, text-safe on glass
     public static final int E_GOLD = 0xFFAA00;       // 维度 amber (highlight)
-    public static final int E_GOLD_TEXT = 0x8A5200;  // amber, text-safe
-    public static final int E_VIOLET = 0x6A2CF0;     // 次元 violet
-    public static final int E_CYAN = 0x00B3D9;       // 空间 cyan
-    public static final int E_JADE = 0x06775F;       // ready / stable (text-safe)
-    public static final int E_INDIGO = 0x1C5FE0;     // 空间 blue (MP)
+    public static final int E_GOLD_TEXT = 0xFFCB6B;   // amber, text-safe on glass
+    public static final int E_VIOLET = 0x9B7BFF;   // dimension violet
+    public static final int E_CYAN = 0x45E3FF;   // space cyan
+    public static final int E_JADE = 0x5CF2CC;   // ready / stable, text-safe on glass
+    public static final int E_INDIGO = 0x7FB2FF;   // space blue (MP)
     public static final int E_WHITE = 0xFFFFFF;
+    public static final int E_SHADOW = 0x04030D;     // true dark, for shadows and vignettes
+    /** Opacity of a glass card face. Low enough that the starfield reads through the panel. */
+    public static final float GLASS = 0.66f;
 
     /** Minimum contrast ratio for body text on {@link #E_CARD}. */
     public static final float MIN_CONTRAST = 7.0f;
@@ -311,9 +314,8 @@ public final class UiTheme {
     }
 
     /**
-     * Main panel: a white card with a stacked violet dimension plane that breathes, an ink
-     * outline, a violet top rule with a glint sliding along it, cyan space brackets and a cut
-     * top-right corner.
+     * Glass card: a translucent dark face, a hairline edge and a single violet top rule.
+     * No solid blocks. The shader draws it when available; the CPU fallback matches it.
      */
     public static void card(GuiGraphics g, int x, int y, int w, int h, float f) {
         float a = clamp01(f);
@@ -327,23 +329,35 @@ public final class UiTheme {
         trim(g, x, y, w, h, a, breathe);
     }
 
-    /** CPU card surface used when the rpg_fx shader is unavailable. */
+    /** CPU glass surface used when the rpg_fx shader is unavailable. */
     private static void cardFallback(GuiGraphics g, int x, int y, int w, int h, float a, float breathe) {
-        double t = seconds();
         int cut = 8;
-        cutRect(g, x + 4, y + 4, w, h, cut, alpha(a * (0.12f + 0.07f * breathe), E_VIOLET));
-        cutRect(g, x + 2, y + 2, w, h, cut, alpha(a * (0.28f + 0.14f * breathe), E_VIOLET));
-        cutRect(g, x, y, w, h, cut, alpha(a, E_INK));
-        cutRect(g, x + 2, y + 2, w - 4, h - 4, cut - 1, alpha(a * 0.99f, E_CARD));
-        g.m_280509_(x + 2, y + 2, x + w - cut - 1, y + 4, alpha(a, E_VIOLET));
-        int span = Math.max(1, w - cut - 4);
-        int sx = x + 2 + (int) (((t * 0.4 + x * 0.002) % 1.0) * span);
-        int sw = Math.max(6, Math.min(24, w / 4));
-        int gl = Math.max(x + 2, sx);
-        int gr = Math.min(x + w - cut - 1, sx + sw);
-        if (gr > gl) {
-            g.m_280509_(gl, y + 2, gr, y + 4, alpha(a * 0.85f, E_WHITE));
+        cutRect(g, x + 1, y + 1, w - 2, h - 2, cut - 1, alpha(a * GLASS, E_CARD));
+        ring(g, x, y, w, h, alpha(a * (0.55f + 0.1f * breathe), E_EDGE));
+        g.m_280509_(x + 2, y + 2, x + w - cut - 1, y + 3, alpha(a * 0.9f, E_VIOLET));
+    }
+
+    /**
+     * Frame: hairline outline, cyan corner ticks, and a faint glass tint. No solid fill.
+     * Used for sub-regions (stat tiles, detail strips) so the panel does not read as stacked blocks.
+     */
+    public static void frame(GuiGraphics g, int x, int y, int w, int h, float f) {
+        float a = clamp01(f);
+        if (w <= 8 || h <= 8) {
+            return;
         }
+        g.m_280509_(x + 1, y + 1, x + w - 1, y + h - 1, alpha(a * 0.35f, E_CARD));
+        ring(g, x, y, w, h, alpha(a * 0.45f, E_EDGE));
+        int t = Math.min(6, Math.min(w, h) / 3);
+        int c = alpha(a, E_CYAN);
+        g.m_280509_(x, y, x + t, y + 1, c);
+        g.m_280509_(x, y, x + 1, y + t, c);
+        g.m_280509_(x + w - t, y, x + w, y + 1, c);
+        g.m_280509_(x + w - 1, y, x + w, y + t, c);
+        g.m_280509_(x, y + h - 1, x + t, y + h, c);
+        g.m_280509_(x, y + h - t, x + 1, y + h, c);
+        g.m_280509_(x + w - t, y + h - 1, x + w, y + h, c);
+        g.m_280509_(x + w - 1, y + h - t, x + w, y + h, c);
     }
 
     /** Corner brackets and the bottom seam. Always CPU: a few fills, drawn on top of either surface. */
@@ -393,18 +407,21 @@ public final class UiTheme {
     }
 
     /**
-     * Button: white card; hover adds a violet plane and a sheen that sweeps across it;
-     * active fills with a violet wash, a thick outline and a white sheen.
+     * Button: no fill block. Idle is a dim hairline; hover adds a faint tint and a brighter edge;
+     * active adds an accent tint, an accent edge and a 2 px accent underline. A sheen crosses
+     * hovered and active buttons.
      */
     public static void buttonSurface(GuiGraphics g, int x, int y, int w, int h, boolean hovered, boolean active, int accent) {
         int acc = palette(accent);
         if (active) {
-            cutRect(g, x, y, w, h, 4, alpha(0.20f, E_VIOLET));
-            ring(g, x, y, w, h, alpha(1f, E_VIOLET));
-            ring(g, x + 1, y + 1, w - 2, h - 2, alpha(1f, E_VIOLET));
+            g.m_280509_(x + 1, y + 1, x + w - 1, y + h - 1, alpha(0.16f, acc));
+            ring(g, x, y, w, h, alpha(0.9f, acc));
+            g.m_280509_(x + 1, y + h - 2, x + w - 1, y + h, alpha(1f, acc));
+        } else if (hovered) {
+            g.m_280509_(x + 1, y + 1, x + w - 1, y + h - 1, alpha(0.08f, E_INK));
+            ring(g, x, y, w, h, alpha(0.75f, E_EDGE));
         } else {
-            cutRect(g, x, y, w, h, 4, alpha(1f, E_INK));
-            cutRect(g, x + 1, y + 1, w - 2, h - 2, 3, alpha(1f, hovered ? E_PAPER : E_CARD));
+            ring(g, x, y, w, h, alpha(0.35f, E_EDGE));
         }
         if ((hovered || active) && w > 14 && h > 6) {
             double t = seconds();
@@ -413,11 +430,8 @@ public final class UiTheme {
             int l = Math.max(x + 2, sx);
             int r = Math.min(x + w - 2, sx + 10);
             if (r > l) {
-                g.m_280509_(l, y + 2, r, y + h - 2, alpha(active ? 0.22f : 0.10f, active ? E_WHITE : E_VIOLET));
+                g.m_280509_(l, y + 2, r, y + h - 3, alpha(active ? 0.18f : 0.08f, active ? E_WHITE : E_CYAN));
             }
-        }
-        if (hovered || active) {
-            g.m_280509_(x + 1, y + 1, x + 4, y + h - 1, alpha(1f, acc));
         }
     }
 
@@ -464,7 +478,7 @@ public final class UiTheme {
         String s = label == null ? "" : label;
         int w = Math.max(12, font.m_92895_(s) + 4);
         int h = 11;
-        g.m_280509_(x, y, x + w, y + h, alpha(1f, E_INK));
+        g.m_280509_(x, y, x + w, y + h, alpha(1f, E_EDGE));
         g.m_280509_(x + 1, y + 1, x + w - 1, y + h - 3, alpha(1f, E_CARD));
         g.m_280509_(x + 1, y + h - 3, x + w - 1, y + h - 2, alpha(1f, E_VIOLET));
         g.m_280056_(font, s, x + 2, y + 2, 0xFF000000 | E_INK, false);
@@ -501,7 +515,7 @@ public final class UiTheme {
     public static void cube(GuiGraphics g, int x, int y, int s, int color) {
         int c = palette(color);
         int top = mix(c, E_WHITE, 0.45f);
-        int right = mix(c, E_INK, 0.28f);
+        int right = mix(c, E_SHADOW, 0.28f);
         int half = s / 2;
         int q = Math.max(1, s / 4);
         int tq = Math.max(1, s * 3 / 4);
@@ -640,7 +654,7 @@ public final class UiTheme {
             g.m_280509_(0, scan + k, w, scan + k + 1, alpha(0.07f * (1f - k / 6f), E_CYAN));
         }
         for (int k = 0; k < 10; k++) {
-            int c = alpha(0.035f * (1f - k / 10f), E_INK);
+            int c = alpha(0.035f * (1f - k / 10f), E_SHADOW);
             g.m_280509_(0, k, w, k + 1, c);
             g.m_280509_(0, h - 1 - k, w, h - k, c);
             g.m_280509_(k, 0, k + 1, h, c);

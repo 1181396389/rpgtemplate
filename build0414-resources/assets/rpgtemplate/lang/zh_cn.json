@@ -73,7 +73,7 @@
   "message.rpgtemplate.weakness.soul_recovered": "睡眠中灵魂得到了修复，魂伤已痊愈",
   "message.rpgtemplate.stat.exhausted": "SP 耗尽，力竭了……",
   "message.rpgtemplate.stat.recovered": "体力恢复了",
-  "hud.rpgtemplate.title": "rpgtemplate 0.4.14",
+  "hud.rpgtemplate.title": "万界 · 0.4.14",
   "hud.rpgtemplate.no_template": "▶ 未载入模板",
   "hud.rpgtemplate.sealed": "封印 %ss",
   "hud.rpgtemplate.wound": "魂伤 -%s",
@@ -84,7 +84,7 @@
   "subtitles.rpgtemplate.critical": "暴击",
   "key.rpgtemplate.panel": "打开系统面板",
   "gui.rpgtemplate.not_activated": "系统尚未激活（需要认主虎符）",
-  "gui.rpgtemplate.title": "rpgtemplate 0.4.14",
+  "gui.rpgtemplate.title": "万界 · 0.4.14",
   "gui.rpgtemplate.subtitle": "全域信息转写体系 · EX",
   "gui.rpgtemplate.tab.status": "状态",
   "gui.rpgtemplate.tab.templates": "模板",
@@ -633,7 +633,6 @@
   "gui.rpgtemplate.v4.status.resources": "资源",
   "gui.rpgtemplate.v4.status.derived": "派生属性",
   "gui.rpgtemplate.v4.status.loaded": "当前模板",
-  "gui.rpgtemplate.v4.status.draws": "待抽取：%s",
   "gui.rpgtemplate.v4.stat.hp": "生命",
   "gui.rpgtemplate.v4.stat.mp": "法力",
   "gui.rpgtemplate.v4.stat.sp": "体力",
@@ -661,5 +660,6 @@
   "gui.rpgtemplate.v4.group.hud": "HUD",
   "gui.rpgtemplate.v4.group.play": "玩法",
   "gui.rpgtemplate.v4.group.display": "显示",
-  "gui.rpgtemplate.status.draw_gate_fallback": "当前模板"
+  "gui.rpgtemplate.status.draw_gate_fallback": "当前模板",
+  "hud.rpgtemplate.ui.def": "防御"
 }

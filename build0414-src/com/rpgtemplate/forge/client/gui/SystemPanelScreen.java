@@ -325,8 +325,6 @@ public final class SystemPanelScreen extends Screen {
         }
         UiTheme.enterPop(g);
         renderFooter(g);
-        UiTheme.dust(this.left + 2, this.top + HEADER_H, this.pw - 4, this.ph - HEADER_H - 2, 0.35f);
-        UiTheme.motes(g);
         super.m_88315_(g, mx, my, partial);
     }
 
@@ -334,7 +332,12 @@ public final class SystemPanelScreen extends Screen {
         Font font = this.f_96547_;
         UiTheme.emblem(g, this.left + PAD, this.top + 10, UiTheme.E_GOLD);
         UiTheme.orbit(g, this.left + PAD + 4, this.top + 14, 7, UiTheme.E_CYAN, 1f, UiTheme.seconds() * 1.3);
-        UiTheme.titleGlitch(g, font, t("title"), this.left + PAD + 14, this.top + 11, UiTheme.E_INK);
+        // title at an integer 2x scale: a clear step above the 9 px body text, still crisp
+        g.m_280168_().m_85836_();
+        g.m_280168_().m_252880_((float) (this.left + PAD + 14), (float) (this.top + 9), 0.0f);
+        g.m_280168_().m_85841_(2.0f, 2.0f, 1.0f);
+        UiTheme.text(g, font, t("title"), 0, 0, UiTheme.E_INK);
+        g.m_280168_().m_85849_();
         UiTheme.right(g, font, "Lv." + data.level(), this.left + this.pw - PAD, this.top + 11, UiTheme.E_VIOLET);
         UiTheme.seam(g, this.left + PAD, this.top + HEADER_H, this.pw - PAD * 2, UiTheme.alpha(1f, UiTheme.E_VIOLET));
     }
@@ -375,22 +378,9 @@ public final class SystemPanelScreen extends Screen {
     private void renderFooter(GuiGraphics g) {
         int y = this.top + this.ph - 14;
         UiTheme.seam(g, this.left + PAD, y - 6, this.pw - PAD * 2, UiTheme.alpha(0.35f, UiTheme.E_CYAN));
-        Font font = this.f_96547_;
-        String msg = t("v4.footer");
         int avail = this.pw - PAD * 2;
-        int tw = font.m_92895_(msg);
-        if (tw <= avail) {
-            UiTheme.text(g, font, msg, this.left + PAD, y, UiTheme.E_FAINT);
-            return;
-        }
-        // ticker: the hint crawls right to left and is masked at both edges of the card
-        int cycle = tw + 36;
-        int off = (int) ((UiTheme.seconds() * 20.0) % cycle);
-        int tx = this.left + PAD - off;
-        UiTheme.text(g, font, msg, tx, y, UiTheme.E_FAINT);
-        UiTheme.text(g, font, msg, tx + cycle, y, UiTheme.E_FAINT);
-        g.m_280509_(this.left + 2, y - 2, this.left + PAD, y + 10, UiTheme.alpha(1f, UiTheme.E_CARD));
-        g.m_280509_(this.left + this.pw - PAD, y - 2, this.left + this.pw - 2, y + 10, UiTheme.alpha(1f, UiTheme.E_CARD));
+        String msg = UiTheme.fit(this.f_96547_, t("v4.footer"), avail);
+        UiTheme.text(g, this.f_96547_, msg, this.left + PAD, y, UiTheme.E_FAINT);
     }
 
     // ------------------------------------------------------------------ status tab
@@ -483,13 +473,13 @@ public final class SystemPanelScreen extends Screen {
             int row = i / 2;
             int x = rx + col * (tileW + 6);
             int y = top + row * (tileH + 3);
-            UiTheme.card(g, x, y, tileW, tileH, 1f);
+            UiTheme.frame(g, x, y, tileW, tileH, 1f);
             UiTheme.text(g, font, fitText(font, stats[i][0], tileW - 10), x + 6, y + 4, UiTheme.E_MUTED);
             UiTheme.text(g, font, fitText(font, stats[i][1], tileW - 10), x + 6, y + tileH - 12, UiTheme.E_INK);
         }
 
         int by = a[1] + a[3] - footH;
-        UiTheme.card(g, a[0], by, a[2], footH, 1f);
+        UiTheme.frame(g, a[0], by, a[2], footH, 1f);
         Minecraft mc = Minecraft.m_91087_();
         long tick = mc.f_91073_ == null ? 0L : mc.f_91073_.m_46467_();
         UiTheme.text(g, font, t("v4.status.loaded"), a[0] + 10, by + 6, UiTheme.E_MUTED);
@@ -588,7 +578,7 @@ public final class SystemPanelScreen extends Screen {
                 continue;
             }
             // soft shadow under the card; a hovered card lifts its shadow
-            Fx.softShadow(g, x, y, CARD_W, cardH, UiTheme.E_INK, hover ? 0.5f : 0.18f);
+            Fx.softShadow(g, x, y, CARD_W, cardH, UiTheme.E_SHADOW, hover ? 0.5f : 0.18f);
             UiTheme.buttonSurface(g, x, y, CARD_W, cardH, hover, selected, qc);
             if (selected) {
                 UiTheme.marching(g, x, y, CARD_W, cardH, UiTheme.E_VIOLET, 1f);
@@ -615,7 +605,7 @@ public final class SystemPanelScreen extends Screen {
         }
 
         // detail card (bottom part)
-        UiTheme.card(g, a[0], dy, a[2], dh, 1f);
+        UiTheme.frame(g, a[0], dy, a[2], dh, 1f);
         TemplateInstance selectedInst = selectedId == null ? null : data.findTemplate(selectedId).orElse(null);
         TemplateDefinition def = selectedInst == null ? null : TemplateRegistry.client().find(selectedInst.templateId()).orElse(null);
         if (selectedInst == null || def == null) {
@@ -771,7 +761,7 @@ public final class SystemPanelScreen extends Screen {
         }
 
         int sy = a[1] + a[3] - DETAIL_STRIP_H;
-        UiTheme.card(g, a[0], sy, a[2], DETAIL_STRIP_H, 1f);
+        UiTheme.frame(g, a[0], sy, a[2], DETAIL_STRIP_H, 1f);
         TemplateDefinition sel = selectedId == null ? null : TemplateRegistry.client().find(selectedId).orElse(null);
         if (sel != null && data.findTemplate(sel.id()).isPresent()) {
             UiTheme.text(g, font, UiTheme.fit(font, sel.displayName() + "  \u00b7  " + sel.description(), a[2] - 16),
@@ -852,7 +842,7 @@ public final class SystemPanelScreen extends Screen {
         int rx = a[0] + nw + 8;
         int rw = a[2] - nw - 8;
         int rowH = 24;
-        UiTheme.card(g, rx, a[1], rw, a[3], 1f);
+        UiTheme.frame(g, rx, a[1], rw, a[3], 1f);
         int rowTop = a[1] + 8;
         for (int i = 0; i < rows.size(); i++) {
             SettingRow row = rows.get(i);
@@ -882,10 +872,10 @@ public final class SystemPanelScreen extends Screen {
         float a = enabled ? 1f : 0.45f;
         int track = UiTheme.mix(UiTheme.E_INSET, UiTheme.E_JADE, k);
         g.m_280509_(x + 1, y + 1, x + w - 1, y + h - 1, UiTheme.alpha(a, track));
-        UiTheme.border(g, x, y, w, h, UiTheme.E_INK);
+        UiTheme.border(g, x, y, w, h, UiTheme.E_EDGE);
         int kx = x + 2 + Math.round(k * (w - h));
         int ks = h - 4;
-        UiTheme.border(g, kx, y + 2, ks, ks, UiTheme.E_INK);
+        UiTheme.border(g, kx, y + 2, ks, ks, UiTheme.E_EDGE);
         g.m_280509_(kx + 1, y + 3, kx + ks - 1, y + ks + 1, UiTheme.alpha(a, UiTheme.E_CARD));
     }
 

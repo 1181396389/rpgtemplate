@@ -161,12 +161,13 @@ public final class FxShader {
             uSize.m_7971_(qw, qh);
             uInner.m_5805_(MARGIN, MARGIN, w, h);
             // corner radius, chamfer (top-right and bottom-left), border width, shadow strength
-            uRad.m_5805_(2.5f, 8f, 1.4f, 0.55f);
-            uFace.m_5805_(1f, 1f, 1f, 0.99f);
+            uRad.m_5805_(2.5f, 8f, 1.4f, 0.30f);
+            // glass face: dark translucent; the final alpha is applied by uMode.y
+            uFace.m_5805_(rgbR(UiTheme.E_CARD), rgbG(UiTheme.E_CARD), rgbB(UiTheme.E_CARD), UiTheme.GLASS);
             uAccent.m_5805_(rgbR(accent), rgbG(accent), rgbB(accent), 1f);
             uAccent2.m_5805_(0.110f, 0.820f, 0.960f, 1f);
             // scanline strength, conic strength, grain, bloom
-            uFx.m_5805_(0.10f, 0.9f, 0.018f, 0.22f);
+            uFx.m_5805_(0.04f, 0.9f, 0.018f, 0.22f);
             uWave.m_5805_(wrapTime(), 0f, 0f, 0f);
             uRipple.m_5805_(0f, 0f, 99f, 0f);
             uMode.m_5805_(1f, clamp01(alpha), 0f, 0f);

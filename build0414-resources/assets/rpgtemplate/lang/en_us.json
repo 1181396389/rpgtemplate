@@ -73,7 +73,7 @@
   "message.rpgtemplate.weakness.soul_recovered": "Your soul mended while you slept. Soul wound healed",
   "message.rpgtemplate.stat.exhausted": "Out of SP... exhausted",
   "message.rpgtemplate.stat.recovered": "Stamina recovered",
-  "hud.rpgtemplate.title": "rpgtemplate 0.4.14",
+  "hud.rpgtemplate.title": "万界 · 0.4.14",
   "hud.rpgtemplate.no_template": "▶ No template loaded",
   "hud.rpgtemplate.sealed": "Sealed %ss",
   "hud.rpgtemplate.wound": "Soul wound -%s",
@@ -84,7 +84,7 @@
   "subtitles.rpgtemplate.critical": "Critical hit",
   "key.rpgtemplate.panel": "Open System Panel",
   "gui.rpgtemplate.not_activated": "System not activated (bind a Tally first)",
-  "gui.rpgtemplate.title": "rpgtemplate 0.4.14",
+  "gui.rpgtemplate.title": "万界 · 0.4.14",
   "gui.rpgtemplate.subtitle": "Global Info Transcription · EX",
   "gui.rpgtemplate.tab.status": "Status",
   "gui.rpgtemplate.tab.templates": "Templates",
@@ -633,7 +633,6 @@
   "gui.rpgtemplate.v4.status.resources": "Resources",
   "gui.rpgtemplate.v4.status.derived": "Derived stats",
   "gui.rpgtemplate.v4.status.loaded": "Loaded template",
-  "gui.rpgtemplate.v4.status.draws": "Pending draws: %s",
   "gui.rpgtemplate.v4.stat.hp": "HP",
   "gui.rpgtemplate.v4.stat.mp": "MP",
   "gui.rpgtemplate.v4.stat.sp": "SP",
@@ -661,5 +660,6 @@
   "gui.rpgtemplate.v4.group.hud": "HUD",
   "gui.rpgtemplate.v4.group.play": "Gameplay",
   "gui.rpgtemplate.v4.group.display": "Display",
-  "gui.rpgtemplate.status.draw_gate_fallback": "the current template"
+  "gui.rpgtemplate.status.draw_gate_fallback": "the current template",
+  "hud.rpgtemplate.ui.def": "DEF"
 }

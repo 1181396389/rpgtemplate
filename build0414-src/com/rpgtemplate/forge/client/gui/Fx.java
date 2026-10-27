@@ -160,7 +160,7 @@ public final class Fx {
     public static void contactAo(GuiGraphics g, int x, int y, int w, int h, float a) {
         for (int i = 0; i < 3; i++) {
             float k = a * (1f - i / 3f);
-            g.m_280509_(x + 2, y + h + i, x + w - 2, y + h + i + 1, UiTheme.alpha(k, UiTheme.E_INK));
+            g.m_280509_(x + 2, y + h + i, x + w - 2, y + h + i + 1, UiTheme.alpha(k, UiTheme.E_SHADOW));
         }
     }
 
