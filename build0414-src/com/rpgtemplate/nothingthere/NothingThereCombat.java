@@ -36,15 +36,20 @@ public final class NothingThereCombat {
     public static void onHurt(LivingHurtEvent event) {
         Entity source = event.getSource().m_7639_();
         LivingEntity victim = event.getEntity();
-        if (source instanceof ServerPlayer attacker && attacker != victim && !NtBleed.ticking) {
+        if (source instanceof ServerPlayer attacker && attacker != victim && !NtBleed.ticking
+            && !NtFormEffects.reflecting) {
             applyAdaptation(event, attacker);
             NtBleed.onHit(event, victim, attacker);
+            NtFormEffects.onPlayerHit(attacker, victim, event.getAmount());
         }
         if (victim instanceof ServerPlayer player) {
             if (source != null && source != victim) {
                 reduceByDeathMemory(event, player, source);
             }
             guardVictim(event, player);
+            if (source instanceof LivingEntity attacker) {
+                NtFormEffects.onPlayerHurt(player, attacker, event.getAmount());
+            }
         }
     }
 
@@ -98,14 +103,15 @@ public final class NothingThereCombat {
     /**
      * 形态输出（最后执行，早于原版护甲减伤）：
      * 锤（form 0）：玩家的攻击伤害 ×(1 + HAMMER_ATTACK_BONUS)。
-     * 手刀（form 1）：玩家的攻击无视目标护甲。原版护甲减伤在 LivingHurtEvent 之后才生效，
+     * 手刀（form 1）：玩家的攻击无视目标护甲、伤害抗性（药水效果）和吸收护盾。原版护甲减伤在 LivingHurtEvent 之后才生效，
      * 所以这里把伤害反解成"经过护甲减伤后恰好等于原始伤害"的数值。
      */
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onHurtFormModifiers(LivingHurtEvent event) {
         Entity source = event.getSource().m_7639_();
         LivingEntity victim = event.getEntity();
-        if (!(source instanceof ServerPlayer attacker) || attacker == victim || NtBleed.ticking) {
+        if (!(source instanceof ServerPlayer attacker) || attacker == victim || NtBleed.ticking
+            || NtFormEffects.reflecting) {
             return;
         }
         if (event.getAmount() <= 0.0f) {
@@ -119,7 +125,9 @@ public final class NothingThereCombat {
         if (form == FORM_HAMMER) {
             event.setAmount((float) (event.getAmount() * (1.0 + HAMMER_ATTACK_BONUS)));
         } else if (form == FORM_BLADE) {
+            // 反解护甲；同时暂停目标的吸收护盾与伤害抗性（I–V 级），本次命中不参与，下一 tick 还原。
             event.setAmount(ignoreArmor(victim, event.getAmount()));
+            NtFormEffects.suspendDefenses(victim);
         }
     }
 

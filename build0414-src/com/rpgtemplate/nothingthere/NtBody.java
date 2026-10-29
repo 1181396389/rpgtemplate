@@ -34,6 +34,13 @@ public final class NtBody {
     public static final EntityDataAccessor<Boolean> DATA_BLADE =
         SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
 
+    /** Synced whip form flag (形态 4 脊骨鞭: the whip is in the right hand, the hammer is hidden). */
+    public static final EntityDataAccessor<Boolean> DATA_WHIP =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
+    /** Synced muscle form flag (形态 5 全收: the muscle fist is in the right hand, the hammer is hidden). */
+    public static final EntityDataAccessor<Boolean> DATA_MUSCLE =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
+
     /** Synced Holle cast flag (every client plays the cast pose). Written by the server in refreshIfChanged. */
     public static final EntityDataAccessor<Boolean> DATA_HOLLE =
         SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
@@ -110,6 +117,46 @@ public final class NtBody {
                 return player.m_20088_().m_135370_(DATA_BLADE);
             }
             return computeBlade(player);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** True in 脊骨鞭 form (form index 4). Clients read the synced flag. */
+    public static boolean whipForm(Player player) {
+        try {
+            if (player.m_9236_().m_5776_()) {
+                return player.m_20088_().m_135370_(DATA_WHIP);
+            }
+            return computeWhip(player);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** True in 全收 form (form index 5). Clients read the synced flag. */
+    public static boolean muscleForm(Player player) {
+        try {
+            if (player.m_9236_().m_5776_()) {
+                return player.m_20088_().m_135370_(DATA_MUSCLE);
+            }
+            return computeMuscle(player);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    private static boolean computeWhip(Player player) {
+        try {
+            return computeHuman(player) && NtForms.current(SystemDataManager.get(player)) == 4;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    private static boolean computeMuscle(Player player) {
+        try {
+            return computeHuman(player) && NtForms.current(SystemDataManager.get(player)) == 5;
         } catch (RuntimeException e) {
             return false;
         }
@@ -242,6 +289,8 @@ public final class NtBody {
             player.m_20088_().m_135381_(DATA_GOODBYE, computeGoodbye(player));
             player.m_20088_().m_135381_(DATA_HOLLE, computeHolle(player));
             player.m_20088_().m_135381_(DATA_BLADE, computeBlade(player));
+            player.m_20088_().m_135381_(DATA_WHIP, computeWhip(player));
+            player.m_20088_().m_135381_(DATA_MUSCLE, computeMuscle(player));
             player.m_20088_().m_135381_(DATA_COCOON, computeCocoon(player));
             player.m_20088_().m_135381_(DATA_OH_CHARGE, computeOhCharge(player));
             player.m_20088_().m_135381_(DATA_OH_SLAM, computeOhSlam(player));

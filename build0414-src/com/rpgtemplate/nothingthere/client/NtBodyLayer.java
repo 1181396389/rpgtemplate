@@ -94,7 +94,7 @@ public final class NtBodyLayer extends RenderLayer<AbstractClientPlayer, PlayerM
                 right.f_104203_ = (float) Math.toRadians(-slamTheta);
             }
             NtBodyMesh.drawHands(pose, buffers.m_6299_(type), light, OverlayTexture.f_118083_,
-                right, left, flag || anim, NtBody.bladeForm(player));
+                right, left, flag || anim, NtBody.bladeForm(player), NtBody.whipForm(player), NtBody.muscleForm(player));
         } finally {
             right.f_104203_ = savedRight;
             left.f_104203_ = savedLeft;

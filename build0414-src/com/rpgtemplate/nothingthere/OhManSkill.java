@@ -62,13 +62,20 @@ public final class OhManSkill implements Skill {
         if (!ctx.consume(ctx.cost(DIRECT_BASE_COST))) {
             return;
         }
-        ctx.cooldown(DIRECT_COOLDOWN);
+        // 脊骨鞭（form 4）没有攻击冷却：不设置 DIRECT_COOLDOWN。其他形态保持原有冷却。
+        if (NtForms.current(ctx.data) != NtFormEffects.FORM_WHIP) {
+            ctx.cooldown(DIRECT_COOLDOWN);
+        }
         switch (NtForms.current(ctx.data)) {
             case 1 -> NtForms.sweep(ctx.player, ctx.data, 3.5, 120.0, ctx.damage(0.8), 0.0, 0.0);       // 手刀：横斩
             case 2 -> bone(ctx);                                                                         // 骨刺连射
             case 3 -> bite(ctx);                                                                         // 贪食之口
-            case 4 -> NtForms.sweep(ctx.player, ctx.data, 5.0, 60.0, ctx.damage(1.2), 1.2, 0.0);       // 脊骨鞭
-            case 5 -> NtForms.sweep(ctx.player, ctx.data, 3.5, 120.0, ctx.damage(1.0), 0.6, 0.10);     // 全收
+            case 4 -> {                                                                                  // 脊骨鞭：骨色粉尘弧线 + 鞭响
+                NtForms.sweep(ctx.player, ctx.data, 5.0, 60.0, ctx.damage(1.2), 1.2, 0.0);
+                NtFx.whip(ctx.player, 5.0, 60.0);
+            }
+            case 5 -> NtFx.muscle(ctx.player,                                                            // 全收：命中处血块 + 血肉脉冲
+                NtForms.sweep(ctx.player, ctx.data, 3.5, 120.0, ctx.damage(1.0), 0.6, 0.10));
             default -> hammer(ctx);
         }
     }

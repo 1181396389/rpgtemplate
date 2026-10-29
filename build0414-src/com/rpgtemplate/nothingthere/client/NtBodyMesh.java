@@ -2,6 +2,7 @@ package com.rpgtemplate.nothingthere.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -21,11 +22,12 @@ import org.joml.Vector3f;
  * (rightArm = 2, leftArm = 3) and is stored relative to that arm's pivot, so the vanilla arm animation moves it.
  *
  * Both arms are flesh (red) arm stubs; NtBodyClient hides the vanilla arms of a human.
- *   right hand: the hammer, always.
- *   left hand: the flesh arm, always; the blade in the hand in blade form (技能 4 变形, 手刀) and on goodbye.
+ *   right hand: the hammer in forms other than 4 and 5; the whip (形态 4) or the muscle fist (形态 5) instead.
+ *   left hand: the flesh arm, always; the blade in the hand in blade form (形态 1, 手刀) and on goodbye.
  *
  * Visibility flags per part:
- *   0 always, 2 blade (blade form or goodbye), 4 never (not drawn).
+ *   0 always, 2 blade (blade form or goodbye), 4 never (not drawn),
+ *   6 hammer (hidden in 脊骨鞭 and 全收), 8 whip (脊骨鞭 only), 10 muscle (全收 only).
  */
 public final class NtBodyMesh {
     public static final int FRAME_RIGHT_ARM = 2;
@@ -36,6 +38,12 @@ public final class NtBodyMesh {
     public static final int FLAG_ALWAYS = 0;
     public static final int FLAG_BLADE = 2;
     public static final int FLAG_NEVER = 4;
+    /** The hammer: drawn unless the player is in 脊骨鞭 (形态 4) or 全收 (形态 5). */
+    public static final int FLAG_HAMMER = 6;
+    /** 脊骨鞭 (形态 4): drawn in 脊骨鞭 only. */
+    public static final int FLAG_WHIP = 8;
+    /** 全收 (形态 5): drawn in 全收 only. */
+    public static final int FLAG_MUSCLE = 10;
 
 
     private static final String DATA_PATH = "assets/rpgtemplate/models/nothing_there/hands.bin";
@@ -53,23 +61,64 @@ public final class NtBodyMesh {
      * Third person. Both arms are drawn (flesh stubs). The blade is in the left hand in blade form and on goodbye.
      *
      * @param goodbye the left blade is out for a goodbye strike
-     * @param blade   the player is in blade form (技能 4)
+     * @param blade   the player is in blade form (形态 1, 手刀)
+     * @param whip    the player is in 脊骨鞭 (形态 4): the whip replaces the hammer
+     * @param muscle  the player is in 全收 (形态 5): the muscle fist replaces the hammer
      */
     public static void drawHands(PoseStack pose, VertexConsumer vc, int light, int overlay,
-                                 ModelPart rightArm, ModelPart leftArm, boolean goodbye, boolean blade) {
-        drawFrame(pose, vc, light, overlay, rightArm, FRAME_RIGHT_ARM, goodbye, blade);
-        drawFrame(pose, vc, light, overlay, leftArm, FRAME_LEFT_ARM, goodbye, blade);
+                                 ModelPart rightArm, ModelPart leftArm, boolean goodbye, boolean blade,
+                                 boolean whip, boolean muscle) {
+        drawFrame(pose, vc, light, overlay, rightArm, FRAME_RIGHT_ARM, goodbye, blade, whip, muscle);
+        drawFrame(pose, vc, light, overlay, leftArm, FRAME_LEFT_ARM, goodbye, blade, whip, muscle);
     }
 
     /**
-     * First person: one hand. The right arm carries the hammer. The left arm is drawn only for goodbye, the same
-     * as drawHands. Called from the hand render event with that hand's pose, as vanilla renderHand does: the arm
-     * pitch is reset first.
+     * First person: one hand, drawn the way vanilla draws an empty hand (ItemInHandRenderer.renderPlayerArm, then
+     * PlayerRenderer.renderHand). The pose passed in is the hand render event's pose, which is still the hand root:
+     * the vanilla hand placement is applied here first. The mesh is scaled around the shoulder pivot by
+     * (sizeXZ, sizeY), so the arm matches the third-person body (NtBody.HITBOX_*) without moving the pivot.
+     *
+     * @param swing    vanilla swing progress of this hand (0 at rest)
+     * @param equip    vanilla equip progress (0 when the hand is up)
+     * @param right    the arm is on the player's right side
+     * @param goodbye  the left blade is out for a goodbye strike (the left arm is drawn for goodbye only)
+     * @param blade    the player is in blade form (形态 1, 手刀)
+     * @param whip     the player is in 脊骨鞭 (形态 4)
+     * @param muscle   the player is in 全收 (形态 5)
      */
     public static void drawArmFirstPerson(PoseStack pose, VertexConsumer vc, int light, int overlay,
-                                          ModelPart arm, boolean right, boolean goodbye, boolean blade) {
+                                          ModelPart arm, boolean right, float swing, float equip,
+                                          boolean goodbye, boolean blade, boolean whip, boolean muscle,
+                                          float sizeXZ, float sizeY) {
         arm.f_104203_ = 0.0F;
-        drawFrame(pose, vc, light, overlay, arm, right ? FRAME_RIGHT_ARM : FRAME_LEFT_ARM, goodbye, blade);
+        pose.m_85836_();
+        applyFirstPersonHand(pose, right, swing, equip);
+        drawFrame(pose, vc, light, overlay, arm, right ? FRAME_RIGHT_ARM : FRAME_LEFT_ARM, goodbye, blade,
+            whip, muscle, sizeXZ, sizeY);
+        pose.m_85849_();
+    }
+
+    /**
+     * Vanilla ItemInHandRenderer.renderPlayerArm, without the final model draw. Copied step by step (same
+     * constants and order) from the 1.20.1 class: the hand is moved and turned to where vanilla shows an empty hand.
+     */
+    private static void applyFirstPersonHand(PoseStack pose, boolean right, float swing, float equip) {
+        float side = right ? 1.0F : -1.0F;
+        float root = (float) Math.sqrt(swing);
+        float swingX = -0.3F * (float) Math.sin(root * Math.PI);
+        float swingY = 0.4F * (float) Math.sin(root * (Math.PI * 2.0));
+        float swingZ = -0.4F * (float) Math.sin(swing * Math.PI);
+        pose.m_252880_(side * (swingX + 0.64F), swingY - 0.6F + equip * -0.6F, swingZ - 0.72F);
+        pose.m_252781_(Axis.f_252436_.m_252977_(side * 45.0F));
+        float yaw = (float) Math.sin(root * Math.PI);
+        float roll = (float) Math.sin(swing * swing * Math.PI);
+        pose.m_252781_(Axis.f_252436_.m_252977_(side * yaw * 70.0F));
+        pose.m_252781_(Axis.f_252403_.m_252977_(side * roll * -20.0F));
+        pose.m_252880_(side * -1.0F, 3.6F, 3.5F);
+        pose.m_252781_(Axis.f_252403_.m_252977_(side * 120.0F));
+        pose.m_252781_(Axis.f_252529_.m_252977_(200.0F));
+        pose.m_252781_(Axis.f_252436_.m_252977_(side * -135.0F));
+        pose.m_252880_(side * 5.6F, 0.0F, 0.0F);
     }
 
     /**
@@ -77,14 +126,27 @@ public final class NtBodyMesh {
      * is at the model's feet (see gen_nt_egg.py).
      */
     public static void drawEgg(PoseStack pose, VertexConsumer vc, int light, int overlay) {
-        draw(pose, vc, light, overlay, FRAME_EGG, false, false);
+        draw(pose, vc, light, overlay, FRAME_EGG, false, false, false, false);
     }
 
-    /** Same transform order as ModelPart.translateAndRotate: offset, then Z, Y, X rotations. */
     private static void drawFrame(PoseStack pose, VertexConsumer vc, int light, int overlay,
-                                  ModelPart part, int frame, boolean goodbye, boolean blade) {
+                                  ModelPart part, int frame, boolean goodbye, boolean blade,
+                                  boolean whip, boolean muscle) {
+        drawFrame(pose, vc, light, overlay, part, frame, goodbye, blade, whip, muscle, 1.0F, 1.0F);
+    }
+
+    /**
+     * Same transform order as ModelPart.translateAndRotate: offset, then Z, Y, X rotations. sizeXZ and sizeY scale
+     * the part around its pivot (1 = no scale); the scale comes after the offset and before the rotations.
+     */
+    private static void drawFrame(PoseStack pose, VertexConsumer vc, int light, int overlay,
+                                  ModelPart part, int frame, boolean goodbye, boolean blade,
+                                  boolean whip, boolean muscle, float sizeXZ, float sizeY) {
         pose.m_85836_();
         pose.m_85837_(part.f_104200_ / 16.0, part.f_104201_ / 16.0, part.f_104202_ / 16.0);
+        if (sizeXZ != 1.0F || sizeY != 1.0F) {
+            pose.m_85841_(sizeXZ, sizeY, sizeXZ);
+        }
         if (part.f_104205_ != 0.0F) {
             pose.m_252781_(new Quaternionf().rotationZ(part.f_104205_));
         }
@@ -94,13 +156,13 @@ public final class NtBodyMesh {
         if (part.f_104203_ != 0.0F) {
             pose.m_252781_(new Quaternionf().rotationX(part.f_104203_));
         }
-        draw(pose, vc, light, overlay, frame, goodbye, blade);
+        draw(pose, vc, light, overlay, frame, goodbye, blade, whip, muscle);
         pose.m_85849_();
     }
 
     /** Emits the visible triangles of one frame in the current pose. */
     private static void draw(PoseStack pose, VertexConsumer vc, int light, int overlay, int frame,
-                             boolean goodbye, boolean blade) {
+                             boolean goodbye, boolean blade, boolean whip, boolean muscle) {
         Matrix4f m = pose.m_85850_().m_252922_();
         Matrix3f nm = pose.m_85850_().m_252943_();
         Vector3f p = new Vector3f();
@@ -108,7 +170,7 @@ public final class NtBodyMesh {
         boolean egg = frame == FRAME_EGG;
         float[] bounds = egg ? eggHeightRange() : null;
         for (Part part : parts()) {
-            if (part.frame() != frame || !visible(part, goodbye, blade)) {
+            if (part.frame() != frame || !visible(part, goodbye, blade, whip, muscle)) {
                 continue;
             }
             float[] pos = part.pos();
@@ -195,12 +257,18 @@ public final class NtBodyMesh {
         return uv;
     }
 
-    private static boolean visible(Part part, boolean goodbye, boolean blade) {
+    private static boolean visible(Part part, boolean goodbye, boolean blade, boolean whip, boolean muscle) {
         switch (part.flag()) {
             case FLAG_BLADE:
                 return blade || goodbye;
             case FLAG_NEVER:
                 return false;
+            case FLAG_HAMMER:
+                return !whip && !muscle;
+            case FLAG_WHIP:
+                return whip;
+            case FLAG_MUSCLE:
+                return muscle;
             default:
                 return true;
         }

@@ -50,6 +50,8 @@ public abstract class NtBodyMixin {
         self.m_20088_().m_135372_(NtBody.DATA_HUMAN, Boolean.FALSE);
         self.m_20088_().m_135372_(NtBody.DATA_GOODBYE, Boolean.FALSE);
         self.m_20088_().m_135372_(NtBody.DATA_BLADE, Boolean.FALSE);
+        self.m_20088_().m_135372_(NtBody.DATA_WHIP, Boolean.FALSE);
+        self.m_20088_().m_135372_(NtBody.DATA_MUSCLE, Boolean.FALSE);
         self.m_20088_().m_135372_(NtBody.DATA_COCOON, Boolean.FALSE);
         self.m_20088_().m_135372_(NtBody.DATA_HOLLE, Boolean.FALSE);
         self.m_20088_().m_135372_(NtBody.DATA_OH_CHARGE, Boolean.FALSE);

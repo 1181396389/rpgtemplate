@@ -5,6 +5,7 @@ import com.rpgtemplate.forge.skill.TargetUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.ClipContext;
@@ -40,6 +41,35 @@ public class HolleSpike extends Projectile {
     public HolleSpike(EntityType<? extends HolleSpike> type, Level level) {
         super(type, level);
         this.m_20242_(true);              // 无重力，直线飞行
+    }
+
+    /**
+     * 服务端自动发射：从玩家眼睛前方朝目标胸口方向生成一根骨刺（尖刺形态的自动反击用）。
+     * 与 launch 走同一条发射路径，只是方向改为指向目标。
+     */
+    public static HolleSpike launchToward(ServerPlayer player, LivingEntity target, float damage) {
+        ServerLevel level = (ServerLevel) player.m_9236_();
+        HolleSpike spike = new HolleSpike(NtEntities.HOLLE_SPIKE, level);
+        spike.m_5602_(player);
+        spike.damage = damage;
+        Vec3 eye = player.m_146892_();
+        Vec3 aim = target.m_20182_();
+        double ax = aim.f_82479_ - eye.f_82479_;
+        double ay = (aim.f_82480_ + target.m_20206_() * 0.5) - eye.f_82480_;
+        double az = aim.f_82481_ - eye.f_82481_;
+        double len = Math.sqrt(ax * ax + ay * ay + az * az);
+        if (len < 1e-6) {
+            return null;
+        }
+        double dx = ax / len;
+        double dy = ay / len;
+        double dz = az / len;
+        Vec3 muzzle = new Vec3(eye.f_82479_ + dx * MUZZLE, eye.f_82480_ + dy * MUZZLE, eye.f_82481_ + dz * MUZZLE);
+        spike.m_6034_(muzzle.f_82479_, muzzle.f_82480_, muzzle.f_82481_);
+        spike.origin = muzzle;
+        spike.m_6686_(dx, dy, dz, (float) SPEED, 0.0F);
+        level.m_7967_(spike);
+        return spike;
     }
 
     /** 服务端发射：从玩家眼睛处沿视线生成一根骨刺。 */

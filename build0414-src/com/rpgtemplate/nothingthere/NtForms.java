@@ -8,6 +8,7 @@ import com.rpgtemplate.core.template.TemplateRegistry;
 import com.rpgtemplate.forge.combat.ModDamageTypes;
 import com.rpgtemplate.forge.skill.TargetUtil;
 import com.rpgtemplate.forge.system.SystemDataManager;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
@@ -108,16 +109,17 @@ public final class NtForms {
 
     /**
      * Hits every valid target inside a forward arc. The arc is measured on the horizontal plane around
-     * the player's look direction. Returns the total damage dealt before lifesteal.
+     * the player's look direction. Returns the entities that were hurt (the caller uses them for effects).
      */
-    public static void sweep(ServerPlayer player, PlayerSystemData data, double range, double arcDegrees,
-                             float damage, double knockback, double lifesteal) {
+    public static List<Entity> sweep(ServerPlayer player, PlayerSystemData data, double range, double arcDegrees,
+                                     float damage, double knockback, double lifesteal) {
+        List<Entity> hit = new ArrayList<>();
         Vec3 look = player.m_20154_();
         double lx = look.f_82479_;
         double lz = look.f_82481_;
         double len = Math.hypot(lx, lz);
         if (len < 1e-6) {
-            return;
+            return hit;
         }
         lx /= len;
         lz /= len;
@@ -138,6 +140,7 @@ public final class NtForms {
                 continue;
             }
             total += damage;
+            hit.add(entity);
             LivingEntity living = TargetUtil.living(entity);
             if (living != null && knockback > 0.0) {
                 living.m_5997_(dx / d * knockback, 0.3, dz / d * knockback);
@@ -146,5 +149,6 @@ public final class NtForms {
         if (lifesteal > 0.0) {
             heal(player, data, total * lifesteal);
         }
+        return hit;
     }
 }

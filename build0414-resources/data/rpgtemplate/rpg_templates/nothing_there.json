@@ -116,6 +116,45 @@
         "max_reduction": 0.99,
         "per_killer": true
       }
+    },
+    {
+      "type": "rpgtemplate:night_vision",
+      "name": "夜视",
+      "description": "常驻夜视效果（隐藏图标与粒子，每秒刷新）。",
+      "params": {}
+    },
+    {
+      "type": "rpgtemplate:debuff_immunity",
+      "name": "异常免疫",
+      "description": "免疫失明、黑暗、反胃、虚弱、中毒、挖掘疲劳和饥饿效果；减速不在免疫范围内（茧需要）。",
+      "params": {}
+    },
+    {
+      "type": "rpgtemplate:non_human_body",
+      "name": "非人体质",
+      "description": "随等级提升移动速度（每级 +1%）与跳跃高度（每 15 级提升一级，最高跳跃提升 III）。移速加成受服务器设置（总倍率与上限）限制。",
+      "params": {
+        "speed_per_level": 0.01,
+        "jump_levels_per_amp": 15,
+        "max_jump_amplifier": 2
+      }
+    },
+    {
+      "type": "rpgtemplate:hunger_save",
+      "name": "延缓饥饿",
+      "description": "饱食度消耗降低 50%。",
+      "params": {
+        "exhaustion_multiplier": 0.5
+      }
+    },
+    {
+      "type": "rpgtemplate:kill_feed",
+      "name": "击杀饱食",
+      "description": "玩家击杀生物后恢复 4 点饱食度与 2.4 点饱和度。",
+      "params": {
+        "food": 4,
+        "saturation": 2.4
+      }
     }
   ],
   "max_level": 60

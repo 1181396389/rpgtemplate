@@ -1,6 +1,5 @@
 package com.rpgtemplate.nothingthere.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.rpgtemplate.nothingthere.NtBody;
 import net.minecraft.client.Minecraft;
@@ -27,6 +26,8 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "rpgtemplate", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class NtFirstPerson {
     private static final ResourceLocation WHITE = new ResourceLocation("minecraft", "textures/misc/white.png");
+    /** First-person hand scale (x/z and y). 1 = vanilla hand size. */
+    private static final float FP_SIZE = 1.0F;
 
     private NtFirstPerson() {
     }
@@ -48,14 +49,14 @@ public final class NtFirstPerson {
         }
         event.setCanceled(true);
 
-        PoseStack pose = event.getPoseStack();
         VertexConsumer vc = event.getMultiBufferSource().m_6299_(model.m_103119_(WHITE));
-        pose.m_85836_();
-        // Same size as the body in third person (NtRendererMixin); the hand origin is the scale centre here.
-        pose.m_85841_(NtBody.HITBOX_WIDTH_SCALE, NtBody.HITBOX_HEIGHT_SCALE, NtBody.HITBOX_WIDTH_SCALE);
-        NtBodyMesh.drawArmFirstPerson(pose, vc, event.getPackedLight(), OverlayTexture.f_118083_,
-            rightArm ? model.f_102811_ : model.f_102812_, rightArm, goodbye, NtBody.bladeForm(player));
-        pose.m_85849_();
+        // The swing and equip progress are the vanilla ones for this hand (the hand placement is applied inside).
+        // Hand size: 1:1. Scaling by the third-person body ratio (NtBody.HITBOX_*) pushed the hammer into the middle
+        // of the view when tested offline, so the first-person hands keep the vanilla size. Change FP_SIZE to resize.
+        NtBodyMesh.drawArmFirstPerson(event.getPoseStack(), vc, event.getPackedLight(), OverlayTexture.f_118083_,
+            rightArm ? model.f_102811_ : model.f_102812_, rightArm,
+            event.getSwingProgress(), event.getEquipProgress(), goodbye, NtBody.bladeForm(player),
+            NtBody.whipForm(player), NtBody.muscleForm(player), FP_SIZE, FP_SIZE);
     }
 
     /** The model of the local player's renderer (the same PlayerModel the layer and the arm event use). */
