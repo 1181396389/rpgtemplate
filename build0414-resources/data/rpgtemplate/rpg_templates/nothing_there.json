@@ -1,0 +1,122 @@
+{
+  "name": "一无所有",
+  "source": "脑叶公司",
+  "period": "O-06-20",
+  "quality": "EX",
+  "type": "BALANCED",
+  "bonus": {
+    "hp": 2.4,
+    "mp": 0.0,
+    "sp": 2.4,
+    "def": 3.2
+  },
+  "skills": [
+    {
+      "id": "rpgtemplate:oh_man",
+      "name": "oh man",
+      "cost_type": "SP",
+      "base_cost": 0.02,
+      "coefficient": 1.0,
+      "cooldown_ticks": 6,
+      "description": "【点按】按当前形态攻击：锤=直锤；手刀=横斩；骨刺连射=3 个目标的骨刺；贪食之口=咬击并吸血；脊骨鞭=长距离鞭击并击退；全收=横斩+击退+吸血。【按住至少 1 秒松开】砸下：范围砸击，带击退，伤害随蓄力提高。 一无所有的任何攻击都会使目标流血 5 秒（每秒 20% 命中伤害，刷新不叠加），并回复自身 1% 最大生命（草案）。"
+    },
+    {
+      "id": "rpgtemplate:holle",
+      "name": "Holle",
+      "cost_type": "SP",
+      "base_cost": 0.05,
+      "coefficient": 1.8,
+      "cooldown_ticks": 40,
+      "description": "高速远程骨刺射击，沿视线命中第一个目标，射程 32 格。"
+    },
+    {
+      "id": "rpgtemplate:goodbye",
+      "name": "goodbye",
+      "cost_type": "SP",
+      "base_cost": 0.15,
+      "coefficient": 4.0,
+      "cooldown_ticks": 60,
+      "description": "两段式：起手约 1 秒，期间不造成伤害并无敌、获得抗性提升；起手结束后左手巨大手刀斩向前方 6 格，范围内所有生物被强制命中（无视无敌帧与攻击取消）。空中起手伤害 ×1.5（草案）。落地后约 1 秒内减伤 30%。起手与动画均为占位，待设计。"
+    },
+    {
+      "id": "rpgtemplate:form_shift",
+      "name": "变形",
+      "cost_type": "SP",
+      "base_cost": 0.01,
+      "coefficient": 0.0,
+      "cooldown_ticks": 10,
+      "description": "在已解锁的形态之间循环切换（初始：锤、手刀；击杀进化解锁更多）。切换后适应清零。"
+    }
+  ],
+  "passives": [
+    {
+      "type": "rpgtemplate:rapid_regen",
+      "name": "高速回血",
+      "description": "超高速被动回复，无消耗，每秒回复最大生命值的 5%；受击后不暂停。",
+      "params": {
+        "percent_per_second": 0.05,
+        "pause_on_hit": false
+      }
+    },
+    {
+      "type": "rpgtemplate:physical_immunity",
+      "name": "物理免疫",
+      "description": "随等级提升对物理伤害的免疫，40 级完全免疫。",
+      "params": {
+        "per_level": 0.025,
+        "max": 1.0
+      }
+    },
+    {
+      "type": "rpgtemplate:cocoon_revive",
+      "name": "茧",
+      "description": "死亡时化为蛋：HP 留 1，蛋态期间减速 255、无敌，120 tick（约 6 秒）后满血孵化复活。蛋态期间不能使用技能，被动正常生效。冷却从死亡开始计算，基础 20 分钟，每级减少 1%，最低 0 分钟。",
+      "params": {
+        "base_cooldown_minutes": 20,
+        "cooldown_reduction_per_level": 0.01,
+        "min_cooldown_minutes": 0,
+        "hatch_ticks": 120
+      }
+    },
+    {
+      "type": "rpgtemplate:adaptation",
+      "name": "适应",
+      "description": "连续用同一形态攻击命中，每次 +1% 该形态伤害，无上限；切换形态清零。",
+      "params": {
+        "per_hit": 0.01,
+        "max": null
+      }
+    },
+    {
+      "type": "rpgtemplate:kill_evolve",
+      "name": "击杀进化",
+      "description": "击杀不同类型的目标累计进度，达到阈值解锁新形态。",
+      "params": {
+        "thresholds": {
+          "monster": 30,
+          "player": 5,
+          "animal": 50
+        },
+        "unlock_order": [
+          "monster",
+          "player",
+          "animal",
+          "all"
+        ],
+        "forms_unlocked": 4
+      }
+    },
+    {
+      "type": "rpgtemplate:death_memory",
+      "name": "死亡记忆",
+      "description": "被击杀后，对击杀者造成的伤害常驻减免 50%；按击杀者分别记录，被同一击杀者每再击杀一次，减免 +10%，上限 99%。",
+      "params": {
+        "damage_reduction_vs_killer": 0.5,
+        "stack_per_death": 0.1,
+        "max_reduction": 0.99,
+        "per_killer": true
+      }
+    }
+  ],
+  "max_level": 60
+}

@@ -1,0 +1,26 @@
+{
+  "nt_goodbye_windup": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_goodbye_windup",
+        "stream": false
+      }
+    ]
+  },
+  "nt_goodbye_hit": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_goodbye_hit",
+        "stream": false
+      }
+    ]
+  },
+  "nt_holle": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_holle",
+        "stream": false
+      }
+    ]
+  }
+}
