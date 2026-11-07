@@ -30,11 +30,6 @@ public final class TransitionTemplatesSetup {
             SkillRegistry.register("rpgtemplate:itachi_crow_clone", new ItachiTemplate.CrowCloneSkill());
             SkillRegistry.register("rpgtemplate:itachi_amaterasu", new ItachiTemplate.AmaterasuSkill());
             SkillRegistry.register("rpgtemplate:itachi_tsukuyomi", new ItachiTemplate.TsukuyomiSkill());
-
-            // SSR · 冲田总司
-            SkillRegistry.register("rpgtemplate:okita_shukuchi", new OkitaTemplate.ShukuchiSkill());
-            SkillRegistry.register("rpgtemplate:okita_coat_of_oaths", new OkitaTemplate.CoatOfOathsSkill());
-            SkillRegistry.register("rpgtemplate:okita_mumyo_sandanzuki", new OkitaTemplate.MumyoSandanzukiSkill());
         });
     }
 }

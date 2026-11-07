@@ -5,7 +5,6 @@ import com.rpgtemplate.forge.client.gui.UiTheme;
 import com.rpgtemplate.nothingthere.NtForms;
 import com.rpgtemplate.templates.ItachiTemplate;
 import com.rpgtemplate.templates.KazumaTemplate;
-import com.rpgtemplate.templates.OkitaTemplate;
 import com.rpgtemplate.templates.TanjiroTemplate;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +60,6 @@ public final class HudNoticeRegistry {
         }
         switch (tpl) {
             case "rpgtemplate:nothing_there" -> collectNothingThere(data, gameTick, out);
-            case OkitaTemplate.TEMPLATE_ID -> collectOkita(data, gameTick, out);
             case ItachiTemplate.TEMPLATE_ID -> collectItachi(data, gameTick, out);
             case TanjiroTemplate.TEMPLATE_ID -> collectTanjiro(data, gameTick, out);
             case KazumaTemplate.TEMPLATE_ID -> collectKazuma(data, gameTick, out);
@@ -90,18 +88,6 @@ public final class HudNoticeRegistry {
         }
         if (data.value(NtForms.KEY_SHELL_DECAYED, 0.0) > 0.5) {
             out.add(new Entry(tr("hud.rpgtemplate.nt.shell_decay"), UiTheme.E_RED));
-        }
-    }
-
-    private static void collectOkita(PlayerSystemData data, long gameTick, List<Entry> out) {
-        int strain = (int) Math.round(data.value(OkitaTemplate.KEY_TB, 0.0));
-        if (strain > 0) {
-            out.add(new Entry(tr("hud.rpgtemplate.okita.tb", strain),
-                strain >= 75 ? UiTheme.E_RED : UiTheme.E_GOLD_TEXT));
-        }
-        double parryUntil = data.value(OkitaTemplate.KEY_PARRY_UNTIL, 0.0);
-        if (parryUntil > gameTick) {
-            out.add(new Entry(tr("hud.rpgtemplate.okita.parry", secs(parryUntil - gameTick)), UiTheme.E_CYAN));
         }
     }
 

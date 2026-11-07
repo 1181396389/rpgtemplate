@@ -519,8 +519,6 @@
   "hud.rpgtemplate.nt.mental_wound": "精神创伤 · %s秒",
   "hud.rpgtemplate.nt.shell_decay": "⚠ 人皮腐朽 · 渴求血肉",
   "hud.rpgtemplate.nt.cocoon_cd": "茧冷却：%s秒",
-  "hud.rpgtemplate.okita.tb": "病弱负荷：%s%%",
-  "hud.rpgtemplate.okita.parry": "心眼架势 · %s秒",
   "hud.rpgtemplate.itachi.strain": "万花筒磨损：%s%%",
   "hud.rpgtemplate.tanjiro.hypoxia": "缺氧负荷：%s%%",
   "hud.rpgtemplate.tanjiro.cough": "⚠ 肺腑痉挛 · %s秒",
@@ -541,8 +539,5 @@
   "message.rpgtemplate.itachi.illness_cough": "⚠ 沉疴发作咯血，身体一阵剧痛虚弱……",
   "message.rpgtemplate.itachi.no_target": "视线焦距内没有可映入月读的目标",
   "message.rpgtemplate.itachi.tsukuyomi_backlash": "⚠ 月读被强行挣脱！万花筒瞳力反噬刺痛双目！",
-  "message.rpgtemplate.itachi.sweet_relief": "甘甜滋味入喉，万花筒的灼痛与胸中沉疴平复了几分。",
-  "message.rpgtemplate.okita.hemoptysis": "⚠ 咳咳……！肺痨突发剧烈咳血，剑步一阵踉跄！",
-  "message.rpgtemplate.okita.parry_ready": "心眼（伪）架势已成——看破下一次来袭之刃！",
-  "message.rpgtemplate.okita.dango_relief": "品尝甜点后心情大好，胸口郁积的咳嗽舒缓了许多！"
+  "message.rpgtemplate.itachi.sweet_relief": "甘甜滋味入喉，万花筒的灼痛与胸中沉疴平复了几分。"
 }

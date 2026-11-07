@@ -86,7 +86,7 @@ public final class TemplateHelper {
         return main.m_41619_() || main.m_41720_() instanceof SwordItem;
     }
 
-    /** 是否为甜食（用于宇智波鼬与冲田总司的甜食控癖好）。 */
+    /** 是否为甜食（用于角色甜食控癖好）。 */
     public static boolean isSweetFood(ItemStack stack) {
         if (stack == null || stack.m_41619_()) {
             return false;

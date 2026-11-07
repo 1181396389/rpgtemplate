@@ -519,8 +519,6 @@
   "hud.rpgtemplate.nt.mental_wound": "Mental Wound · %ss",
   "hud.rpgtemplate.nt.shell_decay": "⚠ Shell Decaying · Craves Flesh",
   "hud.rpgtemplate.nt.cocoon_cd": "Cocoon CD: %ss",
-  "hud.rpgtemplate.okita.tb": "Illness Strain: %s%%",
-  "hud.rpgtemplate.okita.parry": "Eye Stance · %ss",
   "hud.rpgtemplate.itachi.strain": "Mangekyo Strain: %s%%",
   "hud.rpgtemplate.tanjiro.hypoxia": "Hypoxia Load: %s%%",
   "hud.rpgtemplate.tanjiro.cough": "⚠ Lung Cramp · %ss",
@@ -541,8 +539,5 @@
   "message.rpgtemplate.itachi.illness_cough": "⚠ Terminal illness flare-up — coughing blood weakens your body...",
   "message.rpgtemplate.itachi.no_target": "No target in sight for Tsukuyomi",
   "message.rpgtemplate.itachi.tsukuyomi_backlash": "⚠ Tsukuyomi broken! Mangekyo backlash sears your eyes!",
-  "message.rpgtemplate.itachi.sweet_relief": "Sweet treats soothe your Mangekyo strain and aching chest.",
-  "message.rpgtemplate.okita.hemoptysis": "⚠ Cough—! Tuberculosis flare-up triggers sudden hemoptysis!",
-  "message.rpgtemplate.okita.parry_ready": "Eye of the Mind stance ready — parrying the next strike!",
-  "message.rpgtemplate.okita.dango_relief": "Sweets lift your spirits and calm your coughing fit!"
+  "message.rpgtemplate.itachi.sweet_relief": "Sweet treats soothe your Mangekyo strain and aching chest."
 }
