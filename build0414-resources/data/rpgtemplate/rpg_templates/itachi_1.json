@@ -1,0 +1,97 @@
+{
+  "name": "宇智波鼬",
+  "source": "火影忍者",
+  "period": "晓组织潜伏期·身患绝症的幻术天才",
+  "quality": "SR",
+  "type": "MAGICAL",
+  "max_level": 30,
+  "drawable": true,
+  "description": "背负灭族黑暗孤独潜行的绝世忍术与幻术天才。同步继承其臻至化境的万花筒写轮眼才华，以及潜伏期深入骨髓的肺腑绝症与万花筒失明磨损。",
+  "bonus": {
+    "hp": 0.85,
+    "mp": 1.8,
+    "sp": 1.1,
+    "def": 0.9
+  },
+  "skills": [
+    {
+      "id": "rpgtemplate:itachi_crow_clone",
+      "name": "乌鸦分身·魔幻枷杭",
+      "cost_type": "MP",
+      "base_cost": 3.2,
+      "coefficient": 1.5,
+      "cooldown_ticks": 65,
+      "description": "化作鸦群向后瞬身拉开距离，同时以写轮眼幻术楔入目标精神；经四档机制判定施加高额减速禁锢、虚弱与精神穿刺。"
+    },
+    {
+      "id": "rpgtemplate:itachi_amaterasu",
+      "name": "万花筒·天照",
+      "cost_type": "MP",
+      "base_cost": 6.0,
+      "coefficient": 2.5,
+      "cooldown_ticks": 110,
+      "description": "视线焦距（22 格）直接燃起不灭黑炎，造成高额冲击并持续黑炎灼烧 6 秒；每次施展增加 22%【瞳力磨损】。"
+    },
+    {
+      "id": "rpgtemplate:itachi_tsukuyomi",
+      "name": "万花筒·月读",
+      "cost_type": "MP",
+      "base_cost": 8.5,
+      "coefficient": 3.4,
+      "cooldown_ticks": 170,
+      "description": "机制级绝对精神支配幻术，严格经四档机制判定：①完全生效造成全额精神重创并定身失明 3.5 秒；②显著干扰/③微弱牵制逐级衰减；④判定失败被强行看破时自身遭受瞳力反噬咯血失明。"
+    }
+  ],
+  "passives": [
+    {
+      "type": "rpgtemplate:itachi_sharingan_insight",
+      "name": "写轮眼洞察·鸦替身",
+      "description": "瞳力未枯竭时，遭受远程投射物攻击有 35% 概率化作乌鸦替身无伤化解（内置 4 秒冷却）。",
+      "params": {
+        "dodge_chance": 0.35,
+        "icd_ticks": 80
+      }
+    },
+    {
+      "type": "rpgtemplate:itachi_genius_chakra",
+      "name": "绝世忍术才华",
+      "description": "幻术【完全生效】精准制敌时，精妙控蓝自动返还 4%～6% 最大魔力。",
+      "params": {
+        "mp_refund": 0.05
+      }
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "rpgtemplate:itachi_terminal_illness",
+      "name": "膏肓绝症与低耐久体魄",
+      "description": "继承靠药物强撑的病弱身躯：受到近战物理伤害额外增加 18%；当生命低于 45% 受创或瞳力过载时触发【咯血反噬】（损失生命并虚弱减速）。",
+      "params": {
+        "melee_extra_damage": 0.18,
+        "cough_hp_loss": 0.07
+      }
+    }
+  ],
+  "negatives": [
+    {
+      "type": "rpgtemplate:itachi_mangekyo_blindness",
+      "name": "万花筒失明磨损",
+      "description": "施展天照与月读累积【瞳力磨损】；超过 70% 视野陷入黑暗，超过 92% 陷入短暂失明并诱发咯血（静息或蹲伏可缓缓平复）。",
+      "params": {
+        "darkness_threshold": 70,
+        "blindness_threshold": 92
+      }
+    }
+  ],
+  "quirks": [
+    {
+      "type": "rpgtemplate:itachi_pacifist_sweet_tooth",
+      "name": "三色丸子甜食控与速战癖",
+      "description": "喜爱甜食：食用甜点/浆果/蜂蜜可舒缓病痛、降低 28% 瞳力磨损并回复生命；干脆利落终结目标或品尝甜食可额外获得系统契合经验。",
+      "params": {
+        "strain_relief": 28,
+        "bonus_xp": 5.0
+      }
+    }
+  ]
+}

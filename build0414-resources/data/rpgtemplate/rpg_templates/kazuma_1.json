@@ -1,0 +1,97 @@
+{
+  "name": "佐藤和真",
+  "source": "为美好的世界献上祝福！",
+  "period": "初抵阿克塞尔的冒险者",
+  "quality": "N",
+  "type": "BALANCED",
+  "max_level": 10,
+  "drawable": true,
+  "description": "各项面板资质平庸的最基层【冒险者】职阶，但拥有突破天际的异常幸运值与毫无偶像包袱的实用主义下作战术。前期极易满级（Lv.10）解锁后续模板抽取。",
+  "bonus": {
+    "hp": 0.8,
+    "mp": 0.9,
+    "sp": 0.9,
+    "def": 0.7
+  },
+  "skills": [
+    {
+      "id": "rpgtemplate:kazuma_steal",
+      "name": "偷窃（Steal）",
+      "cost_type": "MP",
+      "base_cost": 4.0,
+      "coefficient": 0.6,
+      "cooldown_ticks": 100,
+      "description": "向视线 12 格内目标伸出右手发动强运夺取，经四档机制判定：①完全生效时直接剥离/缴械目标主手武器并施加虚弱 II；②显著干扰施加虚弱与减速；③微弱牵制短暂失衡；④判定失败则自己尴尬僵直。"
+    },
+    {
+      "id": "rpgtemplate:kazuma_snipe",
+      "name": "狙击（Snipe）",
+      "cost_type": "SP",
+      "base_cost": 3.0,
+      "coefficient": 1.6,
+      "cooldown_ticks": 50,
+      "description": "射程 28 格的精准远程一击；受异常强运加持拥有 35% 高暴击率（伤害 ×1.55），若在潜伏状态下射出则额外增伤 45%。"
+    },
+    {
+      "id": "rpgtemplate:kazuma_lurk",
+      "name": "潜伏（Lurk）",
+      "cost_type": "MP",
+      "base_cost": 3.5,
+      "coefficient": 0.0,
+      "cooldown_ticks": 140,
+      "description": "抹消自身存在感进入 5 秒隐匿与加速状态，下一次攻击或狙击破隐时造成 1.45 倍奇袭伤害。"
+    }
+  ],
+  "passives": [
+    {
+      "type": "rpgtemplate:kazuma_extreme_luck",
+      "name": "异常强运",
+      "description": "常驻幸运 +4；遭受致命伤害时有 25% 概率凭借离奇强运保住性命并回复 10% 生命（60 秒冷却）。",
+      "params": {
+        "luck_bonus": 4,
+        "survive_chance": 0.25,
+        "cooldown_ticks": 1200
+      }
+    },
+    {
+      "type": "rpgtemplate:kazuma_danger_sense",
+      "name": "索敌与危机直觉",
+      "description": "周围 10 格存在敌对生物时自动警觉提速，便于风筝周旋或跑路。",
+      "params": {
+        "detect_radius": 10.0
+      }
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "rpgtemplate:kazuma_fragile_physique",
+      "name": "最弱职阶身板",
+      "description": "体格单薄，受到怪物正面重击、爆炸或重物砸击时承受伤害额外增加 20%。",
+      "params": {
+        "extra_damage": 0.2
+      }
+    }
+  ],
+  "negatives": [
+    {
+      "type": "rpgtemplate:kazuma_shallow_mana",
+      "name": "浅薄魔力回路",
+      "description": "先天魔力容量浅薄，4 秒内连续施放魔力技能会导致回路干涸，使下一次技能消耗增加 35%。",
+      "params": {
+        "strain_window_ticks": 80,
+        "cost_multiplier": 1.35
+      }
+    }
+  ],
+  "quirks": [
+    {
+      "type": "rpgtemplate:kazuma_pragmatist",
+      "name": "实用主义偷袭与惜命本能",
+      "description": "从潜伏或背后奇袭命中目标时回复 4% 体力并额外获得契合经验；同时被 3 名以上敌人包围时心生退意，近身硬拼伤害降低 10%。",
+      "params": {
+        "bonus_xp": 3.5,
+        "surrounded_penalty": 0.9
+      }
+    }
+  ]
+}

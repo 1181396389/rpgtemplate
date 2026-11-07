@@ -26,9 +26,19 @@ public final class NtForms {
     public static final String KEY_FORMS = "nt.forms";
     /** Consecutive hit stacks for 适应 (reset on form change). */
     public static final String KEY_ADAPT = "nt.adapt";
+    /** Game tick until which current 适应 stacks remain active before decaying out of combat. */
+    public static final String KEY_ADAPT_UNTIL = "nt.adapt_until";
+    /** Internal cooldown tick for on-hit bleed self-heal. */
+    public static final String KEY_HEAL_UNTIL = "nt.heal_icd";
+    /** Game tick until which soul/mental weakness suppresses rapid regen. */
+    public static final String KEY_MENTAL_WOUND_UNTIL = "nt.mental_wound_until";
+    /** Last game tick flesh/prey was consumed to stabilize human shell. */
+    public static final String KEY_LAST_FEED = "nt.last_feed";
+    /** 1.0 while human shell is decayed from prolonged lack of feeding. */
+    public static final String KEY_SHELL_DECAYED = "nt.shell_decayed";
     /** Kill counters: nt.kill.monster / nt.kill.player / nt.kill.animal. */
     public static final String KEY_KILL = "nt.kill.";
-    /** Death counters per killer UUID: nt.dm.<uuid>. */
+    /** Death counters per killer UUID or mob type: nt.dm.<key>. */
     public static final String KEY_DM = "nt.dm.";
     /** Game tick until which the 茧 revive is on cooldown. */
     public static final String KEY_COCOON_UNTIL = "nt.cocoon_until";
@@ -59,13 +69,22 @@ public final class NtForms {
     private NtForms() {
     }
 
-    /** Template data of an active 一无所有 user, or null. */
+    /** Template data of an active 一无所有 user, or null (strictly isolated to nothing_there). */
     public static PlayerSystemData activeData(ServerPlayer player) {
         if (!SystemDataManager.available(player)) {
             return null;
         }
         PlayerSystemData data = SystemDataManager.get(player);
-        return data.isActivated() ? data : null;
+        return data.isActivated() && NtBody.TEMPLATE_ID.equals(data.loadedTemplateId()) ? data : null;
+    }
+
+    /** Stable Death-Memory key: per-UUID for players, per-entity-type for mobs to prevent save bloat. */
+    public static String deathMemoryKey(Entity killer) {
+        if (killer instanceof Player) {
+            return KEY_DM + killer.m_20148_();
+        }
+        var typeId = net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(killer.m_6095_());
+        return KEY_DM + "type:" + (typeId != null ? typeId.toString() : "unknown");
     }
 
     public static int current(PlayerSystemData data) {

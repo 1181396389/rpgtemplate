@@ -13,7 +13,7 @@ import net.minecraft.sounds.SoundSource;
  * 施法时播放 Holle 音效（NtSounds.HOLLE，MASTER 声道），并让施法者播放施法动作（NtHolleAnim，客户端）。
  */
 public final class HolleSkill implements Skill {
-    static final double BASE_COST = 0.05;
+    static final double BASE_COST = 1.6;
     static final int COOLDOWN = 40;       // 2 秒
     static final int SPIKE_COUNT = 3;     // 每次发射的骨刺数量（伤害平分）
     static final double SPREAD_DEG = 4.0; // 左右两根骨刺相对视线的偏转角（度）
@@ -21,7 +21,7 @@ public final class HolleSkill implements Skill {
 
     @Override
     public void onPress(SkillContext ctx, HeldState held) {
-        if (!ctx.consume(ctx.cost(BASE_COST))) {
+        if (!ctx.consume(ctx.cost(BASE_COST) * NtDrawbacks.costMultiplier(ctx.player))) {
             return;
         }
         ctx.cooldown(COOLDOWN);

@@ -12,7 +12,7 @@ import net.minecraft.world.entity.player.Player;
 
 /** 变形: cycles to the next unlocked form. Changing form resets 适应. */
 public final class FormShiftSkill implements Skill {
-    static final double BASE_COST = 0.01;
+    static final double BASE_COST = 0.4;
     static final int COOLDOWN = 10;
 
     @Override
@@ -31,11 +31,12 @@ public final class FormShiftSkill implements Skill {
             Msg.actionBar(ctx.player, (Component) Component.m_237113_("没有其他已解锁的形态").m_130940_(ChatFormatting.GRAY));
             return;
         }
-        if (!ctx.consume(ctx.cost(BASE_COST))) {
+        if (!ctx.consume(ctx.cost(BASE_COST) * NtDrawbacks.costMultiplier(ctx.player))) {
             return;
         }
         data.setValue(NtForms.KEY_FORM, next);
         data.setValue(NtForms.KEY_ADAPT, 0.0);
+        data.setValue(NtForms.KEY_ADAPT_UNTIL, 0.0);
         SystemDataManager.markDirty((Player) ctx.player);
         ctx.cooldown(COOLDOWN);
         Msg.actionBar(ctx.player, (Component) Component.m_237113_("形态：" + NtForms.NAMES[next]).m_130940_(ChatFormatting.AQUA));

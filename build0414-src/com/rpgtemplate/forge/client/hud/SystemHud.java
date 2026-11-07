@@ -498,6 +498,9 @@ public final class SystemHud {
             out.add(new Notice(tr(RctFatigue.active(data, gameTick) ? "rct_active" : "rct_fatigue",
                 String.format(Locale.ROOT, "%.2f", RctFatigue.factor(data, gameTick))), UiTheme.E_INDIGO));
         }
+        for (HudNoticeRegistry.Entry ext : HudNoticeRegistry.collect(data, gameTick)) {
+            out.add(new Notice(ext.text(), ext.color()));
+        }
         return out;
     }
 

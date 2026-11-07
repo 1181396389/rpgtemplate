@@ -48,7 +48,7 @@ public final class SystemPanelScreen extends Screen {
     private static final int ROW_H = 22;
     private static final int CELL_W = 118;
     private static final int CELL_H = 30;
-    private static final int DETAIL_STRIP_H = 30;
+    private static final int DETAIL_STRIP_H = 46;
     private static final long REVEAL_MS = 2600L;
     private static final long TAB_GLIDE = 0x7AB0000000000001L;
     private static final long STATUS_GLIDE = 0x51A7000000000000L;
@@ -59,6 +59,7 @@ public final class SystemPanelScreen extends Screen {
 
     private static Tab tab = Tab.STATUS;
     private static String selectedId;
+    private static int detailTab;
     private static String revealId;
     private static long revealStartMs = -1L;
     private static boolean revealPending;
@@ -74,6 +75,9 @@ public final class SystemPanelScreen extends Screen {
     private int ph;
     private int ticks;
     private double listScroll;
+    private double detailScroll;
+    private int lastDetailY;
+    private int lastDetailH;
     private double codexScroll;
     private double settingsScroll;
     private EditBox search;
@@ -231,7 +235,13 @@ public final class SystemPanelScreen extends Screen {
         }
         double step = -delta * 16.0;
         switch (tab) {
-            case TEMPLATES -> this.listScroll = Math.max(0.0, this.listScroll + step);
+            case TEMPLATES -> {
+                if (this.lastDetailH > 0 && inside(mx, my, area[0], this.lastDetailY, area[2], this.lastDetailH)) {
+                    this.detailScroll = Math.max(0.0, this.detailScroll + step);
+                } else {
+                    this.listScroll = Math.max(0.0, this.listScroll + step);
+                }
+            }
             case CODEX -> this.codexScroll = Math.max(0.0, this.codexScroll + step);
             case SETTINGS -> this.settingsScroll = Math.max(0.0, this.settingsScroll + step);
             default -> {
@@ -500,12 +510,14 @@ public final class SystemPanelScreen extends Screen {
     private static final int CARD_H = 88;
     private static final int CARD_H_COMPACT = 36;
 
-    /** Template that gates the next draw: first owned, levelled template below its max level. */
+    /** Template that gates the next draw: newest owned, levelled template below its attunement / max level. */
     private static String gateTemplateName(List<TemplateInstance> owned) {
-        for (TemplateInstance inst : owned) {
+        for (int i = owned.size() - 1; i >= 0; i--) {
+            TemplateInstance inst = owned.get(i);
             TemplateDefinition def = TemplateRegistry.client().find(inst.templateId()).orElse(null);
             if (def != null && !def.levelless() && inst.level() < def.maxLevel()) {
-                return def.displayName();
+                int attune = Math.min(def.maxLevel(), 10);
+                return def.displayName() + " Lv." + inst.level() + "/" + attune;
             }
         }
         return t("status.draw_gate_fallback");
@@ -520,11 +532,11 @@ public final class SystemPanelScreen extends Screen {
         UiTheme.text(g, font, t("templates.owned", owned.size()), a[0], a[1] + 4, UiTheme.E_MUTED);
         boolean unlocked = data.isDrawUnlocked();
         int pending = data.pendingDraws();
-        String drawState = !unlocked ? t("status.draw_locked", pending, gateTemplateName(owned))
+        String drawState = !unlocked ? t("status.draw_locked_attune", pending, gateTemplateName(owned))
             : pending > 0 ? t("status.draw_ready", pending) : t("status.draw_none");
         int drawW = 110;
         int drawX = a[0] + a[2] - drawW;
-        UiTheme.text(g, font, fitText(font, drawState, a[2] - drawW - 150), a[0] + 120, a[1] + 4,
+        UiTheme.text(g, font, fitText(font, drawState, a[2] - drawW - 120), a[0] + 100, a[1] + 4,
             unlocked && pending > 0 ? UiTheme.E_GOLD_TEXT : UiTheme.E_MUTED);
         boolean drawOn = unlocked && pending > 0;
         boolean drawHover = inside(mx, my, drawX, a[1], drawW, 16);
@@ -538,9 +550,11 @@ public final class SystemPanelScreen extends Screen {
         }
 
         // detail card is sized first; the card grid gets the height that is left above it
-        int detailH = Math.max(76, Math.min(112, a[3] * 52 / 100));
+        int detailH = Math.max(96, Math.min(138, a[3] * 56 / 100));
         int dy = a[1] + a[3] - detailH;
         int dh = detailH;
+        this.lastDetailY = dy;
+        this.lastDetailH = dh;
         int gridTop = a[1] + 22;
         int gridH = Math.max(0, dy - 6 - gridTop);
         boolean compact = gridH < 2 * CARD_H + 6;
@@ -601,7 +615,10 @@ public final class SystemPanelScreen extends Screen {
                 UiTheme.revealHalo(g, x, y, CARD_W, cardH, 1f, p);
             }
             final String target = id;
-            this.hits.add(new Hit(x, y, CARD_W, cardH, () -> selectedId = target));
+            this.hits.add(new Hit(x, y, CARD_W, cardH, () -> {
+                selectedId = target;
+                this.detailScroll = 0.0;
+            }));
         }
 
         // detail card (bottom part)
@@ -612,30 +629,38 @@ public final class SystemPanelScreen extends Screen {
             UiTheme.text(g, font, t("templates.details"), a[0] + 10, dy + 10, UiTheme.E_FAINT);
             return;
         }
+        TemplateIntrospector.Meta meta = TemplateIntrospector.inspect(def);
         int qc = UiTheme.quality(def.quality().color());
         int ix = a[0] + 10;
         int iw = a[2] - 20;
-        UiTheme.text(g, font, fitText(font, def.displayName(), iw - 70), ix, dy + 8, UiTheme.E_INK);
-        UiTheme.right(g, font, def.quality().label(), a[0] + a[2] - 10, dy + 8, qc);
+        String titleLine = def.displayName();
+        if (!meta.source().isEmpty()) {
+            titleLine += "  \u00b7  \u300a" + meta.source() + "\u300b";
+            if (!meta.period().isEmpty()) {
+                titleLine += " [" + meta.period() + "]";
+            }
+        }
+        UiTheme.text(g, font, fitText(font, titleLine, iw - 70), ix, dy + 7, UiTheme.E_INK);
+        UiTheme.right(g, font, def.quality().label(), a[0] + a[2] - 10, dy + 7, qc);
         String lvText = def.levelless() ? t("templates.levelless") : "Lv." + selectedInst.level() + " / " + def.maxLevel();
-        UiTheme.text(g, font, lvText, ix, dy + 20, UiTheme.E_MUTED);
+        UiTheme.text(g, font, lvText, ix, dy + 19, UiTheme.E_MUTED);
         boolean capped = def.levelless() || selectedInst.level() >= def.maxLevel();
-        UiTheme.bar(g, ix, dy + 31, iw, 4, capped ? 1.0 : selectedInst.xp(),
+        UiTheme.bar(g, ix, dy + 29, iw, 3, capped ? 1.0 : selectedInst.xp(),
             capped ? 1.0 : ClientSystemData.templateXpToNext(selectedInst.templateId()), qc);
 
-        int by = dy + 40;
+        int by = dy + 36;
         boolean loadedHere = selectedInst.templateId().equals(data.loadedTemplateId());
         boolean cooling = pendingLoadId != null;
-        int bw = 74;
+        int bw = 64;
         int bx = ix;
         boolean mainOn = loadedHere || !cooling;
-        boolean mainHover = inside(mx, my, bx, by, bw, 16);
-        UiTheme.buttonSurface(g, bx, by, bw, 16, mainHover && mainOn, loadedHere, UiTheme.E_VIOLET);
+        boolean mainHover = inside(mx, my, bx, by, bw, 15);
+        UiTheme.buttonSurface(g, bx, by, bw, 15, mainHover && mainOn, loadedHere, UiTheme.E_VIOLET);
         UiTheme.text(g, font, cooling && !loadedHere ? t("btn.load_cd") : t(loadedHere ? "btn.unload" : "btn.load"),
-            bx + 6, by + 4, mainOn ? UiTheme.E_INK : UiTheme.E_FAINT);
+            bx + 5, by + 3, mainOn ? UiTheme.E_INK : UiTheme.E_FAINT);
         final String id = selectedInst.templateId();
         final boolean unloadNow = loadedHere;
-        this.hits.add(new Hit(bx, by, bw, 16, () -> {
+        this.hits.add(new Hit(bx, by, bw, 15, () -> {
             if (unloadNow) {
                 send("unload", "");
             } else if (pendingLoadId == null) {
@@ -644,51 +669,155 @@ public final class SystemPanelScreen extends Screen {
                 send("load", id);
             }
         }));
-        bx += bw + 6;
+        bx += bw + 4;
 
-        // 进阶按钮：仅当存在子模板（parent == 当前模板）时显示；可用条件与服务端 AdvanceService.check 一致：
-        // 模板满级，且玩家等级达到子模板的 advance_condition（advanceRequiredPlayerLevel）。
         java.util.Optional<TemplateDefinition> nextTier = TemplateRegistry.client().advancementOf(def.id());
         if (nextTier.isPresent()) {
             boolean atMax = selectedInst.level() >= def.maxLevel();
             boolean advOn = atMax && data.level() >= nextTier.get().advanceRequiredPlayerLevel();
-            boolean advHover = inside(mx, my, bx, by, bw, 16);
-            UiTheme.buttonSurface(g, bx, by, bw, 16, advHover && advOn, false, UiTheme.E_JADE);
-            UiTheme.text(g, font, t("btn.advance"), bx + 6, by + 4, advOn ? UiTheme.E_INK : UiTheme.E_FAINT);
+            boolean advHover = inside(mx, my, bx, by, bw, 15);
+            UiTheme.buttonSurface(g, bx, by, bw, 15, advHover && advOn, false, UiTheme.E_JADE);
+            UiTheme.text(g, font, t("btn.advance"), bx + 5, by + 3, advOn ? UiTheme.E_INK : UiTheme.E_FAINT);
             if (advOn) {
-                this.hits.add(new Hit(bx, by, bw, 16, () -> send("advance", id)));
+                this.hits.add(new Hit(bx, by, bw, 15, () -> send("advance", id)));
             }
-            bx += bw + 6;
+            bx += bw + 4;
         }
         if (def.lineage() != null) {
-            boolean linOn = data.level() >= def.lineage().playerLevel();
-            boolean linHover = inside(mx, my, bx, by, bw, 16);
-            UiTheme.buttonSurface(g, bx, by, bw, 16, linHover && linOn, false, UiTheme.E_CYAN);
-            UiTheme.text(g, font, t("btn.lineage"), bx + 6, by + 4, linOn ? UiTheme.E_INK : UiTheme.E_FAINT);
+            boolean atMax = def.levelless() || selectedInst.level() >= def.maxLevel();
+            boolean linOn = atMax && data.level() >= def.lineage().playerLevel()
+                && data.isDrawUnlocked() && data.pendingDraws() > 0;
+            boolean linHover = inside(mx, my, bx, by, bw, 15);
+            UiTheme.buttonSurface(g, bx, by, bw, 15, linHover && linOn, false, UiTheme.E_CYAN);
+            UiTheme.text(g, font, t("btn.lineage"), bx + 5, by + 3, linOn ? UiTheme.E_INK : UiTheme.E_FAINT);
             if (linOn) {
-                this.hits.add(new Hit(bx, by, bw, 16, () -> send("lineage_draw", id)));
+                this.hits.add(new Hit(bx, by, bw, 15, () -> send("lineage_draw", id)));
             }
         }
 
-        // skills in two columns
-        int sy = by + 24;
-        UiTheme.text(g, font, t("detail.skills"), ix, sy, UiTheme.E_MUTED);
-        sy += 12;
-        int colW = iw / 2;
-        int idx = 0;
-        for (SkillEntry skill : TemplateRegistry.client().effectiveSkills(def.id())) {
-            int sx = ix + (idx % 2) * colW;
-            int ry = sy + (idx / 2) * 11;
-            idx++;
-            if (ry > a[1] + a[3] - 10) {
-                break;
+        // Sub-tabs on the right side: [技能] [被动/加成] [弱点/癖好]
+        List<SkillEntry> skills = TemplateRegistry.client().effectiveSkills(def.id());
+        String[] subLabels = {
+            t("detail.skills") + "(" + skills.size() + ")",
+            t("detail.passives") + "(" + meta.passives().size() + ")",
+            t("detail.drawbacks_tab") + "(" + meta.drawbackCount() + ")"
+        };
+        int[] subColors = {UiTheme.E_VIOLET, UiTheme.E_JADE, UiTheme.E_RED};
+        int sxRight = a[0] + a[2] - 10;
+        for (int s = subLabels.length - 1; s >= 0; s--) {
+            int sw = font.m_92895_(subLabels[s]) + 10;
+            sxRight -= sw;
+            boolean activeSub = detailTab == s;
+            boolean hoverSub = inside(mx, my, sxRight, by, sw, 15);
+            UiTheme.buttonSurface(g, sxRight, by, sw, 15, hoverSub, activeSub, subColors[s]);
+            UiTheme.text(g, font, subLabels[s], sxRight + 5, by + 3, activeSub ? subColors[s] : UiTheme.E_MUTED);
+            final int targetSub = s;
+            this.hits.add(new Hit(sxRight, by, sw, 15, () -> {
+                detailTab = targetSub;
+                this.detailScroll = 0.0;
+            }));
+            sxRight -= 4;
+        }
+
+        List<DetailLine> lines = buildDetailLines(def, selectedInst, meta, skills);
+        int bodyTop = by + 19;
+        int bodyBottom = dy + dh - 6;
+        int bodyH = Math.max(12, bodyBottom - bodyTop);
+        int lineH = 11;
+        double maxDetailScroll = Math.max(0.0, lines.size() * lineH - bodyH);
+        this.detailScroll = Math.min(this.detailScroll, maxDetailScroll);
+        int scrollPx = (int) Math.round(this.detailScroll);
+        for (int i = 0; i < lines.size(); i++) {
+            int ry = bodyTop + i * lineH - scrollPx;
+            if (ry < bodyTop || ry + 9 > bodyBottom) {
+                continue;
             }
-            boolean unlocked2 = skill.unlockedAt(selectedInst.level());
-            UiTheme.block(g, sx, ry + 2, 6, 6, unlocked2 ? UiTheme.E_VIOLET : UiTheme.E_EDGE, unlocked2 ? 1f : 0.5f);
-            UiTheme.text(g, font, fitText(font, skill.name(), colW - 62), sx + 10, ry, unlocked2 ? UiTheme.E_INK : UiTheme.E_FAINT);
-            double cost = SkillFormula.cost(skill.baseCost(), def.quality());
-            String costText = t("v4.cost", NumberFormatter.format(cost)) + " " + (skill.costType() == CostType.SP ? "SP" : "MP");
-            UiTheme.right(g, font, costText, sx + colW - 6, ry, unlocked2 ? UiTheme.E_INDIGO : UiTheme.E_FAINT);
+            DetailLine dl = lines.get(i);
+            UiTheme.block(g, ix, ry + 2, 4, 5, dl.dotColor(), 0.9f);
+            int rightReserve = dl.rightText().isEmpty() ? 0 : font.m_92895_(dl.rightText()) + 10;
+            UiTheme.text(g, font, fitText(font, dl.leftText(), iw - 10 - rightReserve), ix + 8, ry, dl.textColor());
+            if (!dl.rightText().isEmpty()) {
+                UiTheme.right(g, font, dl.rightText(), ix + iw, ry, dl.rightColor());
+            }
+        }
+        if (maxDetailScroll > 0.5) {
+            int trackX = a[0] + a[2] - 4;
+            g.m_280509_(trackX, bodyTop, trackX + 2, bodyBottom, UiTheme.alpha(0.35f, UiTheme.E_EDGE));
+            int thumbH = Math.max(8, (int) Math.round((double) bodyH * bodyH / (lines.size() * lineH)));
+            int thumbY = bodyTop + (int) Math.round((this.detailScroll / maxDetailScroll) * (bodyH - thumbH));
+            g.m_280509_(trackX, thumbY, trackX + 2, thumbY + thumbH, UiTheme.alpha(0.9f, qc));
+        }
+    }
+
+    private record DetailLine(int dotColor, String leftText, int textColor, String rightText, int rightColor) {
+    }
+
+    private List<DetailLine> buildDetailLines(TemplateDefinition def, TemplateInstance inst,
+                                              TemplateIntrospector.Meta meta, List<SkillEntry> skills) {
+        List<DetailLine> out = new ArrayList<>();
+        if (detailTab == 0) {
+            if (skills.isEmpty()) {
+                out.add(new DetailLine(UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
+                return out;
+            }
+            for (SkillEntry skill : skills) {
+                boolean ok = skill.unlockedAt(inst.level());
+                double cost = SkillFormula.cost(skill.baseCost(), def.quality());
+                String res = skill.costType() == CostType.SP ? "SP" : "MP";
+                double cdSec = skill.cooldownTicks() / 20.0;
+                String right = NumberFormatter.format(cost) + " " + res
+                    + (cdSec > 0.0 ? String.format(Locale.ROOT, " \u00b7 %.1fs", cdSec) : "");
+                String prefix = ok ? "" : "[Lv." + skill.unlockLevel() + "] ";
+                String desc = skill.description() == null || skill.description().isEmpty()
+                    ? "" : " \u2014 " + skill.description();
+                out.add(new DetailLine(
+                    ok ? UiTheme.E_VIOLET : UiTheme.E_EDGE,
+                    prefix + skill.name() + desc,
+                    ok ? UiTheme.E_INK : UiTheme.E_FAINT,
+                    right,
+                    ok ? (skill.costType() == CostType.SP ? UiTheme.E_JADE : UiTheme.E_INDIGO) : UiTheme.E_FAINT));
+            }
+        } else if (detailTab == 1) {
+            double mult = def.quality().bonusMultiplier();
+            String bonusLine = String.format(Locale.ROOT,
+                "%s: HP +%.0f%% \u00b7 MP +%.0f%% \u00b7 SP +%.0f%% \u00b7 DEF +%.0f%%  (%s +%d)",
+                t("detail.bonus_loaded"),
+                meta.hpBonus() * mult * 100.0,
+                meta.mpBonus() * mult * 100.0,
+                meta.spBonus() * mult * 100.0,
+                meta.defBonus() * mult * 100.0,
+                t("detail.rule_bonus"),
+                def.quality().ruleBonus());
+            out.add(new DetailLine(UiTheme.E_GOLD_TEXT, bonusLine, UiTheme.E_GOLD_TEXT, "", UiTheme.E_FAINT));
+            if (meta.passives().isEmpty()) {
+                out.add(new DetailLine(UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
+            } else {
+                for (TemplateIntrospector.TraitView tv : meta.passives()) {
+                    String txt = tv.description().isEmpty() ? tv.name() : tv.name() + "\uff1a" + tv.description();
+                    out.add(new DetailLine(UiTheme.E_JADE, txt, UiTheme.E_INK, "", UiTheme.E_FAINT));
+                }
+            }
+        } else {
+            appendTraitGroup(out, t("detail.weaknesses"), meta.weaknesses(), UiTheme.E_RED);
+            appendTraitGroup(out, t("detail.negatives"), meta.negatives(), UiTheme.E_GOLD_TEXT);
+            appendTraitGroup(out, t("detail.quirks"), meta.quirks(), UiTheme.E_CYAN);
+            if (def.description() != null && !def.description().isEmpty()) {
+                out.add(new DetailLine(UiTheme.E_VIOLET,
+                    "[" + t("detail.description") + "] " + def.description(),
+                    UiTheme.E_MUTED, "", UiTheme.E_FAINT));
+            }
+            if (out.isEmpty()) {
+                out.add(new DetailLine(UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
+            }
+        }
+        return out;
+    }
+
+    private static void appendTraitGroup(List<DetailLine> out, String tag,
+                                         List<TemplateIntrospector.TraitView> traits, int color) {
+        for (TemplateIntrospector.TraitView tv : traits) {
+            String body = tv.description().isEmpty() ? tv.name() : tv.name() + "\uff1a" + tv.description();
+            out.add(new DetailLine(color, "[" + tag + "] " + body, UiTheme.E_INK, "", UiTheme.E_FAINT));
         }
     }
 
@@ -768,11 +897,40 @@ public final class SystemPanelScreen extends Screen {
         UiTheme.frame(g, a[0], sy, a[2], DETAIL_STRIP_H, 1f);
         TemplateDefinition sel = selectedId == null ? null : TemplateRegistry.client().find(selectedId).orElse(null);
         if (sel != null && data.findTemplate(sel.id()).isPresent()) {
-            UiTheme.text(g, font, UiTheme.fit(font, sel.displayName() + "  \u00b7  " + sel.description(), a[2] - 16),
-                a[0] + 8, sy + 10, UiTheme.E_INK);
+            TemplateIntrospector.Meta meta = TemplateIntrospector.inspect(sel);
+            String head = sel.displayName()
+                + (meta.source().isEmpty() ? "" : " \u00b7 \u300a" + meta.source() + "\u300b")
+                + (meta.period().isEmpty() ? "" : " [" + meta.period() + "]");
+            String qInfo = t("codex.quality_info",
+                sel.maxLevel(),
+                String.format(Locale.ROOT, "\u00d7%.1f", sel.quality().bonusMultiplier()),
+                String.format(Locale.ROOT, "\u00d7%.0f", sel.quality().costMultiplier()),
+                "+" + sel.quality().ruleBonus());
+            UiTheme.text(g, font, UiTheme.fit(font, head, a[2] - font.m_92895_(qInfo) - 24),
+                a[0] + 8, sy + 6, UiTheme.E_INK);
+            UiTheme.right(g, font, qInfo, a[0] + a[2] - 8, sy + 6, UiTheme.quality(sel.quality().color()));
+            UiTheme.text(g, font, UiTheme.fit(font, sel.description(), a[2] - 16),
+                a[0] + 8, sy + 19, UiTheme.E_MUTED);
+            String drawbacks = summarizeDrawbacks(meta);
+            UiTheme.text(g, font, UiTheme.fit(font, drawbacks, a[2] - 16),
+                a[0] + 8, sy + 32, UiTheme.E_GOLD_TEXT);
         } else {
-            UiTheme.text(g, font, t("codex.locked"), a[0] + 8, sy + 10, UiTheme.E_FAINT);
+            UiTheme.text(g, font, t("codex.locked"), a[0] + 8, sy + 18, UiTheme.E_FAINT);
         }
+    }
+
+    private static String summarizeDrawbacks(TemplateIntrospector.Meta meta) {
+        List<String> tags = new ArrayList<>();
+        for (TemplateIntrospector.TraitView tv : meta.weaknesses()) {
+            tags.add("[" + t("detail.weaknesses") + "] " + tv.name());
+        }
+        for (TemplateIntrospector.TraitView tv : meta.negatives()) {
+            tags.add("[" + t("detail.negatives") + "] " + tv.name());
+        }
+        for (TemplateIntrospector.TraitView tv : meta.quirks()) {
+            tags.add("[" + t("detail.quirks") + "] " + tv.name());
+        }
+        return tags.isEmpty() ? t("detail.none") : String.join("  \u00b7  ", tags);
     }
 
     // ------------------------------------------------------------------ settings tab

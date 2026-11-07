@@ -30,21 +30,21 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class GoodbyeSkill implements Skill {
     private static final Logger LOG = LogManager.getLogger("rpgtemplate/Goodbye");
-    static final double BASE_COST = 0.15;
-    static final int COOLDOWN = 60;            // 3 秒（从按下开始计）
+    static final double BASE_COST = 6.5;       // EX ×32 = 208 SP 门槛，低等级因能量不足无法强开
+    static final int COOLDOWN = 160;           // 8 秒（从按下开始计）
     static final int WINDUP_TICKS = 48;        // 起手 2.4 秒，与 nt_video 前 3 秒的攻击动画一致（design/goodbye-anim-from-video.md）
-    static final int RECOVERY_TICKS = 20;      // 落地后的减伤窗口，占位
+    static final int RECOVERY_TICKS = 20;      // 落地后的减伤窗口
     static final double REACH = 6.0;
-    /** 落地伤害倍率（作用于 JSON 系数 4.0 之上）；v15 为 1.0，本版为 5 倍，占位。 */
-    static final double STRIKE_SCALE = 5.0;
-    static final double AIRBORNE_MULT = 1.5;   // 草案：空中起手 ×1.5
+    /** 落地伤害倍率（作用于 JSON 系数 4.5 之上，严格锚定玩家面板）。 */
+    static final double STRIKE_SCALE = 1.0;
+    static final double AIRBORNE_MULT = 1.35;  // 空中起手 ×1.35
     static final int RESIST_AMP = 1;           // 抗性提升 II（约 40%）
-    static final double DAMAGE_REDUCTION = 0.3; // 减伤 30%（草案）
+    static final double DAMAGE_REDUCTION = 0.3; // 减伤 30%
 
     @Override
     public void onPress(SkillContext ctx, HeldState held) {
         LOG.info("[Goodbye] onPress server, player={}", ctx.player.m_36316_().getName());
-        if (!ctx.consume(ctx.cost(BASE_COST))) {
+        if (!ctx.consume(ctx.cost(BASE_COST) * NtDrawbacks.costMultiplier(ctx.player))) {
             LOG.info("[Goodbye] press rejected: consume failed");
             return;
         }
@@ -95,11 +95,13 @@ public final class GoodbyeSkill implements Skill {
         player.m_9236_().m_6263_(null, cx, cy, cz, NtSounds.HIT, SoundSource.MASTER, 1.0f, 1.0f);
         // 落地血效果：玩家身边的血雾（命中的血迹由 hitBurst 贴在目标身上）
         NtGore.castMist((ServerLevel) player.m_9236_(), player);
-        float damage = (float) (ctx.damage(STRIKE_SCALE) * (airborne ? AIRBORNE_MULT : 1.0));
+        float damage = (float) (ctx.damage(STRIKE_SCALE)
+            * (airborne ? AIRBORNE_MULT : 1.0)
+            * NtDrawbacks.outputMultiplier(data));
         Set<LivingEntity> targets = NtStrike.sweep(player, from, to, REACH * 0.4);
         LOG.info("[Goodbye] strike area hit {} target(s)", targets.size());
         for (LivingEntity target : targets) {
-            forceHit(player, target, damage);
+            NtStrike.strikeWithRule(player, data, target, damage);
         }
     }
 

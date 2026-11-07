@@ -90,11 +90,10 @@ public final class NothingThereDeath {
         }
         double baseMinutes = TraitLookup.param(trait.get(), "base_cooldown_minutes", 20.0);
         double perLevel = TraitLookup.param(trait.get(), "cooldown_reduction_per_level", 0.01);
-        double minMinutes = TraitLookup.param(trait.get(), "min_cooldown_minutes", 0.0);
+        double minMinutes = TraitLookup.param(trait.get(), "min_cooldown_minutes", 2.0);
         long hatchTicks = Math.round(TraitLookup.param(trait.get(), "hatch_ticks", 120.0));
-        // 冷却可以降到 0（用户修正：茧的冷却下限为 0）。之前上限为 0.99，高等级时仍剩 12 秒，
-        // 而孵化只要 6 秒，所以孵化后马上再死会被冷却挡住。
-        double reduction = Math.min(1.0, data.level() * perLevel);
+        // 化茧保底最短冷却 2 分钟（避免满级 0 CD 绝对不死死循环）。
+        double reduction = Math.min(0.90, data.level() * perLevel);
         double minutes = Math.max(minMinutes, baseMinutes * (1.0 - reduction));
         long cooldownTicks = Math.round(minutes * 60.0 * 20.0);
         String nextText = cooldownTicks <= 0 ? "随时可用" : (minutes < 1.0
@@ -147,8 +146,8 @@ public final class NothingThereDeath {
         if (data == null || TraitLookup.activePassive(data, DEATH_MEMORY).isEmpty()) {
             return;
         }
-        String key = NtForms.KEY_DM + killer.m_20148_();
-        data.setValue(key, data.value(key, 0.0) + 1.0);
+        String key = NtForms.deathMemoryKey(killer);
+        data.setValue(key, Math.min(20.0, data.value(key, 0.0) + 1.0));
         SystemDataManager.markDirty((Player) player);
     }
 

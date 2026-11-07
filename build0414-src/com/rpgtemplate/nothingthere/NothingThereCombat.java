@@ -1,7 +1,9 @@
 package com.rpgtemplate.nothingthere;
 
 import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.core.stats.StatType;
 import com.rpgtemplate.core.template.TraitEntry;
+import com.rpgtemplate.forge.skill.RuleJudge;
 import com.rpgtemplate.forge.system.SystemDataManager;
 import com.rpgtemplate.forge.system.TraitLookup;
 import java.util.Optional;
@@ -79,7 +81,7 @@ public final class NothingThereCombat {
         }
     }
 
-    /** 死亡记忆：对曾经击杀过自己的人，伤害按记录次数减免。 */
+    /** 死亡记忆：对曾经击杀过自己的来源按记录次数减免伤害，上限锚定自身等级并受四档对抗判定约束。 */
     private static void reduceByDeathMemory(LivingHurtEvent event, ServerPlayer player, Entity killer) {
         if (NtMimicCombat.fromMimic(event.getSource())) {
             return; // 拟态攻击无视死亡记忆减伤
@@ -92,22 +94,32 @@ public final class NothingThereCombat {
         if (trait.isEmpty()) {
             return;
         }
-        double stacks = data.value(NtForms.KEY_DM + killer.m_20148_(), 0.0);
+        double stacks = data.value(NtForms.deathMemoryKey(killer), 0.0);
         if (stacks < 1.0) {
             return;
         }
-        double base = TraitLookup.param(trait.get(), "damage_reduction_vs_killer", 0.5);
-        double step = TraitLookup.param(trait.get(), "stack_per_death", 0.5);
-        double cap = TraitLookup.param(trait.get(), "max_reduction", 0.99);
-        double reduction = Math.min(cap, base + (stacks - 1.0) * step);
+        double base = TraitLookup.param(trait.get(), "damage_reduction_vs_killer", 0.40);
+        double step = TraitLookup.param(trait.get(), "stack_per_death", 0.10);
+        double levelCap = Math.min(
+            TraitLookup.param(trait.get(), "max_reduction", 0.85),
+            0.35 + data.level() * 0.008);
+        if (killer instanceof LivingEntity livingKiller) {
+            RuleJudge.Result check = RuleJudge.evaluate(player, data, livingKiller, StatType.HP);
+            levelCap = switch (check.tier()) {
+                case FULL -> levelCap;
+                case MAJOR -> Math.min(levelCap, 0.55);
+                case MINOR -> Math.min(levelCap, 0.30);
+                case FAIL -> Math.min(levelCap, 0.12);
+            };
+        }
+        double reduction = Math.min(levelCap, base + (stacks - 1.0) * step);
         event.setAmount((float) (event.getAmount() * (1.0 - reduction)));
     }
 
     /**
      * 形态输出（最后执行，早于原版护甲减伤）：
      * 锤（form 0）：玩家的攻击伤害 ×(1 + HAMMER_ATTACK_BONUS)。
-     * 手刀（form 1）：玩家的攻击无视目标护甲、伤害抗性（药水效果）和吸收护盾。原版护甲减伤在 LivingHurtEvent 之后才生效，
-     * 所以这里把伤害反解成"经过护甲减伤后恰好等于原始伤害"的数值。
+     * 手刀（form 1）：按四档机制判定无视护甲与抗性（①完全生效=100%破甲并暂停护盾抗性；②显著干扰=50%穿甲；③微弱牵制=20%穿甲；④失败=0%）。
      */
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onHurtFormModifiers(LivingHurtEvent event) {
@@ -124,13 +136,27 @@ public final class NothingThereCombat {
         if (data == null) {
             return;
         }
+        float amount = (float) (event.getAmount() * NtDrawbacks.outputMultiplier(data));
         int form = NtForms.current(data);
         if (form == FORM_HAMMER) {
-            event.setAmount((float) (event.getAmount() * (1.0 + HAMMER_ATTACK_BONUS)));
+            event.setAmount((float) (amount * (1.0 + HAMMER_ATTACK_BONUS)));
         } else if (form == FORM_BLADE) {
-            // 反解护甲；同时暂停目标的吸收护盾与伤害抗性（I–V 级），本次命中不参与，下一 tick 还原。
-            event.setAmount(ignoreArmor(victim, event.getAmount()));
-            NtFormEffects.suspendDefenses(victim);
+            RuleJudge.Result check = RuleJudge.evaluate(attacker, data, victim, StatType.SP);
+            float unarmored = ignoreArmor(victim, amount);
+            switch (check.tier()) {
+                case FULL -> {
+                    event.setAmount(unarmored);
+                    NtFormEffects.suspendDefenses(victim);
+                }
+                case MAJOR -> event.setAmount(amount + (unarmored - amount) * 0.50f);
+                case MINOR -> event.setAmount(amount + (unarmored - amount) * 0.20f);
+                case FAIL -> {
+                    event.setAmount(amount);
+                    RuleJudge.notify(attacker, victim, "手刀破防", check);
+                }
+            }
+        } else {
+            event.setAmount(amount);
         }
     }
 
@@ -157,7 +183,7 @@ public final class NothingThereCombat {
         return (lo + hi) * 0.5f;
     }
 
-    /** 适应：每次命中 +1%（无上限），切换形态时清零。 */
+    /** 适应：每次命中 +1%，上限锚定当前等级（15 + Lv，最高 80 层），脱战 15 秒或切换形态清零。 */
     private static void applyAdaptation(LivingHurtEvent event, ServerPlayer attacker) {
         PlayerSystemData data = NtForms.activeData(attacker);
         if (data == null) {
@@ -167,10 +193,16 @@ public final class NothingThereCombat {
         if (trait.isEmpty()) {
             return;
         }
+        long now = attacker.m_9236_().m_46467_();
         double perHit = TraitLookup.param(trait.get(), "per_hit", 0.01);
         double stacks = data.value(NtForms.KEY_ADAPT, 0.0);
+        if (stacks > 0.0 && now > data.value(NtForms.KEY_ADAPT_UNTIL, 0.0)) {
+            stacks = 0.0;
+        }
+        double maxStacks = Math.min(80.0, 15.0 + data.level());
         event.setAmount((float) (event.getAmount() * (1.0 + stacks * perHit)));
-        data.setValue(NtForms.KEY_ADAPT, stacks + 1.0);
+        data.setValue(NtForms.KEY_ADAPT, Math.min(maxStacks, stacks + 1.0));
+        data.setValue(NtForms.KEY_ADAPT_UNTIL, (double) (now + 300L));
         SystemDataManager.markDirty(attacker);
     }
 }

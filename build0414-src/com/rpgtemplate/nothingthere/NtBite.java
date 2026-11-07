@@ -1,10 +1,14 @@
 package com.rpgtemplate.nothingthere;
 
+import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.core.stats.StatType;
+import com.rpgtemplate.forge.skill.RuleJudge;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.WeakHashMap;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -34,13 +38,25 @@ public final class NtBite {
     private NtBite() {
     }
 
-    /** 命中一次：层数 +1（不超过上限），刷新持续时间。 */
-    static void hit(LivingEntity victim) {
+    /** 命中一次：按四档机制判定限制可削减生命上限的层数（①10层/-50% ②6层/-30% ③2层/-10% ④失败），并稳定人皮。 */
+    static void hit(ServerPlayer attacker, PlayerSystemData data, LivingEntity victim) {
         if (!victim.m_6084_()) {
             return;
         }
+        NtDrawbacks.markFed(attacker, data);
+        RuleJudge.Result check = RuleJudge.evaluate(attacker, data, victim, StatType.SP);
+        int cap = switch (check.tier()) {
+            case FULL -> MAX_STACKS;
+            case MAJOR -> 6;
+            case MINOR -> 2;
+            case FAIL -> 0;
+        };
+        if (cap <= 0) {
+            RuleJudge.notify(attacker, victim, "贪食之口侵蚀", check);
+            return;
+        }
         Bite bite = BITES.computeIfAbsent(victim, k -> new Bite());
-        bite.stacks = Math.min(MAX_STACKS, bite.stacks + 1);
+        bite.stacks = Math.min(cap, bite.stacks + 1);
         bite.ticksLeft = DURATION_TICKS;
         apply(victim, bite.stacks);
     }

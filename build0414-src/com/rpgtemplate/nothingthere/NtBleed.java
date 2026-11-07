@@ -44,7 +44,7 @@ final class NtBleed {
         afterHit(victim, attacker, event.getAmount());
     }
 
-    /** Bleed + self-heal after any landed hit. Also used by forced hits that skip the hurt event. */
+    /** Bleed + self-heal after any landed hit (self-heal gated by 0.5s ICD to prevent 0-CD whip infinite sustain). */
     static void afterHit(LivingEntity victim, ServerPlayer attacker, float amount) {
         if (amount <= 0.0f) {
             return;
@@ -56,7 +56,11 @@ final class NtBleed {
         if (victim.m_6084_()) {
             BLEEDS.put(victim, new Bleed(attacker, (float) (amount * PER_SECOND_RATIO), DURATION_TICKS));
         }
-        NtForms.healRatio(attacker, data, HEAL_RATIO);
+        long now = attacker.m_9236_().m_46467_();
+        if (data.value(NtForms.KEY_HEAL_UNTIL, 0.0) <= (double) now) {
+            data.setValue(NtForms.KEY_HEAL_UNTIL, (double) (now + 10L));
+            NtForms.healRatio(attacker, data, HEAL_RATIO);
+        }
     }
 
     /** Server tick: ticks down every bleed and damages once per second (at 80, 60, 40, 20, 0 left). */

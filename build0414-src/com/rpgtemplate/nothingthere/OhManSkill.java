@@ -22,10 +22,10 @@ public final class OhManSkill implements Skill {
     static final int SLAM_FULL_TICKS = 60;    // 3 秒，砸下伤害倍率封顶
     static final double DIRECT_RANGE = 4.5;
     static final double DIRECT_WIDTH = 0.3;
-    static final double DIRECT_BASE_COST = 0.02;
+    static final double DIRECT_BASE_COST = 0.5;
     static final int DIRECT_COOLDOWN = 6;     // 0.3 秒
     static final double SLAM_RADIUS = 4.0;
-    static final double SLAM_BASE_COST = 0.1;
+    static final double SLAM_BASE_COST = 1.5;
     static final int SLAM_COOLDOWN = 30;      // 1.5 秒
     static final double SLAM_KNOCKBACK = 0.6;
     static final int CHARGE_MAX_TICKS = 100;  // 蓄力动作的保险时长（5 秒）：松开时立即清除
@@ -59,7 +59,7 @@ public final class OhManSkill implements Skill {
 
     /** 点按：按当前形态决定攻击方式。形态 0 为直锤（原有行为）。 */
     private static void direct(SkillContext ctx) {
-        if (!ctx.consume(ctx.cost(DIRECT_BASE_COST))) {
+        if (!ctx.consume(ctx.cost(DIRECT_BASE_COST) * NtDrawbacks.costMultiplier(ctx.player))) {
             return;
         }
         // 脊骨鞭（form 4）没有攻击冷却：不设置 DIRECT_COOLDOWN。其他形态保持原有冷却。
@@ -96,19 +96,20 @@ public final class OhManSkill implements Skill {
         }
     }
 
-    /** 贪食之口：近距离单体咬击，按伤害 15% 吸血。 */
+    /** 贪食之口：近距离单体咬击，按伤害 15% 吸血，并恢复人皮稳定度。 */
     private static void bite(SkillContext ctx) {
         float damage = ctx.damage(1.2);
         List<TargetUtil.Hit> hits = TargetUtil.ray(ctx.player, 3.5, 1, 0.4);
         for (TargetUtil.Hit hit : hits) {
             if (TargetUtil.hurt(hit.entity(), ModDamageTypes.technique(ctx.player), damage)) {
                 NtForms.heal(ctx.player, ctx.data, damage * 0.15);
+                NtDrawbacks.markFed(ctx.player, ctx.data);
             }
         }
     }
 
     private static void slam(SkillContext ctx, int ticks) {
-        if (!ctx.consume(ctx.cost(SLAM_BASE_COST))) {
+        if (!ctx.consume(ctx.cost(SLAM_BASE_COST) * NtDrawbacks.costMultiplier(ctx.player))) {
             return;
         }
         ctx.cooldown(SLAM_COOLDOWN);

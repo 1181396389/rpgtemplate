@@ -1,0 +1,98 @@
+{
+  "name": "灶门炭治郎",
+  "source": "鬼灭之刃",
+  "period": "最终选拔突破期·初觉神乐",
+  "quality": "R",
+  "type": "PHYSICAL",
+  "max_level": 20,
+  "drawable": true,
+  "description": "历经狭雾山苦修习得水之呼吸的善良少年剑士。水之剑型沉稳扎实，危急关头可强行催动家传【火之神神乐】，但尚未修成全集中·常中，强开神乐会令肺腑承受剧烈缺氧反噬。",
+  "bonus": {
+    "hp": 1.1,
+    "mp": 0.4,
+    "sp": 1.3,
+    "def": 1.0
+  },
+  "skills": [
+    {
+      "id": "rpgtemplate:tanjiro_water_wheel",
+      "name": "水之呼吸·贰之型 水车",
+      "cost_type": "SP",
+      "base_cost": 4.5,
+      "coefficient": 1.7,
+      "cooldown_ticks": 50,
+      "description": "腾空向前翻滚挥出圆环水斩（半径 3.8 格），顺势卸去坠落冲击并进入全集中呼吸韵律。"
+    },
+    {
+      "id": "rpgtemplate:tanjiro_flowing_dance",
+      "name": "水之呼吸·叁之型 流流舞",
+      "cost_type": "SP",
+      "base_cost": 5.5,
+      "coefficient": 1.45,
+      "cooldown_ticks": 70,
+      "description": "如急流般高速踏步穿梭前方 6.5 格连斩沿途敌人，获得短暂疾行并平复少量【缺氧负荷】。"
+    },
+    {
+      "id": "rpgtemplate:tanjiro_hinokami",
+      "name": "火之神神乐·圆舞",
+      "cost_type": "SP",
+      "base_cost": 11.0,
+      "coefficient": 3.2,
+      "cooldown_ticks": 130,
+      "description": "强行逆转呼吸挥出日轮烈焰圆弧斩，点燃周围敌人并对亡灵额外增伤 35%；每次施展大幅增加【缺氧负荷】，肺腑过载期间无法施展。"
+    }
+  ],
+  "passives": [
+    {
+      "type": "rpgtemplate:tanjiro_total_concentration",
+      "name": "全集中呼吸·初阶",
+      "description": "肺腑平稳时持续回复体力，施展水之呼吸后 6 秒内斩击威力提升 15%（蹲伏调息可加快平复缺氧）。",
+      "params": {
+        "sp_regen_ratio": 0.02,
+        "damage_bonus": 0.15
+      }
+    },
+    {
+      "type": "rpgtemplate:tanjiro_scent_thread",
+      "name": "隙之线嗅觉",
+      "description": "敏锐嗅觉捕捉敌方动作破绽，对生命值低于 40% 的目标造成的伤害提升 25%。",
+      "params": {
+        "hp_threshold": 0.4,
+        "damage_bonus": 0.25
+      }
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "rpgtemplate:tanjiro_lung_strain",
+      "name": "肺腑透支易损",
+      "description": "尚未掌握常中呼吸：处于水下缺氧或【缺氧负荷】达到 60% 以上时，受到的所有伤害增加 25%。",
+      "params": {
+        "extra_damage": 0.25,
+        "hypoxia_threshold": 60
+      }
+    }
+  ],
+  "negatives": [
+    {
+      "type": "rpgtemplate:tanjiro_hinokami_recoil",
+      "name": "火之神神乐强开反噬",
+      "description": "【缺氧负荷】叠满 100% 时引发肺腑痉挛：扣减自身生命，陷入 5 秒剧烈咳嗽减速与疲劳，且暂时封锁圆舞。",
+      "params": {
+        "overload_ticks": 100,
+        "self_damage_ratio": 0.06
+      }
+    }
+  ],
+  "quirks": [
+    {
+      "type": "rpgtemplate:tanjiro_compassion_hardhead",
+      "name": "温柔本性与石头的头",
+      "description": "天性温柔绝不会挥刀伤害村民与幼年动物；近距离正面迎敌时凭借坚硬额头减免 10% 近身冲击，并额外获得契合经验。",
+      "params": {
+        "close_reduction": 0.1,
+        "bonus_xp": 3.0
+      }
+    }
+  ]
+}

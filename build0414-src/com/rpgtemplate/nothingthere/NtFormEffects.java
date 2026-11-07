@@ -1,7 +1,12 @@
 package com.rpgtemplate.nothingthere;
 
+import com.rpgtemplate.core.config.CoreConfig;
 import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.core.stats.StatCalculator;
+import com.rpgtemplate.core.stats.StatType;
+import com.rpgtemplate.core.template.TemplateRegistry;
 import com.rpgtemplate.forge.combat.ModDamageTypes;
+import com.rpgtemplate.forge.skill.RuleJudge;
 import com.rpgtemplate.forge.skill.TargetUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -111,7 +116,7 @@ public final class NtFormEffects {
         }
     }
 
-    /** 脊骨鞭：攻击无视被攻击者的无敌帧。在 LivingAttackEvent 中清零 invulnerableTime，之后的伤害才能生效。 */
+    /** 脊骨鞭：按四档机制判定削减或无视被攻击者的无敌帧（高阶目标抵抗无敌帧剥夺）。 */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onAttack(LivingAttackEvent event) {
         if (!(event.getSource().m_7639_() instanceof ServerPlayer attacker) || attacker == event.getEntity()) {
@@ -123,7 +128,12 @@ public final class NtFormEffects {
         }
         PlayerSystemData data = NtForms.activeData(attacker);
         if (data != null && NtForms.current(data) == FORM_WHIP) {
-            victim.f_19802_ = 0;
+            RuleJudge.Result check = RuleJudge.evaluate(attacker, data, victim, StatType.SP);
+            switch (check.tier()) {
+                case FULL, MAJOR -> victim.f_19802_ = 0;
+                case MINOR -> victim.f_19802_ = victim.f_19802_ / 2;
+                case FAIL -> { }
+            }
         }
     }
 
@@ -134,11 +144,11 @@ public final class NtFormEffects {
         }
         PlayerSystemData data = NtForms.activeData(attacker);
         if (data != null && NtForms.current(data) == FORM_BITE) {
-            NtBite.hit(victim);
+            NtBite.hit(attacker, data, victim);
         }
     }
 
-    /** 玩家受到伤害后的效果（骨刺连射）。在守护结算之后调用，伤害已被守护清零时不反弹。 */
+    /** 玩家受到伤害后的效果（骨刺连射）。反弹与反击骨刺伤害上限锚定自身最大生命与等级，防止低级碰瓷高攻目标。 */
     static void onPlayerHurt(ServerPlayer player, LivingEntity attacker, float amount) {
         if (reflecting || amount <= 0.0F || attacker == player || !attacker.m_6084_()) {
             return;
@@ -147,9 +157,12 @@ public final class NtFormEffects {
         if (data == null || NtForms.current(data) != FORM_SPIKE) {
             return;
         }
+        double selfMaxHp = StatCalculator.maxStat(StatType.HP, data, TemplateRegistry.get(), CoreConfig.get());
+        float reflectCap = (float) Math.max(8.0, selfMaxHp * 0.35 + data.level() * 1.5);
+        float reflected = Math.min((float) (amount * SPIKE_REFLECT), reflectCap);
         reflecting = true;
         try {
-            TargetUtil.hurt(attacker, ModDamageTypes.technique(player), (float) (amount * SPIKE_REFLECT));
+            TargetUtil.hurt(attacker, ModDamageTypes.technique(player), reflected);
         } finally {
             reflecting = false;
         }
@@ -158,7 +171,8 @@ public final class NtFormEffects {
         long last = LAST_SPIKE.getOrDefault(owner, Long.MIN_VALUE / 2);
         if (now - last >= SPIKE_COOLDOWN) {
             LAST_SPIKE.put(owner, now);
-            HolleSpike.launchToward(player, attacker, (float) (amount * SPIKE_SHOT));
+            float spikeDmg = Math.min((float) (amount * SPIKE_SHOT), reflectCap * 1.4f);
+            HolleSpike.launchToward(player, attacker, spikeDmg);
         }
     }
 

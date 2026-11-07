@@ -1,11 +1,18 @@
 package com.rpgtemplate.nothingthere;
 
+import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.core.stats.StatType;
+import com.rpgtemplate.forge.combat.ModDamageTypes;
 import com.rpgtemplate.forge.combat.WorldSlashDamage;
+import com.rpgtemplate.forge.skill.RuleJudge;
 import com.rpgtemplate.forge.skill.TargetUtil;
+import com.rpgtemplate.forge.system.SystemDataManager;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
@@ -96,16 +103,45 @@ public final class NtStrike {
     }
 
     /**
+     * 按四档机制判定执行 goodbye 斩击：
+     * ① 完全生效：无视无敌帧强制命中与致死处决；
+     * ② 显著干扰：常规技巧重创（75% 威力）+ 2 秒减速；
+     * ③ 微弱牵制：常规技巧擦伤（35% 威力）；
+     * ④ 判定失败：仅造成 10% 余波冲击，施放者受反震短暂减速 1 秒。
+     */
+    public static void strikeWithRule(ServerPlayer attacker, PlayerSystemData attackerData,
+                                      LivingEntity target, float damage) {
+        RuleJudge.Result check = RuleJudge.evaluate(attacker, attackerData, target, StatType.SP);
+        RuleJudge.notify(attacker, target, "goodbye", check);
+        switch (check.tier()) {
+            case FULL -> forceHit(attacker, target, damage);
+            case MAJOR -> {
+                if (TargetUtil.hurt(target, ModDamageTypes.technique(attacker), damage * 0.75f)) {
+                    target.m_7292_(new MobEffectInstance(MobEffects.f_19597_, 40, 0, false, false, true));
+                    if (target.m_9236_() instanceof net.minecraft.server.level.ServerLevel hitLevel) {
+                        NtGore.hitBurst(hitLevel, target);
+                    }
+                }
+            }
+            case MINOR -> TargetUtil.hurt(target, ModDamageTypes.technique(attacker), damage * 0.35f);
+            case FAIL -> {
+                TargetUtil.hurt(target, ModDamageTypes.technique(attacker), damage * 0.10f);
+                attacker.m_7292_(new MobEffectInstance(MobEffects.f_19597_, 20, 0, false, false, true));
+            }
+        }
+    }
+
+    /**
      * 强制命中：不走 hurt / attack 事件，因此无视无敌帧、抗性效果（伤害归零）以及其他模组对攻击事件的取消。
      * 玩家目标先经过系统生命（按其防御减免）再扣原版生命；致死时走 kill()。
      */
     public static void forceHit(ServerPlayer attacker, LivingEntity target, float damage) {
         float remaining = damage;
-        if (target instanceof ServerPlayer sp) {
-            var targetData = NtForms.activeData(sp);
-            if (targetData != null) {
+        if (target instanceof ServerPlayer sp && SystemDataManager.available(sp)) {
+            PlayerSystemData targetData = SystemDataManager.get(sp);
+            if (targetData.isActivated()) {
                 remaining = com.rpgtemplate.forge.combat.DamageHandler.absorb(sp, targetData, damage, false);
-                com.rpgtemplate.forge.system.SystemDataManager.markDirty(sp);
+                SystemDataManager.markDirty(sp);
             }
         }
         if (remaining > 0.0f && target.m_6084_()) {
