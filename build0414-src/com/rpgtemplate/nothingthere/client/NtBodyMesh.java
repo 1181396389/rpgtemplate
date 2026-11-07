@@ -89,8 +89,15 @@ public final class NtBodyMesh {
     public static void drawArmFirstPerson(PoseStack pose, VertexConsumer vc, int light, int overlay,
                                           ModelPart arm, boolean right, float swing, float equip,
                                           boolean goodbye, boolean blade, boolean whip, boolean muscle,
-                                          float sizeXZ, float sizeY) {
-        arm.f_104203_ = 0.0F;
+                                          float sizeXZ, float sizeY, float[] attack) {
+        if (attack == null) {
+            arm.f_104203_ = 0.0F;
+        } else {
+            // 拟态攻击姿势：{pitch, yaw, roll}，与 ModelPart 的旋转顺序一致（见 drawFrame）
+            arm.f_104203_ = attack[0];
+            arm.f_104204_ = attack[1];
+            arm.f_104205_ = attack[2];
+        }
         pose.m_85836_();
         applyFirstPersonHand(pose, right, swing, equip);
         drawFrame(pose, vc, light, overlay, arm, right ? FRAME_RIGHT_ARM : FRAME_LEFT_ARM, goodbye, blade,

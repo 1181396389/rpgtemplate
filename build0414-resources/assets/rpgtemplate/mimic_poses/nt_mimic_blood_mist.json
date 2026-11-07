@@ -1,0 +1,47 @@
+{
+  "format": "rpgtemplate-keyframes-v1",
+  "note": "PlayerAnimator 风格关键帧（字段名待对照所用 PlayerAnimator 版本核对）。角度单位：弧度。数值由参考图目测估计，需进游戏调整。",
+  "name": "nt_mimic_blood_mist",
+  "length_ticks": 40,
+  "loop": false,
+  "hit_ticks": [14, 20, 26, 30, 34, 38],
+  "references": [
+    "殷红迷雾血雾弥漫1-5SD.webp（图1举剑 / 图2-3前刺 / 图4横扫 / 图5斜劈）",
+    "枪包 melee 系列节奏"
+  ],
+  "frames": [
+    { "tick": 0, "easing": "linear", "parts": {} },
+    { "tick": 8, "easing": "easeInOut", "parts": {
+        "rightArm": { "pitch": -2.8, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": -0.2 },
+        "torso": { "pitch": -0.1 } } },
+    { "tick": 14, "easing": "easeOut", "parts": {
+        "rightArm": { "pitch": -1.55, "yaw": 0.1, "roll": 0.0 },
+        "leftArm": { "pitch": 0.3 },
+        "torso": { "pitch": 0.15 },
+        "rightLeg": { "pitch": 0.5 },
+        "leftLeg": { "pitch": -0.3 } } },
+    { "tick": 20, "easing": "linear", "parts": {
+        "rightArm": { "pitch": -1.5, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": 0.25 },
+        "rightLeg": { "pitch": 0.6 },
+        "leftLeg": { "pitch": -0.4 } } },
+    { "tick": 26, "easing": "easeInOut", "parts": {
+        "rightArm": { "pitch": -1.45, "yaw": -0.55, "roll": 0.0 },
+        "torso": { "pitch": 0.2, "yaw": -0.3 } } },
+    { "tick": 30, "easing": "linear", "parts": {
+        "rightArm": { "pitch": -1.4, "yaw": -0.7, "roll": 0.0 },
+        "torso": { "pitch": 0.2, "yaw": -0.35 } } },
+    { "tick": 34, "easing": "easeIn", "parts": {
+        "rightArm": { "pitch": -0.7, "yaw": 0.45, "roll": -0.4 },
+        "torso": { "pitch": 0.55, "yaw": 0.2 },
+        "rightLeg": { "pitch": 0.8 },
+        "leftLeg": { "pitch": -0.6 } } },
+    { "tick": 38, "easing": "linear", "parts": {
+        "rightArm": { "pitch": -0.9, "yaw": 0.5, "roll": -0.3 },
+        "torso": { "pitch": 0.5, "yaw": 0.2 },
+        "rightLeg": { "pitch": 0.8 },
+        "leftLeg": { "pitch": -0.6 } } },
+    { "tick": 40, "easing": "easeOut", "parts": {} }
+  ]
+}

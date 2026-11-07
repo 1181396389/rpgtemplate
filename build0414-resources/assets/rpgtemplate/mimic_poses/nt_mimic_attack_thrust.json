@@ -1,0 +1,23 @@
+{
+  "format": "rpgtemplate-keyframes-v1",
+  "note": "拟态突刺重击（第 3 段，倍率 200%）：收手后向前直刺。占位角度（弧度），需进游戏调整。",
+  "name": "nt_mimic_attack_thrust",
+  "length_ticks": 10,
+  "loop": false,
+  "hit_ticks": [6],
+  "frames": [
+    { "tick": 0, "easing": "linear", "parts": {} },
+    { "tick": 3, "easing": "easeOut", "parts": {
+        "rightArm": { "pitch": 0.3, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": -0.5, "yaw": 0.4, "roll": 0.0 },
+        "torso": { "pitch": 0.1, "yaw": 0.0, "roll": 0.0 } } },
+    { "tick": 6, "easing": "easeIn", "parts": {
+        "rightArm": { "pitch": -1.55, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": -0.2, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": -0.2, "yaw": 0.0, "roll": 0.0 } } },
+    { "tick": 10, "easing": "easeOut", "parts": {
+        "rightArm": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 } } }
+  ]
+}

@@ -1,30 +1,29 @@
 package com.rpgtemplate.nothingthere;
 
+import com.rpgtemplate.forge.fx.Fx;
 import java.util.List;
-import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector3f;
 
 /**
- * 形态 4（脊骨鞭）与形态 5（全收）的攻击效果。服务端发送粒子（ServerLevel 会发给附近玩家）和音效。
+ * 形态 4（脊骨鞭）与形态 5（全收）的攻击效果。非粒子几何特效（经 Fx 通道发送到客户端绘制）和音效。
  *
- * 脊骨鞭：挥击弧线上留下骨色粉尘，并播放鞭响（NtSounds.HIT 提高音调，短而脆）。
- * 全收：每个命中目标处爆出暗红与血块色粉尘；施法者周围出现一圈血肉脉冲，并播放沉闷的肉击声（降低音调）。
+ * 脊骨鞭：挥击弧线上留下骨色火花，并播放鞭响（NtSounds.HIT 提高音调，短而脆）。
+ * 全收：每个命中目标处爆出暗红与血块色火花；施法者周围出现一圈血肉脉冲环，并播放沉闷的肉击声（降低音调）。
  */
 public final class NtFx {
-    private static final Vector3f BONE = new Vector3f(0.92f, 0.87f, 0.74f);
-    private static final Vector3f BONE_DARK = new Vector3f(0.58f, 0.52f, 0.42f);
-    private static final Vector3f FLESH = new Vector3f(0.70f, 0.14f, 0.16f);
-    private static final Vector3f CLOT = new Vector3f(0.36f, 0.03f, 0.05f);
+    private static final int BONE = 0xEADEBD;
+    private static final int BONE_DARK = 0x94856B;
+    private static final int FLESH = 0xB32429;
+    private static final int CLOT = 0x5C080D;
 
     private NtFx() {
     }
 
-    /** 脊骨鞭：沿挥击弧线（与 NtForms.sweep 同一弧度）铺出骨色粉尘，并播放鞭响。 */
+    /** 脊骨鞭：沿挥击弧线（与 NtForms.sweep 同一弧度）铺出骨色火花，并播放鞭响。 */
     public static void whip(ServerPlayer player, double range, double arcDegrees) {
         if (!(player.m_9236_() instanceof ServerLevel level)) {
             return;
@@ -41,19 +40,22 @@ public final class NtFx {
         double py = player.m_20186_() + 1.1;
         double pz = player.m_20189_();
         int steps = 12;
+        Fx.Pts bone = new Fx.Pts();
+        Fx.Pts dark = new Fx.Pts();
         for (int s = 0; s <= steps; s++) {
             double a = base - half + (2.0 * half) * s / steps;
-            Vector3f colour = s % 3 == 0 ? BONE : BONE_DARK;
+            Fx.Pts target = s % 3 == 0 ? bone : dark;
             for (double r = 1.2; r <= range; r += 0.9) {
-                level.m_8767_(new DustParticleOptions(colour, 0.9f),
-                    px + Math.cos(a) * r, py, pz + Math.sin(a) * r, 1, 0.0, 0.0, 0.0, 0.0);
+                target.add(px + Math.cos(a) * r, py, pz + Math.sin(a) * r);
             }
         }
+        Fx.send(level, px, py, pz, Fx.SPARK, BONE, 0.12f, 14, 0.0f, bone);
+        Fx.send(level, px, py, pz, Fx.SPARK, BONE_DARK, 0.12f, 14, 0.0f, dark);
         level.m_6263_(null, px, py, pz, NtSounds.HIT, SoundSource.MASTER, 0.8f, 1.6f);
     }
 
     /**
-     * 全收：每个命中目标处爆出血块与暗红粉尘；施法者周围出现血肉脉冲（一圈粉尘向外扩散的环）。
+     * 全收：每个命中目标处爆出血块与暗红火花；施法者周围出现血肉脉冲环。
      *
      * @param hits 挥击命中的实体（NtForms.sweep 返回值）
      */
@@ -65,17 +67,13 @@ public final class NtFx {
             double x = entity.m_20185_();
             double y = entity.m_20186_() + entity.m_20206_() * 0.5;
             double z = entity.m_20189_();
-            level.m_8767_(new DustParticleOptions(CLOT, 1.3f), x, y, z, 14, 0.35, 0.45, 0.35, 0.02);
-            level.m_8767_(new DustParticleOptions(FLESH, 1.1f), x, y, z, 10, 0.30, 0.30, 0.30, 0.02);
+            Fx.burst(level, Fx.SPARK, CLOT, 0.16f, 18, 0.5f, x, y, z, 14, 0.35, 0.45, 0.35);
+            Fx.burst(level, Fx.SPARK, FLESH, 0.14f, 16, 0.5f, x, y, z, 10, 0.30, 0.30, 0.30);
         }
         double px = player.m_20185_();
         double py = player.m_20186_() + 0.9;
         double pz = player.m_20189_();
-        for (int i = 0; i < 16; i++) {
-            double a = 2.0 * Math.PI * i / 16;
-            level.m_8767_(new DustParticleOptions(FLESH, 1.0f),
-                px + Math.cos(a) * 1.3, py, pz + Math.sin(a) * 1.3, 1, 0.0, 0.2, 0.0, 0.0);
-        }
+        Fx.send(level, px, py, pz, Fx.RING, FLESH, 0.16f, 14, 1.3f, new Fx.Pts().add(px, py, pz));
         level.m_6263_(null, px, py, pz, NtSounds.HIT, SoundSource.MASTER, 0.9f, 0.7f);
     }
 }

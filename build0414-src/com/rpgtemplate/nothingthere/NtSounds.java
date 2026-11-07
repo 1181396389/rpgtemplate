@@ -22,6 +22,8 @@ public final class NtSounds {
     public static SoundEvent HIT;
     public static final ResourceLocation HOLLE_ID = new ResourceLocation("rpgtemplate", "nt_holle");
     public static SoundEvent HOLLE;
+    public static final ResourceLocation EGO_BGM_ID = new ResourceLocation("rpgtemplate", "nt_ego_bgm");
+    public static SoundEvent EGO_BGM;
 
     private NtSounds() {
     }
@@ -35,6 +37,8 @@ public final class NtSounds {
             registerHelper.register(HIT_ID, HIT);
             HOLLE = SoundEvent.m_262824_(HOLLE_ID);
             registerHelper.register(HOLLE_ID, HOLLE);
+            EGO_BGM = SoundEvent.m_262824_(EGO_BGM_ID);
+            registerHelper.register(EGO_BGM_ID, EGO_BGM);
         });
     }
 }

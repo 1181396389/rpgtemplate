@@ -1,0 +1,23 @@
+{
+  "format": "rpgtemplate-keyframes-v1",
+  "note": "拟态左轻击（第 1 段，倍率 100%）：右手横向挥斩。占位角度（弧度），需进游戏调整。",
+  "name": "nt_mimic_attack_light",
+  "length_ticks": 10,
+  "loop": false,
+  "hit_ticks": [4],
+  "frames": [
+    { "tick": 0, "easing": "linear", "parts": {} },
+    { "tick": 3, "easing": "easeOut", "parts": {
+        "rightArm": { "pitch": -0.4, "yaw": 0.9, "roll": 0.0 },
+        "leftArm": { "pitch": 0.3, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": 0.0, "yaw": -0.35, "roll": 0.0 } } },
+    { "tick": 6, "easing": "easeInOut", "parts": {
+        "rightArm": { "pitch": -1.0, "yaw": -0.7, "roll": 0.0 },
+        "leftArm": { "pitch": -0.2, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": 0.0, "yaw": 0.4, "roll": 0.0 } } },
+    { "tick": 10, "easing": "easeOut", "parts": {
+        "rightArm": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 } } }
+  ]
+}

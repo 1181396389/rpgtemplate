@@ -1,0 +1,23 @@
+{
+  "format": "rpgtemplate-keyframes-v1",
+  "note": "拟态右重击（第 2 段，倍率 150%）：高举后下劈。占位角度（弧度），需进游戏调整。",
+  "name": "nt_mimic_attack_heavy",
+  "length_ticks": 10,
+  "loop": false,
+  "hit_ticks": [7],
+  "frames": [
+    { "tick": 0, "easing": "linear", "parts": {} },
+    { "tick": 4, "easing": "easeOut", "parts": {
+        "rightArm": { "pitch": -2.7, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": -0.6, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": -0.25, "yaw": 0.0, "roll": 0.0 } } },
+    { "tick": 7, "easing": "easeIn", "parts": {
+        "rightArm": { "pitch": 0.9, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": 0.2, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": 0.35, "yaw": 0.0, "roll": 0.0 } } },
+    { "tick": 10, "easing": "easeOut", "parts": {
+        "rightArm": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+        "torso": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 } } }
+  ]
+}

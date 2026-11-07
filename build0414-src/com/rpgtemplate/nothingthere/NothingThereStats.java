@@ -78,7 +78,7 @@ public final class NothingThereStats {
             return;
         }
         DamageSource source = event.getSource();
-        if (!isPhysical(source)) {
+        if (NtMimicCombat.fromMimic(source) || !isPhysical(source)) {
             return;
         }
         double perLevel = TraitLookup.param(trait.get(), "per_level", 0.025);

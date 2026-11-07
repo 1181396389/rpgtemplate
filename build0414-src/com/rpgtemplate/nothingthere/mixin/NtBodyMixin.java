@@ -56,5 +56,11 @@ public abstract class NtBodyMixin {
         self.m_20088_().m_135372_(NtBody.DATA_HOLLE, Boolean.FALSE);
         self.m_20088_().m_135372_(NtBody.DATA_OH_CHARGE, Boolean.FALSE);
         self.m_20088_().m_135372_(NtBody.DATA_OH_SLAM, Boolean.FALSE);
+        self.m_20088_().m_135372_(NtBody.DATA_MIST_ANIM, Boolean.FALSE);
+        self.m_20088_().m_135372_(NtBody.DATA_CORPSE_ANIM, Boolean.FALSE);
+        self.m_20088_().m_135372_(NtBody.DATA_ATTACK_ANIM, Integer.valueOf(0));
+        self.m_20088_().m_135372_(NtBody.DATA_MIST_LAYERS, Integer.valueOf(0));
+        self.m_20088_().m_135372_(NtBody.DATA_EGO, Boolean.FALSE);
+        self.m_20088_().m_135372_(NtBody.DATA_BLEED_CNT, Integer.valueOf(0));
     }
 }

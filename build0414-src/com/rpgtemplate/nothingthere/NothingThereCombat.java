@@ -74,13 +74,16 @@ public final class NothingThereCombat {
             event.setAmount(0.0f);
             return;
         }
-        if (data.value(NtForms.KEY_GB_GUARD_UNTIL, 0.0) > (double) now) {
+        if (data.value(NtForms.KEY_GB_GUARD_UNTIL, 0.0) > (double) now && !NtMimicCombat.fromMimic(event.getSource())) {
             event.setAmount((float) (event.getAmount() * (1.0 - GoodbyeSkill.DAMAGE_REDUCTION)));
         }
     }
 
     /** 死亡记忆：对曾经击杀过自己的人，伤害按记录次数减免。 */
     private static void reduceByDeathMemory(LivingHurtEvent event, ServerPlayer player, Entity killer) {
+        if (NtMimicCombat.fromMimic(event.getSource())) {
+            return; // 拟态攻击无视死亡记忆减伤
+        }
         PlayerSystemData data = NtForms.activeData(player);
         if (data == null) {
             return;

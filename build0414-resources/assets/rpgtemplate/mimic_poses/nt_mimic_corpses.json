@@ -1,0 +1,26 @@
+{
+  "format": "rpgtemplate-keyframes-v1",
+  "note": "尸横遍野动作：高举拟态后横向斩击。PlayerAnimator 风格关键帧（字段名待对照所用 PlayerAnimator 版本核对）。角度单位：弧度。数值为占位估计，需进游戏调整。",
+  "name": "nt_mimic_corpses",
+  "length_ticks": 20,
+  "loop": false,
+  "hit_ticks": [12],
+  "frames": [
+    { "tick": 0, "easing": "linear", "parts": {} },
+    { "tick": 6, "easing": "easeInOut", "parts": {
+        "rightArm": { "pitch": -2.8, "yaw": 0.0, "roll": 0.0 },
+        "leftArm": { "pitch": -0.2 },
+        "torso": { "pitch": -0.1 } } },
+    { "tick": 10, "easing": "easeIn", "parts": {
+        "rightArm": { "pitch": -1.4, "yaw": -0.9, "roll": 0.0 },
+        "torso": { "pitch": 0.15, "yaw": -0.4 },
+        "rightLeg": { "pitch": 0.4 },
+        "leftLeg": { "pitch": -0.3 } } },
+    { "tick": 12, "easing": "linear", "parts": {
+        "rightArm": { "pitch": -1.35, "yaw": -1.2, "roll": 0.0 },
+        "torso": { "pitch": 0.15, "yaw": -0.5 },
+        "rightLeg": { "pitch": 0.4 },
+        "leftLeg": { "pitch": -0.3 } } },
+    { "tick": 20, "easing": "easeOut", "parts": {} }
+  ]
+}

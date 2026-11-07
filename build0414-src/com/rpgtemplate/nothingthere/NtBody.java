@@ -56,6 +56,26 @@ public final class NtBody {
     public static final EntityDataAccessor<Boolean> DATA_OH_SLAM =
         SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
 
+    /** 拟态·血雾弥漫动作进行中（所有客户端播放动作）。由 NtMimicCombat.syncAnim 写入。 */
+    public static final EntityDataAccessor<Boolean> DATA_MIST_ANIM =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
+    /** 拟态·尸横遍野动作进行中。由 NtMimicCombat.syncAnim 写入。 */
+    public static final EntityDataAccessor<Boolean> DATA_CORPSE_ANIM =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
+    /** 拟态左键三段攻击的同步值 (计数<<2)|(段+1)，0 表示未攻击。由 NtMimicCombat.onAttack 写入。 */
+    public static final EntityDataAccessor<Integer> DATA_ATTACK_ANIM =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135028_);
+    /** 拟态血雾层数（0–5），客户端据此画血雾光环。由 NtMimicCombat.syncAnim 写入。 */
+    public static final EntityDataAccessor<Integer> DATA_MIST_LAYERS =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135028_);
+    /** 拟态流血计数：每次施加流血 +1，客户端据此闪一下血色光圈。由 NtMimicCombat.addBleed 写入。 */
+    public static final EntityDataAccessor<Integer> DATA_BLEED_CNT =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135028_);
+
+    /** E.G.O展现中（服务端每 tick 写入，所有客户端可读）。 */
+    public static final EntityDataAccessor<Boolean> DATA_EGO =
+        SynchedEntityData.m_135353_(Player.class, EntityDataSerializers.f_135035_);
+
     private static final Logger LOG = LogManager.getLogger("rpgtemplate/NtBody");
     private static final Map<UUID, Boolean> LAST_SERVER = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> LAST_CLIENT = new ConcurrentHashMap<>();
@@ -209,6 +229,55 @@ public final class NtBody {
             return SystemDataManager.get(player).value(NtForms.KEY_HOLLE_UNTIL, 0.0) > (double) player.m_9236_().m_46467_();
         } catch (RuntimeException e) {
             return false;
+        }
+    }
+
+    /** 血雾弥漫动作是否进行中（客户端读取同步数据）。 */
+    public static boolean mistAnimPending(Player player) {
+        try {
+            return player.m_20088_().m_135370_(DATA_MIST_ANIM);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** 尸横遍野动作是否进行中（客户端读取同步数据）。 */
+    public static boolean corpseAnimPending(Player player) {
+        try {
+            return player.m_20088_().m_135370_(DATA_CORPSE_ANIM);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** 拟态左键攻击同步值（客户端读取）；0 表示无攻击。 */
+    public static int attackAnimValue(Player player) {
+        try {
+            return player.m_20088_().m_135370_(DATA_ATTACK_ANIM);
+        } catch (RuntimeException e) {
+            return 0;
+        }
+    }
+
+    /** 拟态血雾层数（客户端读取）。 */
+    public static boolean egoActive(Player player) {
+        return player.m_20088_().m_135370_(DATA_EGO);
+    }
+
+    public static int mistLayers(Player player) {
+        try {
+            return player.m_20088_().m_135370_(DATA_MIST_LAYERS);
+        } catch (RuntimeException e) {
+            return 0;
+        }
+    }
+
+    /** 拟态流血计数（客户端读取）。 */
+    public static int bleedCount(Player player) {
+        try {
+            return player.m_20088_().m_135370_(DATA_BLEED_CNT);
+        } catch (RuntimeException e) {
+            return 0;
         }
     }
 

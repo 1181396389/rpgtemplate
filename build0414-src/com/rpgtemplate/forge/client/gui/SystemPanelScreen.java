@@ -646,8 +646,12 @@ public final class SystemPanelScreen extends Screen {
         }));
         bx += bw + 6;
 
-        if (def.advanceRequiredPlayerLevel() > 0 || def.maxLevelOverride() > 0) {
-            boolean advOn = data.level() >= def.advanceRequiredPlayerLevel();
+        // 进阶按钮：仅当存在子模板（parent == 当前模板）时显示；可用条件与服务端 AdvanceService.check 一致：
+        // 模板满级，且玩家等级达到子模板的 advance_condition（advanceRequiredPlayerLevel）。
+        java.util.Optional<TemplateDefinition> nextTier = TemplateRegistry.client().advancementOf(def.id());
+        if (nextTier.isPresent()) {
+            boolean atMax = selectedInst.level() >= def.maxLevel();
+            boolean advOn = atMax && data.level() >= nextTier.get().advanceRequiredPlayerLevel();
             boolean advHover = inside(mx, my, bx, by, bw, 16);
             UiTheme.buttonSurface(g, bx, by, bw, 16, advHover && advOn, false, UiTheme.E_JADE);
             UiTheme.text(g, font, t("btn.advance"), bx + 6, by + 4, advOn ? UiTheme.E_INK : UiTheme.E_FAINT);

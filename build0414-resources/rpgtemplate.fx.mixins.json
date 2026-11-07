@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.rpgtemplate.forge.fx.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ServerLevelParticleMixin"
+  ],
+  "client": [
+    "ClientLevelParticleMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

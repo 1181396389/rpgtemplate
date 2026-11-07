@@ -720,97 +720,134 @@ public final class UiTheme {
         }
     }
 
-    // ------------------------------------------------------------- particles
+    // ------------------------------------------------------------- ripples and sweeps (no particles)
 
-    private static final int MOTE_CAP = 224;
-    private static final float[] MOTE_X = new float[MOTE_CAP];
-    private static final float[] MOTE_Y = new float[MOTE_CAP];
-    private static final float[] MOTE_VX = new float[MOTE_CAP];
-    private static final float[] MOTE_VY = new float[MOTE_CAP];
-    private static final float[] MOTE_G = new float[MOTE_CAP];
-    private static final float[] MOTE_LIFE = new float[MOTE_CAP];
-    private static final float[] MOTE_MAX = new float[MOTE_CAP];
-    private static final float[] MOTE_ALPHA = new float[MOTE_CAP];
-    private static final float[] MOTE_SIZE = new float[MOTE_CAP];
-    private static final int[] MOTE_COLOUR = new int[MOTE_CAP];
-    private static final java.util.Random RNG = new java.util.Random(0x6A1F2B3C4D5E6F70L);
-    private static int moteCursor;
+    private static final int RIPPLE_CAP = 6;
+    private static final float[] RIP_X = new float[RIPPLE_CAP];
+    private static final float[] RIP_Y = new float[RIPPLE_CAP];
+    private static final float[] RIP_AGE = new float[RIPPLE_CAP];
+    private static final float[] RIP_LIFE = new float[RIPPLE_CAP];
+    private static final float[] RIP_RADIUS = new float[RIPPLE_CAP];
+    private static final int[] RIP_COLOUR = new int[RIPPLE_CAP];
+    private static final int[] RIP_RINGS = new int[RIPPLE_CAP];
+    private static final int SWEEP_CAP = 8;
+    private static final int[] SWP_X = new int[SWEEP_CAP];
+    private static final int[] SWP_Y = new int[SWEEP_CAP];
+    private static final int[] SWP_W = new int[SWEEP_CAP];
+    private static final int[] SWP_H = new int[SWEEP_CAP];
+    private static final float[] SWP_STRENGTH = new float[SWEEP_CAP];
+    private static final double[] SWP_SEEN = new double[SWEEP_CAP];
     private static double moteClock = -1.0;
 
-    private static int nextMote() {
-        int s = moteCursor;
-        moteCursor = (moteCursor + 1) % MOTE_CAP;
-        return s;
-    }
-
-    /** Burst of particles that fly out, slow down and fall. Used for clicks and tab changes. */
+    /** Expanding square rings from a point (no particles). {@code count} sets the ring count, {@code speed} the reach. */
     public static void spawn(float x, float y, int color, int count, float speed) {
         if (UiPreferences.reducedMotion) {
             return;
         }
-        int c = palette(color);
-        for (int i = 0; i < count; i++) {
-            int s = nextMote();
-            double a = RNG.nextDouble() * Math.PI * 2.0;
-            float v = speed * (0.35f + RNG.nextFloat() * 0.9f);
-            MOTE_X[s] = x;
-            MOTE_Y[s] = y;
-            MOTE_VX[s] = (float) Math.cos(a) * v;
-            MOTE_VY[s] = (float) Math.sin(a) * v - speed * 0.4f;
-            MOTE_G[s] = 110f;
-            MOTE_LIFE[s] = 0f;
-            MOTE_MAX[s] = 0.45f + RNG.nextFloat() * 0.6f;
-            MOTE_ALPHA[s] = 0.95f;
-            MOTE_SIZE[s] = RNG.nextFloat() < 0.3f ? 2f : 1f;
-            MOTE_COLOUR[s] = c;
+        int slot = -1;
+        float oldest = -1f;
+        for (int i = 0; i < RIPPLE_CAP; i++) {
+            if (RIP_LIFE[i] <= 0f || RIP_AGE[i] >= RIP_LIFE[i]) {
+                slot = i;
+                break;
+            }
+            if (RIP_AGE[i] > oldest) {
+                oldest = RIP_AGE[i];
+                slot = i;
+            }
         }
+        RIP_X[slot] = x;
+        RIP_Y[slot] = y;
+        RIP_AGE[slot] = 0f;
+        RIP_LIFE[slot] = 0.5f + Math.min(0.5f, count * 0.02f);
+        RIP_RADIUS[slot] = 6f + Math.max(0f, speed) * 0.8f;
+        RIP_COLOUR[slot] = palette(color);
+        RIP_RINGS[slot] = Math.max(1, Math.min(3, 1 + count / 8));
     }
 
-    /** Sparse rising dust inside a rect. {@code rate} is the chance per frame of spawning one mote. */
+    /** Soft light band sweeping up through a rect (no particles). Call every frame the rect is shown; {@code rate} sets the strength (0..1). */
     public static void dust(int x, int y, int w, int h, float rate) {
-        if (UiPreferences.reducedMotion || w <= 0 || h <= 0 || RNG.nextFloat() > rate) {
+        if (UiPreferences.reducedMotion || w <= 0 || h <= 0) {
             return;
         }
-        int s = nextMote();
-        MOTE_X[s] = x + RNG.nextFloat() * w;
-        MOTE_Y[s] = y + h - 1;
-        MOTE_VX[s] = (RNG.nextFloat() - 0.5f) * 3f;
-        MOTE_VY[s] = -(6f + RNG.nextFloat() * 10f);
-        MOTE_G[s] = 0f;
-        MOTE_LIFE[s] = 0f;
-        MOTE_MAX[s] = 3f + RNG.nextFloat() * 3f;
-        MOTE_ALPHA[s] = 0.5f;
-        MOTE_SIZE[s] = RNG.nextFloat() < 0.2f ? 2f : 1f;
-        MOTE_COLOUR[s] = RNG.nextBoolean() ? E_CYAN : E_VIOLET;
+        double now = seconds();
+        int slot = -1;
+        for (int i = 0; i < SWEEP_CAP; i++) {
+            if (SWP_X[i] == x && SWP_Y[i] == y && SWP_W[i] == w && SWP_H[i] == h) {
+                slot = i;
+                break;
+            }
+        }
+        if (slot < 0) {
+            slot = 0;
+            for (int i = 1; i < SWEEP_CAP; i++) {
+                if (SWP_SEEN[i] < SWP_SEEN[slot]) {
+                    slot = i;
+                }
+            }
+        }
+        SWP_X[slot] = x;
+        SWP_Y[slot] = y;
+        SWP_W[slot] = w;
+        SWP_H[slot] = h;
+        SWP_STRENGTH[slot] = Math.max(0f, Math.min(1f, rate));
+        SWP_SEEN[slot] = now;
     }
 
-    /** Advances and draws every live particle. Call once per frame, after the content. */
+    /** Draws the ripples and sweeps. Call once per frame, after the content. */
     public static void motes(GuiGraphics g) {
         double now = seconds();
         float dt = moteClock < 0.0 ? 0f : (float) Math.min(0.1, now - moteClock);
         moteClock = now;
-        float drag = (float) Math.exp(-3.0 * dt);
-        for (int i = 0; i < MOTE_CAP; i++) {
-            if (MOTE_MAX[i] <= 0f) {
+        for (int i = 0; i < RIPPLE_CAP; i++) {
+            if (RIP_LIFE[i] <= 0f) {
                 continue;
             }
-            MOTE_LIFE[i] += dt;
-            if (MOTE_LIFE[i] >= MOTE_MAX[i]) {
-                MOTE_MAX[i] = 0f;
+            RIP_AGE[i] += dt;
+            if (RIP_AGE[i] >= RIP_LIFE[i]) {
+                RIP_LIFE[i] = 0f;
                 continue;
             }
-            MOTE_VX[i] *= drag;
-            MOTE_VY[i] = MOTE_VY[i] * drag + MOTE_G[i] * dt;
-            MOTE_X[i] += MOTE_VX[i] * dt;
-            MOTE_Y[i] += MOTE_VY[i] * dt;
-            float k = MOTE_LIFE[i] / MOTE_MAX[i];
-            float fadeIn = Math.min(1f, k * 12f);
-            float a = MOTE_ALPHA[i] * (1f - k) * fadeIn;
-            int px = Math.round(MOTE_X[i]);
-            int py = Math.round(MOTE_Y[i]);
-            int sz = (int) MOTE_SIZE[i];
-            g.m_280509_(px, py, px + sz, py + sz, alpha(a, MOTE_COLOUR[i]));
+            float t = RIP_AGE[i] / RIP_LIFE[i];
+            float ease = 1f - (1f - t) * (1f - t);
+            float radius = RIP_RADIUS[i] * ease;
+            float a = (1f - t) * (1f - t) * 0.9f * Math.min(1f, t * 10f);
+            int cx = Math.round(RIP_X[i]);
+            int cy = Math.round(RIP_Y[i]);
+            for (int k = 0; k < RIP_RINGS[i]; k++) {
+                int r = Math.round(radius - k * 4f);
+                if (r <= 1) {
+                    continue;
+                }
+                hairFrame(g, cx - r, cy - r, cx + r, cy + r, alpha(a * (1f - k * 0.3f), RIP_COLOUR[i]));
+            }
         }
+        for (int i = 0; i < SWEEP_CAP; i++) {
+            double since = now - SWP_SEEN[i];
+            if (SWP_SEEN[i] <= 0.0 || since > 0.25) {
+                continue;
+            }
+            float fade = (float) (1.0 - since / 0.25) * SWP_STRENGTH[i];
+            int top = SWP_Y[i];
+            int h = SWP_H[i];
+            float phase = (float) ((now % 1.6) / 1.6);
+            int band = top + h - Math.round(phase * h);
+            for (int d = 0; d < 5; d++) {
+                int yy = band + d * 2;
+                if (yy < top || yy + 2 > top + h) {
+                    continue;
+                }
+                float a = fade * 0.45f * (1f - d / 5f);
+                g.m_280509_(SWP_X[i], yy, SWP_X[i] + SWP_W[i], yy + 2, alpha(a, E_CYAN));
+            }
+        }
+    }
+
+    private static void hairFrame(GuiGraphics g, int x1, int y1, int x2, int y2, int argb) {
+        g.m_280509_(x1, y1, x2 + 1, y1 + 1, argb);
+        g.m_280509_(x1, y2, x2 + 1, y2 + 1, argb);
+        g.m_280509_(x1, y1, x1 + 1, y2 + 1, argb);
+        g.m_280509_(x2, y1, x2 + 1, y2 + 1, argb);
     }
 
     // ------------------------------------------------------------- title

@@ -51,6 +51,9 @@ public final class NothingThereDeath {
                 NtForms.activeData(player) == null ? "no-data" : NtForms.activeData(player).value(NtForms.KEY_COCOON_UNTIL, 0.0));
             clearGoodbye(player);
             recordDeathMemory(player, killer);
+            if (killer instanceof ServerPlayer hunter) {
+                NtMimicBlade.tryDrop(player, hunter); // 殷红迷雾·原型拟态刀（茧未触发时才会走到这里）
+            }
         }
         if (killer instanceof ServerPlayer hunter && hunter != victim) {
             countKill(hunter, victim);

@@ -22,5 +22,13 @@
         "stream": false
       }
     ]
+  },
+  "nt_ego_bgm": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_ego_bgm",
+        "stream": false
+      }
+    ]
   }
 }

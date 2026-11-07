@@ -1,6 +1,7 @@
 package com.rpgtemplate.nothingthere.mixin;
 
 import com.rpgtemplate.nothingthere.client.NtGoodbyeLean;
+import com.rpgtemplate.nothingthere.client.NtMimicPose;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Client only. The goodbye strike leans the 一无所有 torso forward and crouches it (NtGoodbyeLean).
  * HEAD undoes the last frame's lean, TAIL applies this frame's lean after the vanilla pose.
+ * 拟态动作（血雾弥漫 / 尸横遍野）同样在 TAIL 写入姿势（NtMimicPose）。
  */
 @Mixin(PlayerModel.class)
 public abstract class NtPlayerModelMixin {
@@ -24,5 +26,6 @@ public abstract class NtPlayerModelMixin {
     private void nt$leanApply(LivingEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
                               float netHeadYaw, float headPitch, CallbackInfo ci) {
         NtGoodbyeLean.apply((PlayerModel<?>) (Object) this, entity, ageInTicks);
+        NtMimicPose.apply((PlayerModel<?>) (Object) this, entity, ageInTicks);
     }
 }
