@@ -70,7 +70,17 @@ public final class TacticalSkillClient {
     }
 
     private static void ensureKeysResolved(Minecraft mc) {
-        if (cachedSkillKeys != null || mc.f_91066_ == null || mc.f_91066_.f_92059_ == null) {
+        if (cachedSkillKeys != null) {
+            return;
+        }
+        if (ClientKeys.SKILLS != null && ClientKeys.SKILLS.length >= 4 && ClientKeys.PAGE != null) {
+            cachedSkillKeys = new KeyMapping[]{
+                ClientKeys.SKILLS[0], ClientKeys.SKILLS[1], ClientKeys.SKILLS[2], ClientKeys.SKILLS[3]
+            };
+            cachedPageKey = ClientKeys.PAGE;
+            return;
+        }
+        if (mc.f_91066_ == null || mc.f_91066_.f_92059_ == null) {
             return;
         }
         KeyMapping[] found = new KeyMapping[4];
@@ -310,8 +320,9 @@ public final class TacticalSkillClient {
         // 半透明中心暗幕与指针十字
         g.m_280509_(cx - 118, cy - 102, cx + 118, cy + 102, UiTheme.alpha(0.38f, UiTheme.E_SHADOW));
         UiTheme.border(g, cx - 22, cy - 12, 44, 24, selected >= 0 ? UiTheme.E_JADE : UiTheme.E_EDGE);
-        g.m_280653_(font, selected >= 0 ? "#" + (selected + 1) : "\u00d7", cx, cy - 4,
-            UiTheme.alpha(1.0f, selected >= 0 ? UiTheme.E_GOLD_TEXT : UiTheme.E_MUTED));
+        String centerLabel = selected >= 0 ? "#" + (selected + 1) : "\u00d7";
+        UiTheme.text(g, font, centerLabel, cx - font.m_92895_(centerLabel) / 2, cy - 4,
+            selected >= 0 ? UiTheme.E_GOLD_TEXT : UiTheme.E_MUTED);
 
         int radius = 72;
         int cardW = 76;
@@ -345,8 +356,8 @@ public final class TacticalSkillClient {
         int dotX = cx + (int) Math.round(wheelAimX * 0.45);
         int dotY = cy + (int) Math.round(wheelAimY * 0.45);
         g.m_280509_(dotX - 2, dotY - 2, dotX + 2, dotY + 2, UiTheme.alpha(0.95f, UiTheme.E_GOLD_TEXT));
-        g.m_280653_(font, Component.m_237115_("hud.rpgtemplate.ui.wheel_hint").getString(),
-            cx, cy + 92, UiTheme.alpha(1.0f, UiTheme.E_MUTED));
+        String wheelHint = Component.m_237115_("hud.rpgtemplate.ui.wheel_hint").getString();
+        UiTheme.text(g, font, wheelHint, cx - font.m_92895_(wheelHint) / 2, cy + 92, UiTheme.E_MUTED);
     }
 
     private static int selectedWheelSlot(int count) {

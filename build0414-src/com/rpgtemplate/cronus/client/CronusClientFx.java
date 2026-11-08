@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.rpgtemplate.core.data.PlayerSystemData;
 import com.rpgtemplate.cronus.CronusFxMsg;
 import com.rpgtemplate.cronus.CronusKeys;
-import com.rpgtemplate.forge.client.ClientSystemState;
+import com.rpgtemplate.forge.client.ClientSystemData;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -226,8 +226,9 @@ public final class CronusClientFx {
             return;
         }
 
-        PlayerSystemData selfData = ClientSystemState.data();
-        boolean selfIsCronus = selfData.isActivated() && CronusKeys.TEMPLATE_ID.equals(selfData.loadedTemplateId());
+        PlayerSystemData selfData = ClientSystemData.get();
+        boolean selfIsCronus = selfData != null && selfData.isActivated()
+            && CronusKeys.TEMPLATE_ID.equals(selfData.loadedTemplateId());
         if (!selfIsCronus && DOMAINS.isEmpty() && POPUPS.isEmpty() && RIPPLES.isEmpty() && TRAPS.isEmpty()) {
             return;
         }

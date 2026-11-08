@@ -119,7 +119,7 @@ public final class CronusSkills {
                 ctx.data.setValue(CronusKeys.KEY_WEAPON_MODE, (double) next);
                 ctx.cooldown(8);
                 ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                    SoundEvents.f_11887_, SoundSource.PLAYERS, 0.8f, next == CronusKeys.MODE_GUN ? 1.45f : 0.85f);
+                    SoundEvents.f_11736_, SoundSource.PLAYERS, 0.8f, next == CronusKeys.MODE_GUN ? 1.45f : 0.85f);
                 Msg.actionBar(ctx.player, Component.m_237115_(next == CronusKeys.MODE_GUN
                         ? "message.rpgtemplate.cronus.mode_gun"
                         : "message.rpgtemplate.cronus.mode_chainsaw")
@@ -243,7 +243,7 @@ public final class CronusSkills {
                 Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.spin_ready")
                     .m_130940_(ChatFormatting.GREEN));
                 ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                    SoundEvents.f_12318_, SoundSource.PLAYERS, 0.8f, 1.8f);
+                    SoundEvents.f_11983_, SoundSource.PLAYERS, 0.8f, 1.8f);
             }
             if (heldTicks >= 26L) {
                 ctx.data.setValue(KEY_CHARGE_START, -1.0);

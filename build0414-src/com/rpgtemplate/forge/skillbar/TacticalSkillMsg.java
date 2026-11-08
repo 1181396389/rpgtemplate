@@ -32,11 +32,11 @@ public final class TacticalSkillMsg {
 
     public static void encode(TacticalSkillMsg msg, FriendlyByteBuf buf) {
         buf.writeByte(msg.kind);
-        buf.writeVarInt(msg.value);
+        buf.m_130130_(msg.value);
     }
 
     public static TacticalSkillMsg decode(FriendlyByteBuf buf) {
-        return new TacticalSkillMsg(buf.readByte(), buf.readVarInt());
+        return new TacticalSkillMsg(buf.readByte(), buf.m_130242_());
     }
 
     public static void handle(TacticalSkillMsg msg, Supplier<NetworkEvent.Context> ctxSupplier) {

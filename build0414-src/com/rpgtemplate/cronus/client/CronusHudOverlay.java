@@ -2,7 +2,7 @@ package com.rpgtemplate.cronus.client;
 
 import com.rpgtemplate.core.data.PlayerSystemData;
 import com.rpgtemplate.cronus.CronusKeys;
-import com.rpgtemplate.forge.client.ClientSystemState;
+import com.rpgtemplate.forge.client.ClientSystemData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,8 +46,9 @@ public final class CronusHudOverlay {
         if (mc.f_91074_ == null || mc.f_91066_.f_92062_) {
             return;
         }
-        PlayerSystemData data = ClientSystemState.data();
-        boolean isCronus = data.isActivated() && CronusKeys.TEMPLATE_ID.equals(data.loadedTemplateId());
+        PlayerSystemData data = ClientSystemData.get();
+        boolean isCronus = data != null && data.isActivated()
+            && CronusKeys.TEMPLATE_ID.equals(data.loadedTemplateId());
         if (!isCronus && outBannerTicks <= 0) {
             return;
         }
@@ -95,8 +96,8 @@ public final class CronusHudOverlay {
                 Font font = mc.f_91062_;
                 String mainTxt = Component.m_237115_("hud.rpgtemplate.cronus.out_banner").getString();
                 String subTxt = "KIMEWAZA  ·  CRITICAL CREWS-AID  ·  OUT!";
-                g.m_280653_(font, mainTxt, sw / 2, cy - 9, (a << 24) | 0x38FF9C);
-                g.m_280653_(font, subTxt, sw / 2, cy + 3, (a << 24) | 0xFFE066);
+                g.m_280056_(font, mainTxt, sw / 2 - font.m_92895_(mainTxt) / 2, cy - 9, (a << 24) | 0x38FF9C, true);
+                g.m_280056_(font, subTxt, sw / 2 - font.m_92895_(subTxt) / 2, cy + 3, (a << 24) | 0xFFE066, true);
             }
         }
     }

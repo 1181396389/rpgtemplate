@@ -51,23 +51,23 @@ public final class CronusFxMsg {
 
     public static void encode(CronusFxMsg m, FriendlyByteBuf buf) {
         buf.writeByte(m.kind);
-        buf.writeVarInt(m.entityId);
+        buf.m_130130_(m.entityId);
         buf.writeDouble(m.x);
         buf.writeDouble(m.y);
         buf.writeDouble(m.z);
         buf.writeFloat(m.param);
-        buf.writeVarInt(m.extra);
+        buf.m_130130_(m.extra);
     }
 
     public static CronusFxMsg decode(FriendlyByteBuf buf) {
         return new CronusFxMsg(
             buf.readByte(),
-            buf.readVarInt(),
+            buf.m_130242_(),
             buf.readDouble(),
             buf.readDouble(),
             buf.readDouble(),
             buf.readFloat(),
-            buf.readVarInt());
+            buf.m_130242_());
     }
 
     public static void handle(CronusFxMsg msg, Supplier<NetworkEvent.Context> ctxSupplier) {

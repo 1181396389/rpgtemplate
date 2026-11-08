@@ -8,6 +8,7 @@ import com.rpgtemplate.core.template.TemplateRegistry;
 import com.rpgtemplate.forge.skill.HeldState;
 import com.rpgtemplate.forge.skill.Skill;
 import com.rpgtemplate.forge.skill.SkillContext;
+import com.rpgtemplate.forge.skill.SkillManager;
 import com.rpgtemplate.forge.skill.SkillRegistry;
 import com.rpgtemplate.forge.system.SystemDataManager;
 import java.lang.reflect.Constructor;
@@ -48,6 +49,11 @@ public final class ServerSkillInvoker {
 
     public static void pressSlot(ServerPlayer player, int slot) {
         if (player == null || slot < 0 || slot > 15 || !SystemDataManager.available(player)) {
+            return;
+        }
+        // 0..11 槽位直接走原生 SkillManager.onInput，完整继承夺舍拦截、技能借用、蓄力、冷却同步与提示反馈
+        if (slot < 12) {
+            SkillManager.onInput(player, slot, true);
             return;
         }
         PlayerSystemData data = SystemDataManager.get(player);
@@ -94,6 +100,10 @@ public final class ServerSkillInvoker {
 
     public static void releaseSlot(ServerPlayer player, int slot) {
         if (player == null) {
+            return;
+        }
+        if (slot >= 0 && slot < 12) {
+            SkillManager.onInput(player, slot, false);
             return;
         }
         ActiveHold hold = HOLDS.remove(player.m_20148_());

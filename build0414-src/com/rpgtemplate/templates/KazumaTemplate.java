@@ -110,7 +110,7 @@ public final class KazumaTemplate {
                 case FAIL -> ctx.player.m_7292_(new MobEffectInstance(MobEffects.f_19597_, 25, 1, false, false, true));
             }
             ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                SoundEvents.f_12318_, SoundSource.PLAYERS, 0.9f, 1.35f);
+                SoundEvents.f_11983_, SoundSource.PLAYERS, 0.9f, 1.35f);
             SystemDataManager.markDirty(ctx.player);
         }
 
@@ -181,7 +181,7 @@ public final class KazumaTemplate {
                 }
             }
             ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                SoundEvents.f_11687_, SoundSource.PLAYERS, 1.0f, 1.25f);
+                SoundEvents.f_11699_, SoundSource.PLAYERS, 1.0f, 1.25f);
             SystemDataManager.markDirty(ctx.player);
         }
     }

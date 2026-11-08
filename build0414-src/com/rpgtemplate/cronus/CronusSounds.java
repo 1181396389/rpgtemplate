@@ -83,13 +83,13 @@ public final class CronusSounds {
     public static void playOutExecute(ServerPlayer p) {
         playCustom(p, OUT_EXECUTE);
         p.m_9236_().m_6263_(null, p.m_20185_(), p.m_20186_(), p.m_20189_(),
-            SoundEvents.f_11909_, SoundSource.PLAYERS, 1.0f, 0.75f);
+            SoundEvents.f_11913_, SoundSource.PLAYERS, 1.0f, 0.75f);
     }
 
     public static void playItemGet(ServerPlayer p) {
         playCustom(p, ITEM_GET);
         p.m_9236_().m_6263_(null, p.m_20185_(), p.m_20186_(), p.m_20189_(),
-            SoundEvents.f_12318_, SoundSource.PLAYERS, 0.9f, 1.65f);
+            SoundEvents.f_11983_, SoundSource.PLAYERS, 0.9f, 1.65f);
     }
 
     private static void playCustom(ServerPlayer p, SoundEvent custom) {

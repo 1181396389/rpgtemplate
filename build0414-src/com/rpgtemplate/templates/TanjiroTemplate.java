@@ -146,7 +146,7 @@ public final class TanjiroTemplate {
                 }
             }
             ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                SoundEvents.f_11909_, SoundSource.PLAYERS, 1.0f, 1.05f);
+                SoundEvents.f_11913_, SoundSource.PLAYERS, 1.0f, 1.05f);
             addHypoxia(ctx.player, ctx.data, 42.0, ctx.now);
         }
     }
