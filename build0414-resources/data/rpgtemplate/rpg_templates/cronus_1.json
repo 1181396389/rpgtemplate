@@ -1,0 +1,171 @@
+{
+  "name": "假面骑士 Cronus",
+  "source": "假面骑士 Ex-Aid",
+  "period": "假面骑士编年史 · 幻梦集团社长（檀正宗）",
+  "quality": "EX",
+  "type": "BALANCED",
+  "max_level": 60,
+  "drawable": true,
+  "description": "使用《假面骑士编年史》卡带与故障驱动器 II（Buggle Driver II）变身的传说级时间骑士。执掌【Pause】时间暂停、【Restart】时间重开与【Reset】时间回溯三大管理员权能，能够将一切违逆规则者宣判「绝版」；但亦受制于完美国内病毒抗体负荷以及超越时间法则的光速/高阶神则冲击。",
+  "bonus": {
+    "hp": 1.4,
+    "mp": 2.8,
+    "sp": 2.2,
+    "def": 2.8
+  },
+  "skills": [
+    {
+      "id": "rpgtemplate:cronus_henshin",
+      "name": "编年史变身",
+      "cost_type": "MP",
+      "base_cost": 4.0,
+      "coefficient": 0.0,
+      "cooldown_ticks": 40,
+      "description": "切换【檀正宗人形态 ⇄ 假面骑士 Cronus 变身态】。变身后激活时计光轮、小伤害免疫与随时间递增的【时间防御系统】；解除变身时将自动终止时停并加速平复病毒负荷。"
+    },
+    {
+      "id": "rpgtemplate:cronus_pause",
+      "name": "Pause / Restart",
+      "cost_type": "MP",
+      "base_cost": 6.0,
+      "coefficient": 0.0,
+      "cooldown_ticks": 70,
+      "description": "【首次按下·Pause】展开半径 12~20m 的罗马数字时钟领域并持续消耗能量：经四档机制判定，①完全生效时定格生物与飞行投射物，时停中造成的伤害全部悬停蓄积；②显著干扰/③微弱牵制依次降级为迟缓；④判定失败目标免疫并引发悖论反噬。【再次按下·Restart】重开时间流动，将蓄积的全部悬停伤害以 1.20x 倍率瞬间引爆！"
+    },
+    {
+      "id": "rpgtemplate:cronus_zwei",
+      "name": "故障驱动器 II · 武装",
+      "cost_type": "SP",
+      "base_cost": 2.8,
+      "coefficient": 1.6,
+      "cooldown_ticks": 30,
+      "description": "【潜行 + 点按】零消耗切换「链锯模式（Zwei Chainsaw）」与「光束枪模式（Zwei Gun）」。【常态点按】链锯模式发动突进弧形重斩；光束枪模式发射三连发高精度翡翠光束（时停中自动叠入悬停伤害池）。"
+    },
+    {
+      "id": "rpgtemplate:cronus_energy_item",
+      "name": "能量道具抽取",
+      "cost_type": "MP",
+      "base_cost": 4.5,
+      "coefficient": 0.0,
+      "cooldown_ticks": 140,
+      "description": "仅变身态可用。调取《假面骑士编年史》规则特权，弹出「ITEM GET!」并获取一枚随机能量道具（低生命时优先触发【回复】，其余包含【高速化】【肌肉化 +30% 伤害】【钢铁化 -35% 承伤】【跳跃强化】）。"
+    },
+    {
+      "id": "rpgtemplate:cronus_crews_aid",
+      "name": "Critical Crews-Aid",
+      "cost_type": "MP",
+      "base_cost": 5.5,
+      "coefficient": 3.2,
+      "cooldown_ticks": 75,
+      "description": "【点按】迅捷突进时计飞踢。【长按蓄力 ≥0.5s·旋转踢】脚下展开旋转表针发动 360° 时钟回旋踢，5 秒内击败敌人享 1.5 倍经验加成！若在【Pause】期间释放旋转踢，将强制触发 1.35x 倍率【Restart】大引爆，并对生命低于 15%（头顶浮现绿色 OUT）且完全时停（FULL）的目标直接降下「绝版哒！」即死处决！"
+    },
+    {
+      "id": "rpgtemplate:cronus_kimewaza",
+      "name": "编年史武装必杀",
+      "cost_type": "MP",
+      "base_cost": 10.5,
+      "coefficient": 3.8,
+      "cooldown_ticks": 200,
+      "description": "按当前武装与时停状态自动派生四式必杀：①链锯常态【Critical Sacrifice】突进十字重斩；②链锯时停【断罪十字刻】在冻结目标四周悬停四柄光锯，Restart 时同步绞杀；③光束枪常态【Critical Judgement】扇形七重审判光束；④光束枪时停【全方位死角包围网】环绕目标悬停 12 枚光弹，Restart 时无死角轰击。"
+    },
+    {
+      "id": "rpgtemplate:cronus_reset",
+      "name": "Reset · 时间回溯",
+      "cost_type": "MP",
+      "base_cost": 12.0,
+      "coefficient": 0.0,
+      "cooldown_ticks": 360,
+      "description": "发动编年史禁忌管理员指令【Reset】，将自身空间坐标、朝向与生命值回溯至约 4 秒前的较高状态，并抹除中毒、凋零、失明、迟缓与灼烧等负面异常（每次回溯大幅增加 Bugster 病毒负荷）。"
+    }
+  ],
+  "passives": [
+    {
+      "type": "rpgtemplate:cronus_micro_immunity",
+      "name": "小伤害免疫",
+      "description": "变身态下，单次结算低于自身最大生命值 2%~6%（随等级成长锚定）的轻微伤害被编年史重甲完全豁免，并弹出原剧「GUARD!」护盾字样。",
+      "params": {
+        "base_ratio": 0.02,
+        "max_ratio": 0.06
+      }
+    },
+    {
+      "type": "rpgtemplate:cronus_gauntlet_amp",
+      "name": "伤害拳套强化",
+      "description": "每次攻击命中敌人叠加 1 层拳套增幅（每层 +10% 伤害，持续 7 秒），层数上限随当前等级解锁为 3~7 层（最高 +30%~+70%）。",
+      "params": {
+        "per_stack": 0.1,
+        "base_max_stacks": 3,
+        "cap_stacks": 7
+      }
+    },
+    {
+      "type": "rpgtemplate:cronus_time_defense",
+      "name": "时间防御系统",
+      "description": "维持变身态时，每 5 秒自动校准时序装甲并叠加 +2% 伤害减免，上限随当前等级锚定为 15%~45%（解除变身时归零）。",
+      "params": {
+        "step_per_5s": 0.02,
+        "base_cap": 0.15,
+        "max_cap": 0.45
+      }
+    },
+    {
+      "type": "rpgtemplate:cronus_clash_guard",
+      "name": "减伤系统",
+      "description": "主动命中敌人后的 0.6 秒正面交锋拼刀窗口内，自身承受的伤害额外降低 25%。",
+      "params": {
+        "window_ticks": 12,
+        "reduction": 0.25
+      }
+    },
+    {
+      "type": "rpgtemplate:cronus_air_chrono",
+      "name": "三段跳与时之滞空",
+      "description": "腾空后可额外踏出两段时计波纹跳跃（三段跳）；在空中按住【潜行键 Shift】可定格自身重力主动滞空最多 1.2 秒。",
+      "params": {
+        "extra_jumps": 2,
+        "hover_ticks": 24
+      }
+    },
+    {
+      "type": "rpgtemplate:cronus_admin_auth",
+      "name": "编年史管理员权限",
+      "description": "在自身展开的【Pause】时间暂停领域内完全免疫迟缓效果、获得迅捷步伐，且对时停领域内目标造成的伤害提升 12%。",
+      "params": {
+        "pause_damage_bonus": 0.12
+      }
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "rpgtemplate:cronus_light_rule_weakness",
+      "name": "光速与高阶神则克制",
+      "description": "再现原剧无敌玩家（Hyper Muteki）与神明级规则对时间暂停的克制：受到雷电、魔法、音爆及灵魂/规则斩击时【时间防御系统】效能减半、承受伤害增加 25%，且在【Pause】期间受击会额外流失 8% 能量。",
+      "params": {
+        "extra_damage": 0.25,
+        "mp_drain_ratio": 0.08
+      }
+    }
+  ],
+  "negatives": [
+    {
+      "type": "rpgtemplate:cronus_bugster_overload",
+      "name": "Bugster 病毒抗体过载",
+      "description": "频繁维持【Pause】、释放必杀与发动【Reset】会不断累积体内崩源体病毒负荷（0~100%）。负荷达到 100% 时故障驱动器 II 发生过热反噬：强制解除时停与变身并进入 6 秒冷却锁死。",
+      "params": {
+        "max_strain": 100,
+        "lockout_ticks": 120
+      }
+    }
+  ],
+  "quirks": [
+    {
+      "type": "rpgtemplate:cronus_out_judgement",
+      "name": "「绝版哒！」社长裁决",
+      "description": "视野内生命值低于 15% 的猎物头顶会自动浮现绿色「OUT」绝版宣告；使用长按【旋转踢】终结敌人可获得 1.5 倍经验加成并平复病毒负荷，在时停中更能直接处决被完全定格的「OUT」目标。",
+      "params": {
+        "out_hp_ratio": 0.15,
+        "spin_xp_multiplier": 1.5
+      }
+    }
+  ]
+}

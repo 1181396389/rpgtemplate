@@ -177,7 +177,8 @@ public final class SystemHud {
         int tileH = detail ? TILE_H_DETAIL : TILE_H;
 
         int resH = 100 + notices.size() * 12 + (notices.isEmpty() ? 0 : 4);
-        int dockH = def == null ? 40 : 50 + (paged ? 12 : 0) + tileH + 8;
+        int subDeckExtra = paged ? 30 : 0;
+        int dockH = def == null ? 40 : 50 + (paged ? 12 : 0) + tileH + subDeckExtra + 8;
 
         scale = UiLayout.hudScale(((Double) ModConfigs.CLIENT.hudScale.get()).floatValue(),
             g.m_280182_(), g.m_280206_(), 440, Math.max(resH, dockH) + 45);
@@ -390,7 +391,8 @@ public final class SystemHud {
         int y = 46;
         if (paged) {
             UiTheme.text(g, font, ClientKeys.pageMark(page) + " / " + (skills.size() + 3) / 4, 14, y, UiTheme.E_GOLD_TEXT);
-            UiTheme.right(g, font, ClientKeys.pageKeyLabel() + "  " + tr("ui.page"), DOCK_W - 14, y, UiTheme.E_FAINT);
+            UiTheme.right(g, font,
+                ClientKeys.pageKeyLabel() + " " + tr("ui.page_or_wheel"), DOCK_W - 14, y, UiTheme.E_FAINT);
             y += 12;
         }
         int x = 6;
@@ -398,7 +400,49 @@ public final class SystemHud {
             SkillEntry skill = skills.get(first + i);
             drawTile(g, font, data, inst, def, skill, i, x + i * (TILE_W + TILE_GAP), y, tileH, detail, gameTick);
         }
+        if (paged) {
+            int pages = (skills.size() + 3) / 4;
+            int subPage = (page + 1) % pages;
+            int subFirst = subPage * 4;
+            int subShown = Math.max(0, Math.min(4, skills.size() - subFirst));
+            int subY = y + tileH + 4;
+            for (int i = 0; i < subShown; i++) {
+                SkillEntry subSkill = skills.get(subFirst + i);
+                drawSubTile(g, font, data, inst, def, subSkill, i, x + i * (TILE_W + TILE_GAP), subY, 26, gameTick);
+            }
+        }
         g.m_280168_().m_85849_();
+    }
+
+    private static void drawSubTile(GuiGraphics g, Font font, PlayerSystemData data, TemplateInstance inst,
+                                    TemplateDefinition def, SkillEntry skill, int index,
+                                    int x, int y, int h, long gameTick) {
+        boolean locked = !skill.unlockedAt(inst.level());
+        boolean sealed = gameTick < data.value("sealed_until", 0.0);
+        double cooldown = Math.max(0.0, data.value("cd:" + skill.id(), 0.0) - (double) gameTick);
+        double cost = SkillFormula.cost(skill.baseCost(), def.quality());
+        boolean affordable = skill.costType() == CostType.MP ? data.mp() >= cost
+            : (skill.costType() != CostType.SP || data.sp() >= cost);
+
+        int stateColour = locked ? UiTheme.E_FAINT
+            : (sealed || !affordable ? UiTheme.E_DEEP_RED : (cooldown > 0.0 ? UiTheme.E_GOLD_TEXT : UiTheme.E_CYAN));
+        g.m_280509_(x, y, x + TILE_W, y + h, UiTheme.alpha(0.42f, UiTheme.E_EDGE));
+        g.m_280509_(x + 1, y + 1, x + TILE_W - 1, y + h - 1, UiTheme.alpha(0.55f, UiTheme.E_CARD));
+        g.m_280509_(x + 1, y + 1, x + TILE_W - 1, y + 2, UiTheme.alpha(0.9f, stateColour));
+
+        String chord = "A+" + UiTheme.fit(font, ClientKeys.physicalKeyLabel(index), 10);
+        String rightTag = locked ? "L" + skill.unlockLevel()
+            : (cooldown > 0.0 ? String.format(Locale.ROOT, "%.0fs", Math.ceil(cooldown / 20.0)) : "\u2713");
+        UiTheme.text(g, font, chord, x + 3, y + 3, UiTheme.E_GOLD_TEXT);
+        UiTheme.right(g, font, rightTag, x + TILE_W - 2, y + 3, stateColour);
+        UiTheme.text(g, font, UiTheme.fit(font, skill.name(), TILE_W - 6), x + 3, y + 12,
+            locked ? UiTheme.E_FAINT : UiTheme.E_MUTED);
+
+        double cdMax = Math.max(1, skill.cooldownTicks());
+        double progress = cooldown > 0.0 ? cdMax - Math.min(cooldown, cdMax) : 1.0;
+        double progressMax = cooldown > 0.0 ? cdMax : 1.0;
+        UiTheme.bar(g, x + 2, y + h - 3, TILE_W - 4, 2, progress, progressMax,
+            cooldown > 0.0 ? UiTheme.E_GOLD_TEXT : stateColour);
     }
 
     private static void drawTile(GuiGraphics g, Font font, PlayerSystemData data, TemplateInstance inst,

@@ -1,6 +1,7 @@
 package com.rpgtemplate.forge.client.hud;
 
 import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.cronus.CronusKeys;
 import com.rpgtemplate.forge.client.gui.UiTheme;
 import com.rpgtemplate.nothingthere.NtForms;
 import com.rpgtemplate.templates.ItachiTemplate;
@@ -60,11 +61,44 @@ public final class HudNoticeRegistry {
         }
         switch (tpl) {
             case "rpgtemplate:nothing_there" -> collectNothingThere(data, gameTick, out);
+            case CronusKeys.TEMPLATE_ID -> collectCronus(data, gameTick, out);
             case ItachiTemplate.TEMPLATE_ID -> collectItachi(data, gameTick, out);
             case TanjiroTemplate.TEMPLATE_ID -> collectTanjiro(data, gameTick, out);
             case KazumaTemplate.TEMPLATE_ID -> collectKazuma(data, gameTick, out);
             default -> {
             }
+        }
+    }
+
+    private static void collectCronus(PlayerSystemData data, long gameTick, List<Entry> out) {
+        double overheatUntil = data.value(CronusKeys.KEY_OVERHEAT_UNTIL, 0.0);
+        if (overheatUntil > gameTick) {
+            out.add(new Entry(tr("hud.rpgtemplate.cronus.overheat", secs(overheatUntil - gameTick)), UiTheme.E_RED));
+        }
+        if (CronusKeys.isTransformed(data)) {
+            String mode = tr(CronusKeys.weaponMode(data) == CronusKeys.MODE_GUN
+                ? "hud.rpgtemplate.cronus.mode_gun"
+                : "hud.rpgtemplate.cronus.mode_chainsaw");
+            int timeDefPct = (int) Math.round(data.value(CronusKeys.KEY_TIME_DEF, 0.0) * 100.0);
+            out.add(new Entry(tr("hud.rpgtemplate.cronus.henshin", mode, timeDefPct), UiTheme.E_JADE));
+        } else {
+            out.add(new Entry(tr("hud.rpgtemplate.cronus.human"), UiTheme.E_MUTED));
+        }
+        if (CronusKeys.isPaused(data)) {
+            String left = secs(data.value(CronusKeys.KEY_PAUSE_LEFT_SEC, 0.0) * 20.0);
+            int pending = (int) Math.round(data.value(CronusKeys.KEY_PENDING_DMG, 0.0));
+            out.add(new Entry(tr("hud.rpgtemplate.cronus.paused", left, pending), UiTheme.E_GOLD_TEXT));
+        }
+        if (data.value(CronusKeys.KEY_GAUNTLET_UNTIL, 0.0) > gameTick) {
+            int stacks = (int) Math.round(data.value(CronusKeys.KEY_GAUNTLET_STACKS, 0.0));
+            if (stacks > 0) {
+                out.add(new Entry(tr("hud.rpgtemplate.cronus.gauntlet", stacks, stacks * 10), UiTheme.E_CYAN));
+            }
+        }
+        int viral = (int) Math.round(data.value(CronusKeys.KEY_VIRAL, 0.0));
+        if (viral > 0) {
+            out.add(new Entry(tr("hud.rpgtemplate.cronus.viral", viral),
+                viral >= 75 ? UiTheme.E_RED : UiTheme.E_VIOLET));
         }
     }
 

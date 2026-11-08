@@ -1,0 +1,50 @@
+{
+  "cronus_henshin": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_henshin",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_pause": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_pause",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_restart": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_restart",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kimewaza": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kimewaza",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_out_execute": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_out_execute",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_item_get": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_item_get",
+        "stream": false
+      }
+    ]
+  }
+}
