@@ -1,0 +1,65 @@
+name: Build Mod JAR
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      mod_version:
+        description: 'Optional override for mod version (defaults to build.properties)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Forge 1.20.1 SRG SDK & Minecraft libraries
+        uses: actions/cache@v4
+        with:
+          path: .build-cache
+          key: forge-srg-sdk-${{ hashFiles('build.properties') }}
+
+      - name: Build and verify mod JAR
+        shell: bash
+        run: |
+          chmod +x build.sh
+          EXTRA_ARGS=()
+          if [[ -n "${{ github.event.inputs.mod_version }}" ]]; then
+            EXTRA_ARGS+=(--version "${{ github.event.inputs.mod_version }}")
+          elif [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" == v* ]]; then
+            EXTRA_ARGS+=(--version "${GITHUB_REF_NAME#v}")
+          fi
+          ./build.sh "${EXTRA_ARGS[@]}"
+          ls -lh dist/
+
+      - name: Upload mod JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpgtemplate-jar
+          path: dist/rpgtemplate-*.jar
+          if-no-files-found: error
+
+      - name: Publish GitHub Release on version tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/rpgtemplate-*.jar \
+            --title "rpgtemplate ${GITHUB_REF_NAME}" \
+            --generate-notes

@@ -1,8 +1,11 @@
 # Build outputs / local tooling
 *.class
 *.jar
+!base/rpgtemplate-0.4.14.jar
 .gradle/
+.build-cache/
 build/
+dist/
 .cache/
 run/
 .idea/
