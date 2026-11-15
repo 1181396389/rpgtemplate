@@ -23,12 +23,12 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class TemplateHelper {
     private static final Set<Item> SWEET_ITEMS = Set.of(
-        Items.f_42575_, // COOKIE
-        Items.f_42694_, // PUMPKIN_PIE
-        Items.f_42776_, // SWEET_BERRIES
+        Items.f_42572_, // COOKIE
+        Items.f_42687_, // PUMPKIN_PIE
+        Items.f_42780_, // SWEET_BERRIES
         Items.f_151079_, // GLOW_BERRIES
         Items.f_42787_, // HONEY_BOTTLE
-        Items.f_42499_  // APPLE
+        Items.f_42410_  // APPLE
     );
 
     private TemplateHelper() {

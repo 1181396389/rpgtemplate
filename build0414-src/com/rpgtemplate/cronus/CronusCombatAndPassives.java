@@ -88,7 +88,8 @@ public final class CronusCombatAndPassives {
                 }
             }
             case AIR_HOVER_START -> {
-                data.setValue(CronusKeys.KEY_HOVER_UNTIL, (double) (now + 26L));
+                long hoverTicks = data.value(CronusKeys.KEY_ITEM_JUMP_UNTIL, 0.0) > (double) now ? 42L : 26L;
+                data.setValue(CronusKeys.KEY_HOVER_UNTIL, (double) (now + hoverTicks));
                 Vec3 cur = player.m_20184_();
                 player.m_20256_(new Vec3(cur.f_82479_ * 0.85, Math.max(0.0, cur.f_82480_ * 0.1), cur.f_82481_ * 0.85));
                 player.f_19789_ = 0.0f;
@@ -236,8 +237,9 @@ public final class CronusCombatAndPassives {
                     }
                     event.setAmount(dmg);
 
-                    // 若目标处于完全时停，转入悬停伤害蓄水池，留待 Restart 一并引爆
+                    // 若目标处于完全时停，转入悬停伤害蓄水池，留待 Restart 一并引爆（清零无敌帧避免连击被吞）
                     if (CronusPauseManager.interceptDeferredDamage(attacker, atkData, victim, dmg)) {
+                        victim.f_19802_ = 0;
                         event.setAmount(0.0f);
                         event.setCanceled(true);
                         return;
@@ -351,8 +353,8 @@ public final class CronusCombatAndPassives {
         if (source == null) {
             return false;
         }
-        if (source.m_269533_(DamageTypeTags.f_268738_) // IS_LIGHTNING
-            || source.m_269533_(DamageTypeTags.f_268415_)) { // BYPASSES_INVULNERABILITY
+        if (source.m_269533_(DamageTypeTags.f_268725_) // IS_LIGHTNING
+            || source.m_269533_(DamageTypeTags.f_268738_)) { // BYPASSES_INVULNERABILITY
             return true;
         }
         String msgId = source.m_19385_();

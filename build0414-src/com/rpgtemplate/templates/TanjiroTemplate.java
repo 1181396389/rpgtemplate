@@ -139,7 +139,7 @@ public final class TanjiroTemplate {
                 ctx.player, ctx.player.m_20191_().m_82400_(4.2), e -> TargetUtil.valid(ctx.player, e));
             for (Entity entity : targets) {
                 LivingEntity lv = TargetUtil.living(entity);
-                float dmg = (lv != null && lv.m_6336_() == MobType.f_21640_) ? baseDmg * 1.35f : baseDmg; // UNDEAD 增伤
+                float dmg = (lv != null && lv.m_6336_() == MobType.f_21641_) ? baseDmg * 1.35f : baseDmg; // UNDEAD 增伤
                 if (TargetUtil.hurt(entity, ModDamageTypes.technique(ctx.player), dmg) && lv != null) {
                     lv.m_20254_(5);
                     TemplateHelper.burstOn(lv, Fx.SPHERE, 0xFF922B, 0.32f, 14, 12);

@@ -102,6 +102,9 @@ public final class CronusSkills {
                 return;
             }
             CronusKeys.addViralStrain(ctx.player, ctx.data, 8.0, ctx.now);
+            if (!CronusKeys.isTransformed(ctx.data)) {
+                return;
+            }
             CronusPauseManager.startPause(ctx.player, ctx.data, ctx.now);
         }
     }
@@ -147,6 +150,12 @@ public final class CronusSkills {
                 List<TargetUtil.Hit> hits = TargetUtil.ray(ctx.player, 26.0, 2, 0.45);
                 for (TargetUtil.Hit hit : hits) {
                     for (int i = 0; i < 3; i++) {
+                        if (!hit.entity().m_6084_()) {
+                            break;
+                        }
+                        if (i > 0) {
+                            hit.entity().f_19802_ = 0; // 清零连发间隔无敌帧，保证三连光弹全部命中
+                        }
                         TargetUtil.hurt(hit.entity(), ModDamageTypes.technique(ctx.player), perShot);
                     }
                 }
@@ -289,7 +298,6 @@ public final class CronusSkills {
             ctx.data.setValue(CronusKeys.KEY_SPIN_XP_UNTIL, (double) (ctx.now + 100L));
             TemplateHelper.dashForward(ctx.player, 0.90, 0.26);
             ctx.player.f_19789_ = 0.0f;
-            CronusKeys.addViralStrain(ctx.player, ctx.data, 10.0, ctx.now);
 
             boolean wasPaused = CronusKeys.isPaused(ctx.data);
             float dmg = ctx.damage(1.45);
@@ -329,6 +337,7 @@ public final class CronusSkills {
                     for (LivingEntity exec : outExecutions) {
                         if (exec.m_6084_()) {
                             float lethal = Math.max(dmg * 3.0f, exec.m_21233_() * 1.25f);
+                            exec.f_19802_ = 0; // 清零 Restart 刚赋予的无敌帧，保证绝版处决全额生效
                             TargetUtil.hurt(exec, ModDamageTypes.technique(ctx.player), lethal);
                             CronusNet.popupOn(exec, CronusFxMsg.POPUP_CRITICAL);
                         }
@@ -339,6 +348,7 @@ public final class CronusSkills {
                         .m_130940_(ChatFormatting.GREEN));
                 }
             }
+            CronusKeys.addViralStrain(ctx.player, ctx.data, 10.0, ctx.now);
             SystemDataManager.markDirty((Player) ctx.player);
         }
     }
@@ -363,7 +373,6 @@ public final class CronusSkills {
                 return;
             }
             ctx.cooldown(200);
-            CronusKeys.addViralStrain(ctx.player, ctx.data, 14.0, ctx.now);
             CronusSounds.playKimewaza(ctx.player);
 
             int mode = CronusKeys.weaponMode(ctx.data);
@@ -416,6 +425,7 @@ public final class CronusSkills {
                 Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime_surround_trap")
                     .m_130940_(ChatFormatting.GOLD));
             }
+            CronusKeys.addViralStrain(ctx.player, ctx.data, 14.0, ctx.now);
         }
     }
 
@@ -439,9 +449,9 @@ public final class CronusSkills {
             ctx.cooldown(360);
 
             // 还原空间坐标与朝向，生命值取「当前值」与「4秒前快照」中的较高者，净化负面状态
-            ctx.player.m_6021_(snap.x, snap.y, snap.z);
             ctx.player.m_146922_(snap.yRot);
             ctx.player.m_146926_(snap.xRot);
+            ctx.player.m_6021_(snap.x, snap.y, snap.z);
             ctx.player.m_20256_(Vec3.f_82478_);
             ctx.player.f_19789_ = 0.0f;
             ctx.player.f_19864_ = true;

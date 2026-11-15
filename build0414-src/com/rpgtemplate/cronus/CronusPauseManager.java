@@ -229,13 +229,14 @@ public final class CronusPauseManager {
 
         unfreezeAll(d);
 
+        if (player != null && player.m_9236_() instanceof ServerLevel sl) {
+            CronusNet.sendNear(sl, d.cx, d.cy, d.cz,
+                new CronusFxMsg(CronusFxMsg.KIND_DOMAIN_RESTART, player.m_19879_(),
+                    d.cx, d.cy + 0.05, d.cz, (float) d.radius, 0));
+        }
+
         if (player != null && player.m_6084_()) {
             CronusSounds.playRestart(player);
-            if (player.m_9236_() instanceof ServerLevel sl) {
-                CronusNet.sendNear(sl, d.cx, d.cy, d.cz,
-                    new CronusFxMsg(CronusFxMsg.KIND_DOMAIN_RESTART, player.m_19879_(),
-                        d.cx, d.cy + 0.05, d.cz, (float) d.radius, 0));
-            }
             resolvingRestart = true;
             try {
                 for (SuspendedTrap trap : d.traps) {
@@ -248,6 +249,7 @@ public final class CronusPauseManager {
                     Float raw = entry.getValue();
                     if (victim != null && victim.m_6084_() && raw != null && raw > 0.0f) {
                         float finalBurst = (float) (raw * burstMultiplier);
+                        victim.f_19802_ = 0; // 清零末击无敌帧，防止悬停伤害爆发被原版 hurt 冷却吞噬
                         TargetUtil.hurt(victim, ModDamageTypes.technique(player), finalBurst);
                         CronusNet.popupOn(victim, CronusFxMsg.POPUP_CRITICAL);
                     }

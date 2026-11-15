@@ -1,5 +1,6 @@
 package com.rpgtemplate.forge.skillbar.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.rpgtemplate.core.data.PlayerSystemData;
 import com.rpgtemplate.core.data.TemplateInstance;
 import com.rpgtemplate.core.skill.SkillFormula;
@@ -153,9 +154,10 @@ public final class TacticalSkillClient {
             }
         }
 
-        // 2. 长按技能翻页键呼出战术轮盘
+        // 2. 长按技能翻页键呼出战术轮盘（先暂扣点击避免提前误翻页；短按松开时回放一次原版翻页）
         if (cachedPageKey != null && cachedPageKey.m_90832_(key, scan)) {
             if (action == 1 && !pageKeyDown) {
+                suppressKey(cachedPageKey);
                 pageKeyDown = true;
                 pageKeyPressMs = System.currentTimeMillis();
                 wheelActive = false;
@@ -163,9 +165,12 @@ public final class TacticalSkillClient {
                 wheelAimY = 0.0;
                 lastYaw = mc.f_91074_.m_146908_();
                 lastPitch = mc.f_91074_.m_146909_();
+            } else if (action == 2 && pageKeyDown) {
+                suppressKey(cachedPageKey);
             } else if (action == 0 && pageKeyDown) {
                 pageKeyDown = false;
                 if (wheelActive) {
+                    suppressKey(cachedPageKey);
                     int chosen = selectedWheelSlot(currentSkills().size());
                     wheelActive = false;
                     if (chosen >= 0) {
@@ -174,6 +179,8 @@ public final class TacticalSkillClient {
                         TacticalNet.CHANNEL.sendToServer(
                             new TacticalSkillMsg(TacticalSkillMsg.KIND_SKILL_RELEASE, chosen));
                     }
+                } else {
+                    KeyMapping.m_90835_(InputConstants.m_84827_(key, scan));
                 }
             }
         }
@@ -187,12 +194,28 @@ public final class TacticalSkillClient {
         Minecraft mc = Minecraft.m_91087_();
         LocalPlayer player = mc.f_91074_;
         if (player == null || mc.f_91073_ == null) {
+            activeAltKeyIndex = -1;
+            activeAltSlot = -1;
             wheelActive = false;
             pageKeyDown = false;
             clientHovering = false;
+            wasJumpDown = false;
+            airJumpsUsed = 0;
+            hoverTicksUsed = 0;
             return;
         }
         ensureKeysResolved(mc);
+
+        // 若蓄力期间打开了界面，主动结算副栏松开并复位，避免蓄力态卡死
+        if (mc.f_91080_ != null && activeAltKeyIndex >= 0) {
+            int slot = activeAltSlot;
+            activeAltKeyIndex = -1;
+            activeAltSlot = -1;
+            if (slot >= 0) {
+                TacticalNet.CHANNEL.sendToServer(
+                    new TacticalSkillMsg(TacticalSkillMsg.KIND_SKILL_RELEASE, slot));
+            }
+        }
 
         // 维持拦截 Alt 按住期间的原版技能键触发
         if (activeAltKeyIndex >= 0 && cachedSkillKeys != null && cachedSkillKeys[activeAltKeyIndex] != null) {
@@ -201,11 +224,13 @@ public final class TacticalSkillClient {
 
         // 战术轮盘激活与视角偏移追踪
         if (pageKeyDown && mc.f_91080_ == null) {
+            if (cachedPageKey != null) {
+                suppressKey(cachedPageKey);
+            }
             List<SkillEntry> skills = currentSkills();
             if (skills.size() > 1 && System.currentTimeMillis() - pageKeyPressMs >= WHEEL_HOLD_MS) {
                 if (!wheelActive) {
                     wheelActive = true;
-                    // 打开轮盘时抵消刚才轻点翻页的影响：不吃掉玩家正常习惯，视角锁定转为轮盘指针
                     lastYaw = player.m_146908_();
                     lastPitch = player.m_146909_();
                 }
@@ -217,6 +242,7 @@ public final class TacticalSkillClient {
                 player.m_146926_(lastPitch);
             }
         } else {
+            pageKeyDown = false;
             wheelActive = false;
         }
 

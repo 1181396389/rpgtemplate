@@ -27,12 +27,14 @@ public final class TacticalNet {
 
     @SubscribeEvent
     public static void onCommonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> CHANNEL.registerMessage(
-            0,
-            TacticalSkillMsg.class,
-            TacticalSkillMsg::encode,
-            TacticalSkillMsg::decode,
-            TacticalSkillMsg::handle,
-            Optional.of(NetworkDirection.PLAY_TO_SERVER)));
+        event.enqueueWork(() -> {
+            CHANNEL.registerMessage(
+                0,
+                TacticalSkillMsg.class,
+                TacticalSkillMsg::encode,
+                TacticalSkillMsg::decode,
+                TacticalSkillMsg::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        });
     }
 }

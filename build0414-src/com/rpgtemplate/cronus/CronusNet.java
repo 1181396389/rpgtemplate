@@ -31,13 +31,15 @@ public final class CronusNet {
 
     @SubscribeEvent
     public static void onCommonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> CHANNEL.registerMessage(
-            0,
-            CronusFxMsg.class,
-            CronusFxMsg::encode,
-            CronusFxMsg::decode,
-            CronusFxMsg::handle,
-            Optional.of(NetworkDirection.PLAY_TO_CLIENT)));
+        event.enqueueWork(() -> {
+            CHANNEL.registerMessage(
+                0,
+                CronusFxMsg.class,
+                CronusFxMsg::encode,
+                CronusFxMsg::decode,
+                CronusFxMsg::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        });
     }
 
     public static void sendNear(ServerLevel level, double x, double y, double z, CronusFxMsg msg) {

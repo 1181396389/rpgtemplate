@@ -138,7 +138,13 @@ public final class CronusClientFx {
             }
             case CronusFxMsg.KIND_DOMAIN_RESTART -> {
                 DOMAINS.removeIf(d -> d.ownerId == msg.entityId);
-                TRAPS.clear();
+                double r = Math.max(1.0, msg.param + 3.0);
+                double rSq = r * r;
+                TRAPS.removeIf(t -> {
+                    double dx = t.x - msg.x;
+                    double dz = t.z - msg.z;
+                    return dx * dx + dz * dz <= rSq;
+                });
                 DOMAINS.add(new DomainFx(msg.entityId, msg.x, msg.y, msg.z, msg.param, 22, true));
             }
             case CronusFxMsg.KIND_ARCADE_POPUP -> {
@@ -541,7 +547,7 @@ public final class CronusClientFx {
                     int bit = 1 << ((4 - row) * 3 + (2 - col));
                     if ((mask & bit) != 0) {
                         float x0 = ox + col * pixel - pad * pixel;
-                        float y0 = startY + row * pixel - pad * pixel;
+                        float y0 = startY + (4 - row) * pixel - pad * pixel;
                         float x1 = x0 + pixel + pad * 2f * pixel;
                         float y1 = y0 + pixel + pad * 2f * pixel;
                         quadBillboard(vc, mat, b, x0, y0, x1, y1, rgb, alpha);
