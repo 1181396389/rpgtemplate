@@ -256,6 +256,7 @@ public final class UiTheme {
     }
 
     public static void enterPush(GuiGraphics g, float progress, float offsetY) {
+        g.m_280262_();
         float p = clamp01(progress);
         ALPHA_STACK.push(RenderSystem.getShaderColor()[3]);
         RenderSystem.setShaderColor(1f, 1f, 1f, p);
@@ -264,6 +265,7 @@ public final class UiTheme {
     }
 
     public static void enterPop(GuiGraphics g) {
+        g.m_280262_();
         g.m_280168_().m_85849_();
         float restore = ALPHA_STACK.isEmpty() ? 1f : ALPHA_STACK.pop();
         RenderSystem.setShaderColor(1f, 1f, 1f, restore);

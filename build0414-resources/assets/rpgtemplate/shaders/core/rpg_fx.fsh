@@ -10,6 +10,7 @@
 in vec2 vUv;
 in vec4 vColor;
 
+uniform vec4 ColorModulator;
 uniform vec2 uSize;     // quad size in local pixels
 uniform vec4 uInner;    // card rect inside the quad (x, y, w, h)
 uniform vec4 uRad;      // corner radius, chamfer, border width, shadow strength
@@ -91,14 +92,15 @@ float starLayer(vec2 uv, float seed, float t) {
 
 vec3 backdrop(vec2 p) {
     float t = uWave.x;
-    vec2 size = uSize;
+    vec2 size = max(uSize, vec2(1.0));
 
     // ripple: a click or tab change sends a ring that warps the starfield
     vec2 dv = p - uRipple.xy;
     float r = length(dv);
     float ring = r - uRipple.z * 520.0;
     float amp = uRipple.w * exp(-abs(ring) * 0.02);
-    p += normalize(dv + vec2(1e-4)) * sin(ring * 0.08) * amp * 12.0;
+    vec2 dirR = r > 1e-4 ? dv / r : vec2(0.0);
+    p += dirR * sin(ring * 0.08) * amp * 12.0;
     vec2 uv = p / size;
 
     // deep space gradient, lifted toward the upper-left
@@ -146,7 +148,8 @@ vec3 backdrop(vec2 p) {
         float bands = sin(q.y * 14.0 + fbm(q * 2.0 + vec2(t * 0.02, 0.0)) * 3.0 + t * 0.04);
         vec3 pl = mix(vec3(0.24, 0.11, 0.52), vec3(0.10, 0.44, 0.66), bands * 0.5 + 0.5);
         float lit = clamp(dot(vec3(q, z), normalize(vec3(-0.40, -0.50, 0.77))), 0.0, 1.0);
-        col = pl * (0.35 + 0.75 * lit) + CYAN2 * pow(1.0 - z, 3.0) * 0.45;
+        float rimZ = max(1.0 - z, 0.0);
+        col = pl * (0.35 + 0.75 * lit) + CYAN2 * (rimZ * rimZ * rimZ) * 0.45;
     }
 
     // shooting star: one streak every 13 s, from a random start toward the lower left
@@ -161,7 +164,7 @@ vec3 backdrop(vec2 p) {
         vec2 ba = head - a;
         float h = clamp(dot(p - a, ba) / dot(ba, ba), 0.0, 1.0);
         float dd = length(p - a - ba * h);
-        col += vec3(0.90, 0.95, 1.00) * pow(h, 3.0) * exp(-dd * 0.9) * (1.0 - local / 1.1) * 1.2;
+        col += vec3(0.90, 0.95, 1.00) * (h * h * h) * exp(-dd * 0.9) * (1.0 - local / 1.1) * 1.2;
     }
 
     // slow scan band and vignette
@@ -194,7 +197,8 @@ vec4 surface(vec2 p) {
     float ang = atan(q.y, q.x);
     float frac = fract(ang / 6.2831853 + 0.5);
     float behind = fract(fract(t * 0.22) - frac);
-    float tail = pow(max(0.0, 1.0 - behind / 0.28), 2.0);
+    float t1 = max(0.0, 1.0 - behind / 0.28);
+    float tail = t1 * t1;
     float edge = (1.0 - smoothstep(0.0, bw, -d)) * cov;
     vec3 conicCol = mix(uAccent.rgb, uAccent2.rgb, frac);
 
@@ -236,7 +240,7 @@ vec4 surface(vec2 p) {
     float aOut = clamp(glowA + shadowA, 0.0, 1.0) * (1.0 - cov);
     vec3 cOut = (uAccent.rgb * glowA + vec3(0.20, 0.12, 0.42) * shadowA) / max(glowA + shadowA, 1e-4);
     float aIn = uFace.a * cov;
-    float aFinal = aIn + aOut;
+    float aFinal = clamp(aIn + aOut, 0.0, 1.0);
     vec3 cFinal = (col * aIn + cOut * aOut) / max(aFinal, 1e-4);
     return vec4(cFinal, aFinal);
 }
@@ -276,7 +280,8 @@ vec4 rim(vec2 p) {
     float frac = s / max(4.0 * (b.x + b.y), 1.0);
 
     float behind = fract(fract(t * 0.22) - frac);
-    float tail = pow(max(0.0, 1.0 - behind / 0.22), 2.0);
+    float t2 = max(0.0, 1.0 - behind / 0.22);
+    float tail = t2 * t2;
     vec3 cc = mix(uAccent.rgb, uAccent2.rgb, frac);
     float aRim = clamp(edge * tail * uFx.y, 0.0, 1.0);
 
@@ -300,5 +305,9 @@ void main() {
     } else {
         o = rim(p);
     }
-    fragColor = vec4(o.rgb, o.a * uMode.y) * vColor;
+    vec4 outCol = vec4(o.rgb, o.a * uMode.y) * vColor * ColorModulator;
+    if (outCol.a <= 0.0005) {
+        discard;
+    }
+    fragColor = outCol;
 }

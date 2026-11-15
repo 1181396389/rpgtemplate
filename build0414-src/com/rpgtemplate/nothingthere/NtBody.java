@@ -79,7 +79,7 @@ public final class NtBody {
     private static final Logger LOG = LogManager.getLogger("rpgtemplate/NtBody");
     private static final Map<UUID, Boolean> LAST_SERVER = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> LAST_CLIENT = new ConcurrentHashMap<>();
-    private static final Map<UUID, String> DIAG_LAST = new ConcurrentHashMap<>();
+    private static final Map<String, String> DIAG_LAST = new ConcurrentHashMap<>();
 
     private NtBody() {
     }
@@ -386,15 +386,15 @@ public final class NtBody {
                 PlayerSystemData data = SystemDataManager.get(player);
                 diag = "available=true activated=" + data.isActivated()
                     + " loaded=" + data.loadedTemplateId()
-                    + " hatch=" + data.value(NtForms.KEY_COCOON_HATCH, 0.0)
-                    + " tick=" + player.m_9236_().m_46467_();
+                    + " hatch=" + data.value(NtForms.KEY_COCOON_HATCH, 0.0);
             }
         } catch (RuntimeException e) {
             diag = "exception=" + e;
         }
         String line = (client ? "client" : "server") + " " + diag + " -> human=" + human;
-        if (!line.equals(DIAG_LAST.put(player.m_20148_(), line))) {
-            LOG.info("[NtBody] player={} {}", player.m_36316_().getName(), line);
+        String key = (client ? "C:" : "S:") + player.m_20148_();
+        if (!line.equals(DIAG_LAST.put(key, line))) {
+            LOG.info("[NtBody] player={} {} (tick={})", player.m_36316_().getName(), line, player.m_9236_().m_46467_());
         }
     }
 }

@@ -30,10 +30,11 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Set {@code -Drpgtemplate.noFxShader=true} to force the CPU path for A/B checks.
  *
- * <p>Srg notes: {@code GuiGraphics.pose()} = m_280168_, {@code PoseStack.last()} = m_85850_,
- * {@code Pose.pose()} = m_252922_, {@code Tesselator.getInstance()} = m_85913_,
- * {@code getBuilder()} = m_85915_, {@code BufferBuilder.end} = m_231175_,
- * {@code BufferUploader.drawWithShader} = m_231209_, {@code VertexConsumer.vertex(Matrix4f,..)} = m_252986_,
+ * <p>Srg notes: {@code GuiGraphics.pose()} = m_280168_, {@code GuiGraphics.flush()} = m_280262_,
+ * {@code PoseStack.last()} = m_85850_, {@code Pose.pose()} = m_252922_,
+ * {@code Tesselator.getInstance()} = m_85913_, {@code getBuilder()} = m_85915_,
+ * {@code BufferBuilder.end} = m_231175_, {@code BufferUploader.drawWithShader} = m_231202_,
+ * {@code VertexConsumer.vertex(Matrix4f,..)} = m_252986_,
  * {@code uv} = m_7421_, {@code color(int..)} = m_6122_, {@code endVertex} = m_5752_,
  * {@code ShaderInstance.getUniform} = m_173348_, {@code Uniform.set(float..)} = m_5985_ / m_7971_ / m_5889_ / m_5805_,
  * {@code DefaultVertexFormat.POSITION_TEX_COLOR} = f_85819_, {@code ResourceLocation.fromNamespaceAndPath} = m_214293_.
@@ -237,6 +238,8 @@ public final class FxShader {
     }
 
     private static void draw(GuiGraphics g, int x, int y, int w, int h) {
+        // Flush any buffered GuiGraphics draws first so our immediate quad layers cleanly on top.
+        g.m_280262_();
         Matrix4f m = g.m_280168_().m_85850_().m_252922_();
         BufferBuilder buf = Tesselator.m_85913_().m_85915_();
         buf.m_166779_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85819_);
@@ -250,9 +253,19 @@ public final class FxShader {
         buf.m_252986_(m, x1, y0, 0f).m_7421_(1f, 0f).m_6122_(255, 255, 255, 255).m_5752_();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
         RenderSystem.disableCull();
         RenderSystem.setShader(() -> program);
-        BufferUploader.m_231209_(buf.m_231175_());
+        try {
+            // m_231202_ = BufferUploader.drawWithShader (binds rpg_fx & uploads matrices/uniforms).
+            BufferUploader.m_231202_(buf.m_231175_());
+        } finally {
+            RenderSystem.enableCull();
+            RenderSystem.depthMask(true);
+            RenderSystem.enableDepthTest();
+            RenderSystem.disableBlend();
+        }
         if (glChecks > 0) {
             glChecks--;
             int err = GL11.glGetError();
