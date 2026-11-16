@@ -12,7 +12,10 @@ import com.rpgtemplate.forge.system.Msg;
 import com.rpgtemplate.forge.system.SystemDataManager;
 import com.rpgtemplate.templates.TemplateHelper;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -40,6 +43,63 @@ public final class CronusSkills {
     /** 变身后赋予的长时夜视/水下呼吸基准时长（5 分钟，低于 2 分钟时静默续满，彻底杜绝原版夜视低时长闪屏）。 */
     public static final int LONG_BUFF_DURATION = 6000;
 
+    private record PendingHenshin(long executeAtTick, boolean fast) {
+    }
+
+    /** 音效先导队列：先播变身音效，满 6 秒（120 ticks）后再正式执行变身。 */
+    private static final Map<UUID, PendingHenshin> PENDING_HENSHINS = new HashMap<>();
+
+    public static boolean isHenshinPending(ServerPlayer player) {
+        return player != null && PENDING_HENSHINS.containsKey(player.m_20148_());
+    }
+
+    /** 服务端每 tick 推进变身音效 6 秒倒计时；抵达 6 秒瞬间正式执行变身演出与状态切换。 */
+    public static void tickPendingHenshin(ServerPlayer player, PlayerSystemData data, long now) {
+        if (player == null) {
+            return;
+        }
+        PendingHenshin pending = PENDING_HENSHINS.get(player.m_20148_());
+        if (pending == null) {
+            return;
+        }
+        if (!player.m_6084_() || data == null || CronusKeys.isTransformed(data)) {
+            cancelPendingHenshin(player, data);
+            return;
+        }
+        long remaining = pending.executeAtTick() - now;
+        if (remaining > 0L) {
+            if (remaining % 20L == 0L) {
+                int sec = (int) (remaining / 20L);
+                Msg.actionBar(player, Component.m_237110_("message.rpgtemplate.cronus.henshin_audio_countdown", sec)
+                    .m_130940_(ChatFormatting.GREEN));
+            }
+            return;
+        }
+        PENDING_HENSHINS.remove(player.m_20148_());
+        executeHenshinTransformation(player, data, now, pending.fast());
+    }
+
+    /** 取消尚未执行变身的 6 秒音效先导（若为右键卡带快捷变身，安全归还已收纳进腰带的卡带）。 */
+    public static void cancelPendingHenshin(ServerPlayer player, PlayerSystemData data) {
+        if (player == null) {
+            return;
+        }
+        PendingHenshin removed = PENDING_HENSHINS.remove(player.m_20148_());
+        if (removed == null) {
+            return;
+        }
+        if (data != null && !CronusKeys.isTransformed(data)
+            && data.value(CronusKeys.KEY_GASHAT_IN_HENSHIN, 0.0) > 0.5) {
+            long heldToken = (long) data.value(CronusKeys.KEY_GASHAT_HELD_TOKEN, 0.0);
+            data.setValue(CronusKeys.KEY_GASHAT_IN_HENSHIN, 0.0);
+            data.setValue(CronusKeys.KEY_GASHAT_HELD_TOKEN, 0.0);
+            CronusGearManager.clearAllDriverLoadedFlags(player);
+            CronusGearManager.returnConsumedGashat(player, data, heldToken);
+            SystemDataManager.markDirty((Player) player);
+            SystemDataManager.sync(player);
+        }
+    }
+
     private CronusSkills() {
     }
 
@@ -52,8 +112,28 @@ public final class CronusSkills {
         return true;
     }
 
-    /** 统一变身执行（{@code fast=false} 为技能 1 完整 7.8s 演出；{@code fast=true} 为装备腰带后右键卡带的快捷版 2.2s 快速变身）。 */
+    /**
+     * 触发变身先导流程：立即播放对应编年史变身音效，并在音效播放满 6 秒（120 ticks）后再正式执行变身与演出。
+     * ({@code fast=false} 为完整音效 + 完整 7.8s 演出；{@code fast=true} 为 9 秒后音效 + 快捷版 2.2s 快速变身)
+     */
     public static void performHenshinOn(ServerPlayer player, PlayerSystemData data, long now, boolean fast) {
+        if (fast) {
+            // 快捷版快速变身：立即播放原视频 9 秒后的编年史变身音效
+            CronusSounds.playHenshinFast(player);
+        } else {
+            // 技能 1 完整变身：立即播放原视频完整编年史变身音效
+            CronusSounds.playHenshin(player);
+        }
+        PENDING_HENSHINS.put(player.m_20148_(),
+            new PendingHenshin(now + CronusKeys.HENSHIN_AUDIO_LEAD_TICKS, fast));
+        Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.henshin_audio_warmup")
+            .m_130940_(ChatFormatting.GREEN));
+        SystemDataManager.markDirty((Player) player);
+        SystemDataManager.sync(player);
+    }
+
+    /** 音效播放满 6 秒后正式执行变身状态切换、常驻增益与 3D 变身演出。 */
+    private static void executeHenshinTransformation(ServerPlayer player, PlayerSystemData data, long now, boolean fast) {
         int revealDelay = fast ? CronusKeys.HENSHIN_FAST_REVEAL_TICKS : CronusKeys.HENSHIN_FULL_REVEAL_TICKS;
         int beltGashatDelay = fast ? 0 : CronusKeys.HENSHIN_FULL_GASHAT_DOCK_TICKS;
 
@@ -73,14 +153,6 @@ public final class CronusSkills {
 
         // 先广播带动画延时的 3D 装甲同步包（在变身动画结束后再显现盔甲，此前保持人形态与 3D 故障驱动器Ⅱ）
         CronusNet.syncSuitState(player, true, revealDelay, beltGashatDelay);
-
-        if (fast) {
-            // 快捷版快速变身：直接播放原视频 9 秒后的编年史变身音效
-            CronusSounds.playHenshinFast(player);
-        } else {
-            // 技能 1 完整变身：直接播放原视频完整编年史变身音效
-            CronusSounds.playHenshin(player);
-        }
 
         if (player.m_9236_() instanceof ServerLevel sl) {
             CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
@@ -104,6 +176,7 @@ public final class CronusSkills {
 
     /** 统一解除变身执行（仅通过技能触发：终止时停、停止持续激光、清除电锯聚能、收回缺陷护罩Ⅱ、归还卡带、同步还原外观）。 */
     public static void performHenshinOff(ServerPlayer player, PlayerSystemData data) {
+        cancelPendingHenshin(player, data);
         CronusLaserBeamManager.stopFor(player.m_20148_());
         data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_UNTIL, 0.0);
         data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_DMG, 0.0);
@@ -138,6 +211,11 @@ public final class CronusSkills {
         }
         if (CronusKeys.isTransformed(data)) {
             Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gashat_skill_only_off")
+                .m_130940_(ChatFormatting.YELLOW));
+            return false;
+        }
+        if (isHenshinPending(player)) {
+            Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.henshin_pending")
                 .m_130940_(ChatFormatting.YELLOW));
             return false;
         }
@@ -181,10 +259,15 @@ public final class CronusSkills {
                 performHenshinOff(ctx.player, ctx.data);
                 return;
             }
+            if (isHenshinPending(ctx.player)) {
+                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.henshin_pending")
+                    .m_130940_(ChatFormatting.YELLOW));
+                return;
+            }
             if (!ctx.consume(ctx.cost(4.0))) {
                 return;
             }
-            ctx.cooldown(40);
+            ctx.cooldown(160);
             performHenshinOn(ctx.player, ctx.data, ctx.now, false);
         }
     }

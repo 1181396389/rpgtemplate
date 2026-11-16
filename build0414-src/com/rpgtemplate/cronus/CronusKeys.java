@@ -43,6 +43,8 @@ public final class CronusKeys {
     /** 本次右键变身所收纳卡带的唯一令牌（用于解除变身时原样归还且杜绝面板重复补发）。 */
     public static final String KEY_GASHAT_HELD_TOKEN = "cr.gashat_held_token";
 
+    /** 变身音效先导时长：播放音效 6 秒（120 ticks）后再正式执行变身与演出。 */
+    public static final int HENSHIN_AUDIO_LEAD_TICKS = 120;
     /** 技能 1 完整变身演出：卡带飞入锁定腰带（tFrame=126 ≈ 83 ticks）与落雷收束装甲显现（150 ticks）。 */
     public static final int HENSHIN_FULL_GASHAT_DOCK_TICKS = 83;
     public static final int HENSHIN_FULL_REVEAL_TICKS = 150;

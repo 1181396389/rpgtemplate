@@ -197,10 +197,15 @@ public final class CronusCombatAndPassives {
         if (data == null) {
             CronusPauseManager.forceClearFor(player.m_20148_());
             CronusLaserBeamManager.stopFor(player.m_20148_());
+            CronusSkills.cancelPendingHenshin(player,
+                SystemDataManager.available(player) ? SystemDataManager.get(player) : null);
             REWIND_HISTORY.remove(player.m_20148_());
             return;
         }
         long now = player.m_9236_().m_46467_();
+
+        // 0. 推进变身音效 6 秒先导倒计时（满 6 秒后正式执行变身与演出）
+        CronusSkills.tickPendingHenshin(player, data, now);
 
         // 1. 驱动【Pause】领域与光线枪必杀技一持续绿色激光
         CronusPauseManager.tickPlayerPause(player, data, now);
@@ -482,6 +487,11 @@ public final class CronusCombatAndPassives {
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         MUSCLE_LAUNCHED.remove(event.getEntity().m_20148_());
+        if (event.getEntity() instanceof ServerPlayer deadPlayer) {
+            CronusLaserBeamManager.stopFor(deadPlayer.m_20148_());
+            CronusSkills.cancelPendingHenshin(deadPlayer,
+                SystemDataManager.available(deadPlayer) ? SystemDataManager.get(deadPlayer) : null);
+        }
         if (!(event.getSource().m_7639_() instanceof ServerPlayer killer)) {
             return;
         }
@@ -516,6 +526,8 @@ public final class CronusCombatAndPassives {
         if (event.getEntity() instanceof ServerPlayer sp) {
             CronusPauseManager.forceClearFor(sp.m_20148_());
             CronusLaserBeamManager.stopFor(sp.m_20148_());
+            CronusSkills.cancelPendingHenshin(sp,
+                SystemDataManager.available(sp) ? SystemDataManager.get(sp) : null);
             REWIND_HISTORY.remove(sp.m_20148_());
         }
     }
