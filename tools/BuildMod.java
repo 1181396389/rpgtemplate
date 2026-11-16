@@ -57,7 +57,7 @@ public final class BuildMod {
         "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
     private static final String FORGE_MAVEN = "https://maven.minecraftforge.net";
     private static final String CLEAN_MIXIN_CONFIGS =
-        "rpgtemplate.nothingthere.mixins.json,rpgtemplate.mask.mixins.json";
+        "rpgtemplate.nothingthere.mixins.json,rpgtemplate.mask.mixins.json,rpgtemplate.cronus.mixins.json";
 
     private static final Pattern LEGACY_ITEM_MODEL_OR_TEX = Pattern.compile(
         "^(body_adapter|bottle_.*|drug_.*|empty_fullbottle|evol_trigger|fabricator_.*|fullbottle_.*"

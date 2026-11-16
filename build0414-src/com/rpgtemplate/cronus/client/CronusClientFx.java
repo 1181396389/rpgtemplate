@@ -214,6 +214,10 @@ public final class CronusClientFx {
                 RIPPLES.add(new RippleFx(msg.x, msg.y, msg.z, msg.param, msg.extra, 18));
             case CronusFxMsg.KIND_HENSHIN_SEQ ->
                 CronusSpriteFx.spawnHenshin(msg.entityId, msg.x, msg.y, msg.z);
+            case CronusFxMsg.KIND_HENSHIN_FAST ->
+                CronusSpriteFx.spawnFastHenshin(msg.entityId, msg.x, msg.y, msg.z);
+            case CronusFxMsg.KIND_SUIT_STATE ->
+                CronusSuitAppearance.setRemoteTransformed(msg.entityId, msg.extra != 0);
             case CronusFxMsg.KIND_SPRITE_FX ->
                 CronusSpriteFx.spawnBurst(msg.extra, msg.entityId, msg.x, msg.y, msg.z, msg.param);
             case CronusFxMsg.KIND_ENERGY_ICON ->

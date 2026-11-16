@@ -91,6 +91,8 @@ public final class CronusSpriteFx {
 
     /** 原速完整 7.8s 变身演出（234 帧 @ 30fps = 156 MC ticks）。 */
     private static final int HENSHIN_MAX_TICKS = 158;
+    /** 快捷版快速变身（~2.2s = 44 MC ticks，仅展示卡片 + 闪电 + 时钟）。 */
+    private static final int HENSHIN_FAST_TICKS = 44;
 
     private static final List<HenshinSeq> HENSHINS = new ArrayList<>();
     private static final List<SpriteBurst> BURSTS = new ArrayList<>();
@@ -115,12 +117,16 @@ public final class CronusSpriteFx {
 
     private static final class HenshinSeq {
         final int entityId;
+        final boolean fast;
+        final int maxAge;
         double x, y, z;
         float yawDeg;
         int age;
 
-        HenshinSeq(int entityId, double x, double y, double z, float yawDeg) {
+        HenshinSeq(int entityId, double x, double y, double z, float yawDeg, boolean fast) {
             this.entityId = entityId;
+            this.fast = fast;
+            this.maxAge = fast ? HENSHIN_FAST_TICKS : HENSHIN_MAX_TICKS;
             this.x = x;
             this.y = y;
             this.z = z;
@@ -201,6 +207,15 @@ public final class CronusSpriteFx {
 
     /** 触发完整 7.8s（234 帧原速）四层同步 3D 变身演出。 */
     public static void spawnHenshin(int entityId, double x, double y, double z) {
+        spawnHenshinInternal(entityId, x, y, z, false);
+    }
+
+    /** 触发快捷版 2.2s（44 ticks）快速变身演出：仅展示卡片 + 闪电 + 时钟！ */
+    public static void spawnFastHenshin(int entityId, double x, double y, double z) {
+        spawnHenshinInternal(entityId, x, y, z, true);
+    }
+
+    private static void spawnHenshinInternal(int entityId, double x, double y, double z, boolean fast) {
         Minecraft mc = Minecraft.m_91087_();
         float yaw = 0f;
         if (mc.f_91073_ != null) {
@@ -213,7 +228,7 @@ public final class CronusSpriteFx {
             }
         }
         HENSHINS.removeIf(h -> h.entityId == entityId);
-        HENSHINS.add(new HenshinSeq(entityId, x, y, z, yaw));
+        HENSHINS.add(new HenshinSeq(entityId, x, y, z, yaw, fast));
     }
 
     /**
@@ -258,7 +273,7 @@ public final class CronusSpriteFx {
                 h.y = e.m_20186_();
                 h.z = e.m_20189_();
             }
-            if (++h.age >= HENSHIN_MAX_TICKS) {
+            if (++h.age >= h.maxAge) {
                 hit.remove();
             }
         }
@@ -394,6 +409,83 @@ public final class CronusSpriteFx {
         double originX = px + fwdX * depthShift;
         double originY = py + 1.05;
         double originZ = pz + fwdZ * depthShift;
+
+        // 快捷版快速变身（~2.2s，仅显示：时钟 + 卡片 + 闪电，无卡带飞入与慢速悬停等待）
+        if (h.fast) {
+            float tTick = h.age + pt;
+
+            // ① 时钟层 A：背部巨型编年史钟表快速显现 → 1.1s 合体瞬间沿中线左右裂开 → 随落雷淡出
+            float clockFrame;
+            if (tTick < 8.0f) {
+                clockFrame = 1.0f + (tTick / 8.0f) * 29.0f;
+            } else if (tTick < 21.0f) {
+                clockFrame = 30.0f + ((tTick - 8.0f) / 13.0f) * 146.0f;
+            } else if (tTick < 35.0f) {
+                clockFrame = 176.0f + ((tTick - 21.0f) / 14.0f) * 38.0f;
+            } else {
+                clockFrame = 214.0f + Mth.m_14036_((tTick - 35.0f) / 9.0f, 0.0f, 1.0f) * 22.0f;
+            }
+            double clockDepth = selfFirstPerson ? 0.88 : -0.78;
+            float rearViewAlpha = (!selfFirstPerson && camDotFwd < -0.35) ? 0.78f : 1.0f;
+            renderHenshinClock(src, mat,
+                originX + fwdX * clockDepth, py + 1.92, originZ + fwdZ * clockDepth,
+                rightX, rightZ, clockFrame, rearViewAlpha);
+
+            // ① 时钟层 B：金色发光罗马数字 I~XII 急速成型环绕
+            if (tTick <= 38.0f) {
+                int cIdx;
+                float cAlpha = 1.0f;
+                if (tTick <= 22.0f) {
+                    float p = Mth.m_14036_(tTick / 22.0f, 0.0f, 1.0f);
+                    cIdx = Math.min(ATLAS_CLOCK.validFrames - 1, (int) (p * (ATLAS_CLOCK.validFrames - 1)));
+                } else {
+                    cIdx = ATLAS_CLOCK.validFrames - 1;
+                    cAlpha = tTick > 30.0f ? Mth.m_14036_((38.0f - tTick) / 8.0f, 0.0f, 1.0f) : 1.0f;
+                }
+                drawStageLayer(src, mat, ATLAS_CLOCK, cIdx,
+                    originX + fwdX * 0.58, originY, originZ + fwdZ * 0.58,
+                    rightX, rightZ, stageW, stageH, cAlpha);
+            }
+
+            // ② 卡片层：编年史卡片闪现 → 迅猛砸落合体
+            if (tTick <= 30.0f) {
+                int cardIdx;
+                if (tTick <= 16.0f) {
+                    float p = Mth.m_14036_(tTick / 16.0f, 0.0f, 1.0f);
+                    cardIdx = (int) (p * 26.0f);
+                } else {
+                    float p = Mth.m_14036_((tTick - 16.0f) / 12.0f, 0.0f, 1.0f);
+                    cardIdx = Math.min(ATLAS_CARD.validFrames - 1, 51 + (int) (p * 12.0f));
+                }
+                float cardAlpha = tTick > 26.5f ? Mth.m_14036_((30.0f - tTick) / 3.5f, 0.0f, 1.0f) : 0.96f;
+                double cardDepth = tTick >= 18.0f ? 0.16 : -0.22;
+                drawStageLayer(src, mat, ATLAS_CARD, cardIdx,
+                    originX + fwdX * cardDepth, originY, originZ + fwdZ * cardDepth,
+                    rightX, rightZ, stageW, stageH, cardAlpha);
+            }
+
+            // ③ 闪电层 A：双正交立体放射翠绿闪电
+            if (tTick >= 5.0f && tTick <= 25.0f) {
+                float p = Mth.m_14036_((tTick - 5.0f) / 18.0f, 0.0f, 1.0f);
+                int aIdx = Math.min(ATLAS_ARC.validFrames - 1, (int) (p * (ATLAS_ARC.validFrames - 1)));
+                float aAlpha = tTick > 21.0f ? Mth.m_14036_((25.0f - tTick) / 4.0f, 0.0f, 1.0f) : 1.0f;
+                drawStageLayer(src, mat, ATLAS_ARC, aIdx,
+                    originX + fwdX * 0.05, originY, originZ + fwdZ * 0.05,
+                    rightX, rightZ, stageW, stageH, aAlpha);
+                drawStageLayer(src, mat, ATLAS_ARC, aIdx,
+                    originX, originY, originZ,
+                    fwdX, fwdZ, stageW * 0.85, stageH * 0.95, aAlpha * 0.72f);
+            }
+
+            // ③ 闪电层 B：合体天降三面星形立体巨型翠绿落雷
+            if (tTick >= 22.0f && tTick <= 43.5f) {
+                float p = Mth.m_14036_((tTick - 22.0f) / 19.0f, 0.0f, 1.0f);
+                int bIdx = Math.min(ATLAS_BOLT.validFrames - 1, (int) (p * (ATLAS_BOLT.validFrames - 1)));
+                float bAlpha = tTick > 39.0f ? Mth.m_14036_((43.5f - tTick) / 4.5f, 0.0f, 1.0f) : 1.0f;
+                renderVolumetricBolt(src, mat, originX, py, originZ, 1.25f, yawRad, bIdx, bAlpha);
+            }
+            return;
+        }
 
         // 30fps 原剧时间轴帧号：1 tick (50ms) = 1.5 帧
         float tFrame = 1.0f + (h.age + pt) * 1.5f;

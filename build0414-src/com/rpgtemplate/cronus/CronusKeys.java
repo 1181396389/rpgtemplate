@@ -32,6 +32,8 @@ public final class CronusKeys {
     public static final String KEY_WEAPON_MODE = "cr.weapon_mode";
     /** 1.0 = 已由 Cronus 变身施加常驻夜视/水下呼吸增益（解除变身时自动回收）。 */
     public static final String KEY_BUFFS_APPLIED = "cr.buffs_applied";
+    /** 1.0 = 通过腰间装备【故障驱动器Ⅱ】+ 右键卡带变身（卸下腰带时自动解除变身）。 */
+    public static final String KEY_HENSHIN_VIA_DRIVER = "cr.henshin_via_driver";
 
     /** 面板「物品」界面专属装备收录与唯一令牌状态（获得 Cronus 模板后自动解锁）。 */
     public static final String KEY_GEAR_UNLOCKED = "cr.gear_unlocked";
@@ -152,11 +154,12 @@ public final class CronusKeys {
         return mult;
     }
 
-    /** 玩家解除变身时：清理病毒过载之外由 Cronus 施加的常驻增益与召唤武装。 */
+    /** 玩家解除变身时：清理病毒过载之外由 Cronus 施加的常驻增益、腰带卡带指示灯、3D 装甲同步与召唤武装。 */
     public static void clearTransformedState(ServerPlayer player, PlayerSystemData data) {
         if (data != null) {
             data.setValue(KEY_TRANSFORMED, 0.0);
             data.setValue(KEY_TIME_DEF, 0.0);
+            data.setValue(KEY_HENSHIN_VIA_DRIVER, 0.0);
         }
         if (player != null && data != null && data.value(KEY_BUFFS_APPLIED, 0.0) > 0.5) {
             player.m_21195_(MobEffects.f_19611_); // NIGHT_VISION
@@ -164,7 +167,12 @@ public final class CronusKeys {
             data.setValue(KEY_BUFFS_APPLIED, 0.0);
         }
         if (player != null) {
+            var wornDriver = CronusItems.getWornDriver(player);
+            if (!wornDriver.m_41619_() && CronusItems.isDriverLoaded(wornDriver)) {
+                CronusItems.clearDriverLoaded(wornDriver);
+            }
             CronusGearManager.retractSummonedBugvisor(player);
+            CronusNet.syncSuitState(player, false);
         }
     }
 

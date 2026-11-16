@@ -51,11 +51,18 @@ public final class CronusSkills {
         return true;
     }
 
-    /** 统一变身执行（供技能 1 与【故障驱动器Ⅱ】手动变身共用）。 */
-    public static void performHenshinOn(ServerPlayer player, PlayerSystemData data, long now) {
+    /** 统一变身执行（{@code fast=false} 为技能 1 完整 7.8s 演出；{@code fast=true} 为装备腰带后右键卡带的快捷版 2.2s 快速变身）。 */
+    public static void performHenshinOn(ServerPlayer player, PlayerSystemData data, long now, boolean fast) {
         data.setValue(CronusKeys.KEY_TRANSFORMED, 1.0);
         data.setValue(CronusKeys.KEY_TRANSFORM_SINCE, (double) now);
         data.setValue(CronusKeys.KEY_TIME_DEF, 0.05);
+        data.setValue(CronusKeys.KEY_HENSHIN_VIA_DRIVER, fast ? 1.0 : 0.0);
+
+        // 若腰间佩戴了【故障驱动器Ⅱ】，点亮插卡显示（3D 腰带中央显现编年史卡带）
+        var wornDriver = CronusItems.getWornDriver(player);
+        if (!wornDriver.m_41619_()) {
+            CronusItems.setDriverLoaded(wornDriver, player.m_20148_(), 0L);
+        }
 
         // 变身即赋予长时夜视（5分钟，不闪烁）、长时水下呼吸并立即净化既有中毒
         player.m_21195_(MobEffects.f_19614_); // POISON
@@ -64,16 +71,29 @@ public final class CronusSkills {
         player.m_20301_(player.m_6062_());
         data.setValue(CronusKeys.KEY_BUFFS_APPLIED, 1.0);
 
-        // 变身自动装备【Gashacon 缺陷护罩Ⅱ】
+        // 变身自动装备【Gashacon 缺陷护罩Ⅱ】并向周围全体玩家同步 3D Cronus 装甲外观
         CronusGearManager.grantSummonedBugvisor(player, data);
+        CronusNet.syncSuitState(player, true);
 
-        CronusSounds.playHenshin(player);
+        if (fast) {
+            // 快捷版变身干脆利落音效：卡带启动 + 时钟敲击 + 翠绿落雷
+            player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                SoundEvents.f_11983_, SoundSource.PLAYERS, 0.95f, 1.38f);
+            player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                SoundEvents.f_11736_, SoundSource.PLAYERS, 0.85f, 1.10f);
+            player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                SoundEvents.f_12089_, SoundSource.PLAYERS, 0.65f, 1.28f);
+        } else {
+            CronusSounds.playHenshin(player);
+        }
+
         if (player.m_9236_() instanceof ServerLevel sl) {
             CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
                 new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, player.m_19879_(),
                     player.m_20185_(), player.m_20186_() + 0.05, player.m_20189_(), 3.6f, 1));
             CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
-                new CronusFxMsg(CronusFxMsg.KIND_HENSHIN_SEQ, player.m_19879_(),
+                new CronusFxMsg(fast ? CronusFxMsg.KIND_HENSHIN_FAST : CronusFxMsg.KIND_HENSHIN_SEQ,
+                    player.m_19879_(),
                     player.m_20185_(), player.m_20186_(), player.m_20189_(), 1.0f, 0));
         }
         Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.henshin_on")
@@ -82,7 +102,12 @@ public final class CronusSkills {
         SystemDataManager.sync(player);
     }
 
-    /** 统一解除变身执行（终止时停、收回缺陷护罩Ⅱ、撤除常驻夜视/水下呼吸）。 */
+    /** 兼容入口：默认完整变身演出。 */
+    public static void performHenshinOn(ServerPlayer player, PlayerSystemData data, long now) {
+        performHenshinOn(player, data, now, false);
+    }
+
+    /** 统一解除变身执行（终止时停、收回缺陷护罩Ⅱ、撤除常驻夜视/水下呼吸、同步还原外观）。 */
     public static void performHenshinOff(ServerPlayer player, PlayerSystemData data) {
         if (CronusKeys.isPaused(data)) {
             CronusPauseManager.restart(player, data, 1.20, false);
@@ -94,8 +119,8 @@ public final class CronusSkills {
         SystemDataManager.sync(player);
     }
 
-    /** 供【故障驱动器Ⅱ】手动右键触发变身 / 解除变身（同样遵循驱动器过热锁与少量 MP 消耗）。 */
-    public static void toggleHenshinManual(ServerPlayer player, PlayerSystemData data, long now) {
+    /** 供腰间装备【故障驱动器Ⅱ】后右键【假面骑士编年史转玩卡带】触发快捷版变身 / 解除变身。 */
+    public static void toggleHenshinFast(ServerPlayer player, PlayerSystemData data, long now) {
         if (!checkDriverReady(player, data, now)) {
             return;
         }
@@ -110,10 +135,10 @@ public final class CronusSkills {
             return;
         }
         data.setMp(Math.max(0.0, data.mp() - cost));
-        performHenshinOn(player, data, now);
+        performHenshinOn(player, data, now, true);
     }
 
-    /** 技能 1：编年史变身（檀正宗人形态 ⇄ 假面骑士 Cronus 切换；与手动驱动器变身完全互通）。 */
+    /** 技能 1：编年史变身（檀正宗人形态 ⇄ 假面骑士 Cronus 完整演出切换；与腰带卡带快捷变身完全互通）。 */
     public static final class HenshinSkill implements Skill {
         @Override
         public void onPress(SkillContext ctx, HeldState held) {
@@ -129,7 +154,7 @@ public final class CronusSkills {
                 return;
             }
             ctx.cooldown(40);
-            performHenshinOn(ctx.player, ctx.data, ctx.now);
+            performHenshinOn(ctx.player, ctx.data, ctx.now, false);
         }
     }
 

@@ -1118,32 +1118,41 @@ public final class SystemPanelScreen extends Screen {
         // 拥有假面骑士 Cronus 模板后，自动在「物品」界面收纳【故障驱动器Ⅱ】与【假面骑士编年史转玩卡带】
         if (CronusKeys.ownsCronusTemplate(data)) {
             int dState = (int) Math.round(data.value(CronusKeys.KEY_DRIVER_STATE, 0.0));
-            boolean dHeld = dState == CronusGearManager.STATE_HELD;
-            boolean dDropped = dState == CronusGearManager.STATE_DROPPED_NEARBY;
-            boolean dLost = dState == CronusGearManager.STATE_LOST;
+            boolean dWorn = dState == CronusGearManager.STATE_WORN
+                || (this.f_96541_ != null && this.f_96541_.f_91074_ != null && CronusItems.isWearingDriver(this.f_96541_.f_91074_));
+            boolean dHeld = dWorn || dState == CronusGearManager.STATE_HELD;
+            boolean dDropped = !dWorn && dState == CronusGearManager.STATE_DROPPED_NEARBY;
+            boolean dLost = !dWorn && dState == CronusGearManager.STATE_LOST;
 
-            String dStatus = dHeld ? t("cronus_gear.state_held")
-                : (dDropped ? t("cronus_gear.state_dropped")
-                    : (dLost ? t("cronus_gear.state_lost") : t("cronus_gear.state_stored")));
-            int dStatusColor = dHeld ? UiTheme.E_JADE
-                : (dDropped ? UiTheme.E_GOLD_TEXT
-                    : (dLost ? UiTheme.E_RED : UiTheme.E_MUTED));
+            String dStatus = dWorn ? t("cronus_gear.state_worn")
+                : (dHeld ? t("cronus_gear.state_held")
+                    : (dDropped ? t("cronus_gear.state_dropped")
+                        : (dLost ? t("cronus_gear.state_lost") : t("cronus_gear.state_stored"))));
+            int dStatusColor = dWorn ? UiTheme.E_JADE
+                : (dHeld ? UiTheme.E_CYAN
+                    : (dDropped ? UiTheme.E_GOLD_TEXT
+                        : (dLost ? UiTheme.E_RED : UiTheme.E_MUTED)));
             String dQuick = dHeld ? t("items.quick_store")
                 : (dDropped ? t("items.quick_dropped")
                     : (dLost ? t("items.quick_reclaim") : t("items.quick_take")));
             boolean dEnabled = !dDropped;
             int dAccentBtn = dHeld ? UiTheme.E_CYAN : (dEnabled ? UiTheme.E_JADE : UiTheme.E_EDGE);
             Runnable dAct = dHeld ? () -> send("cronus_driver_store", "") : () -> send("cronus_driver_take", "");
-            String dPrimary = dHeld ? t("cronus_gear.btn_store")
-                : (dDropped ? t("cronus_gear.btn_dropped")
-                    : (dLost ? t("cronus_gear.btn_reclaim") : t("cronus_gear.btn_take")));
+            String dPrimary = dWorn ? t("cronus_gear.btn_unequip_store")
+                : (dHeld ? t("cronus_gear.btn_store")
+                    : (dDropped ? t("cronus_gear.btn_dropped")
+                        : (dLost ? t("cronus_gear.btn_reclaim") : t("cronus_gear.btn_take"))));
+
+            String dSecondary = dWorn ? "" : t("cronus_gear.btn_equip");
+            boolean dSecEnabled = !dWorn && !dDropped;
+            Runnable dSecAct = () -> send("cronus_driver_equip", "");
 
             int gState = (int) Math.round(data.value(CronusKeys.KEY_GASHAT_STATE, 0.0));
             boolean gInDriver = gState == CronusGearManager.STATE_IN_DRIVER;
             boolean gHeld = gState == CronusGearManager.STATE_HELD;
             boolean gDropped = gState == CronusGearManager.STATE_DROPPED_NEARBY;
             boolean gLost = gState == CronusGearManager.STATE_LOST;
-            boolean canTakeSet = (!dHeld && !dDropped) || (!gHeld && !gInDriver && !gDropped);
+            boolean canTakeSet = (!dWorn && !dDropped) || (!gHeld && !gInDriver && !gDropped);
 
             List<DetailSpec> driverDetails = List.of(
                 new DetailSpec(UiTheme.E_JADE, t("cronus_gear.driver_d1_tag"), t("cronus_gear.driver_d1_body")),
@@ -1167,10 +1176,10 @@ public final class SystemPanelScreen extends Screen {
                 dEnabled,
                 dAccentBtn,
                 dAct,
-                canTakeSet ? t("cronus_gear.btn_take_set") : "",
-                canTakeSet,
-                UiTheme.E_GOLD_TEXT,
-                () -> send("cronus_set_take", ""),
+                dSecondary,
+                dSecEnabled,
+                UiTheme.E_JADE,
+                dSecAct,
                 t("cronus_gear.driver_tooltip"),
                 driverDetails
             ));

@@ -32,6 +32,10 @@ public final class CronusFxMsg {
     public static final byte KIND_ENERGY_ICON = 9;
     /** 3D 能量光束/瞬移时空轨线：extra=0(缺陷护罩Ⅱ 双管翡翠激光), 1(时序瞬移金绿时空残影轨)。 */
     public static final byte KIND_BEAM_LINE = 10;
+    /** 快捷版编年史快速变身（~2.2s，仅显示卡片 + 翠绿闪电 + 编年史时钟，右键转玩卡带触发）。 */
+    public static final byte KIND_HENSHIN_FAST = 11;
+    /** 假面骑士 Cronus 3D 变身装甲外观状态同步（extra=1 变身态，0 人形态）。 */
+    public static final byte KIND_SUIT_STATE = 12;
 
     public static final int BEAM_GUN = 0;
     public static final int BEAM_BLINK = 1;

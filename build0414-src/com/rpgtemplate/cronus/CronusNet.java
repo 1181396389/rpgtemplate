@@ -3,6 +3,7 @@ package com.rpgtemplate.cronus;
 import java.util.Optional;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -45,6 +46,34 @@ public final class CronusNet {
     public static void sendNear(ServerLevel level, double x, double y, double z, CronusFxMsg msg) {
         CHANNEL.send(PacketDistributor.NEAR.with(
             () -> new PacketDistributor.TargetPoint(x, y, z, RANGE, level.m_46472_())), msg);
+    }
+
+    public static void sendTrackingAndSelf(ServerPlayer player, CronusFxMsg msg) {
+        CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), msg);
+    }
+
+    public static void sendTo(ServerPlayer target, CronusFxMsg msg) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), msg);
+    }
+
+    public static void syncSuitState(ServerPlayer player, boolean transformed) {
+        if (player == null) {
+            return;
+        }
+        sendTrackingAndSelf(player, new CronusFxMsg(
+            CronusFxMsg.KIND_SUIT_STATE, player.m_19879_(),
+            player.m_20185_(), player.m_20186_(), player.m_20189_(),
+            1.0f, transformed ? 1 : 0));
+    }
+
+    public static void syncSuitStateTo(ServerPlayer subject, ServerPlayer viewer, boolean transformed) {
+        if (subject == null || viewer == null) {
+            return;
+        }
+        sendTo(viewer, new CronusFxMsg(
+            CronusFxMsg.KIND_SUIT_STATE, subject.m_19879_(),
+            subject.m_20185_(), subject.m_20186_(), subject.m_20189_(),
+            1.0f, transformed ? 1 : 0));
     }
 
     public static void popupOn(Entity target, int popupType) {

@@ -14,18 +14,20 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 假面骑士 Cronus 专属装备（故障驱动器Ⅱ / 编年史转玩卡带）面板「物品」界面存取、防复制唯一性管理，
- * 以及变身自动赋予 / 解除自动回收的【Gashacon 缺陷护罩Ⅱ】全生命周期管理器。
+ * 假面骑士 Cronus 专属装备（故障驱动器Ⅱ / 编年史转玩卡带）面板「物品」界面存取、腰间佩戴、防复制唯一性管理，
+ * 以及变身自动赋予 / 解除自动回收的【Gashacon 缺陷护罩Ⅱ】与 3D 变身外观同步管理器。
  */
 @Mod.EventBusSubscriber(modid = "rpgtemplate")
 public final class CronusGearManager {
@@ -34,6 +36,7 @@ public final class CronusGearManager {
     public static final int STATE_DROPPED_NEARBY = 2;
     public static final int STATE_LOST = 3;
     public static final int STATE_IN_DRIVER = 4;
+    public static final int STATE_WORN = 5;
 
     private static final double NEARBY_DROP_RANGE = 64.0;
 
@@ -49,6 +52,12 @@ public final class CronusGearManager {
         PlayerSystemData data = SystemDataManager.get(player);
         long activeToken = (long) data.value(CronusKeys.KEY_DRIVER_TOKEN, 0.0);
         if (activeToken > 0L) {
+            if (isWearingOwnedDriver(player, player.m_20148_(), activeToken)) {
+                updateDriverState(player, data, STATE_WORN);
+                Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gear_driver_worn")
+                    .m_130940_(ChatFormatting.GREEN));
+                return;
+            }
             if (hasOwnedDriver(player, player.m_20148_(), activeToken)) {
                 updateDriverState(player, data, STATE_HELD);
                 Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gear_driver_held")
@@ -86,6 +95,76 @@ public final class CronusGearManager {
         Msg.actionBar(player, Component.m_237115_(activeToken > 0L
             ? "message.rpgtemplate.cronus.gear_driver_reclaimed"
             : "message.rpgtemplate.cronus.gear_driver_taken")
+            .m_130940_(ChatFormatting.GREEN));
+    }
+
+    /** 一键将【故障驱动器Ⅱ】装备至腰间（护腿槽位），若当前穿着其他护腿则安全收入背包。 */
+    public static void handleDriverEquip(ServerPlayer player) {
+        if (!canAccessCronusGear(player)) {
+            return;
+        }
+        PlayerSystemData data = SystemDataManager.get(player);
+        long activeToken = (long) data.value(CronusKeys.KEY_DRIVER_TOKEN, 0.0);
+        if (CronusItems.isWearingDriver(player)) {
+            updateDriverState(player, data, STATE_WORN);
+            Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gear_driver_worn")
+                .m_130940_(ChatFormatting.GREEN));
+            return;
+        }
+        if (activeToken > 0L) {
+            ItemEntity nearby = findNearbyDroppedDriver(player, player.m_20148_(), activeToken);
+            if (nearby != null && !hasOwnedDriver(player, player.m_20148_(), activeToken)) {
+                updateDriverState(player, data, STATE_DROPPED_NEARBY);
+                Msg.actionBar(player, Component.m_237110_("message.rpgtemplate.cronus.gear_dropped_nearby",
+                    (int) Math.floor(nearby.m_20185_()),
+                    (int) Math.floor(nearby.m_20186_()),
+                    (int) Math.floor(nearby.m_20189_()))
+                    .m_130940_(ChatFormatting.YELLOW));
+                return;
+            }
+        }
+
+        // 若护腿槽已有其他护腿，先确认背包能安全收纳，绝不覆写玩家护腿
+        ItemStack oldLegs = player.m_6844_(EquipmentSlot.LEGS);
+        if (!oldLegs.m_41619_()) {
+            ItemStack moved = oldLegs.m_41777_();
+            if (!player.m_150109_().m_36054_(moved)) {
+                Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gear_legs_full")
+                    .m_130940_(ChatFormatting.RED));
+                return;
+            }
+            player.m_8061_(EquipmentSlot.LEGS, ItemStack.f_41583_);
+        }
+
+        // 若玩家背包/副手/仓库中已持有自己的驱动器，直接取出来佩戴；否则签发新驱动器并佩戴
+        boolean[] hadGashat = {false};
+        ItemStack toEquip;
+        long tokenToUse;
+        if (activeToken > 0L && hasOwnedDriver(player, player.m_20148_(), activeToken)) {
+            removePlayerDrivers(player, player.m_20148_(), activeToken, hadGashat);
+            tokenToUse = activeToken;
+            toEquip = new ItemStack(CronusItems.BUGGLE_DRIVER_II.get());
+            CronusItems.stampOwned(toEquip, player.m_20148_(), tokenToUse);
+        } else {
+            tokenToUse = Math.max(1L, (long) data.value(CronusKeys.KEY_DRIVER_SEQ, 0.0) + 1L);
+            data.setValue(CronusKeys.KEY_DRIVER_SEQ, (double) tokenToUse);
+            toEquip = new ItemStack(CronusItems.BUGGLE_DRIVER_II.get());
+            CronusItems.stampOwned(toEquip, player.m_20148_(), tokenToUse);
+        }
+        if (CronusKeys.isTransformed(data)) {
+            CronusItems.setDriverLoaded(toEquip, player.m_20148_(), 0L);
+        }
+        player.m_8061_(EquipmentSlot.LEGS, toEquip);
+        data.setValue(CronusKeys.KEY_DRIVER_TOKEN, (double) tokenToUse);
+        data.setValue(CronusKeys.KEY_DRIVER_STATE, (double) STATE_WORN);
+        SystemDataManager.markDirty((Player) player);
+        SystemDataManager.sync(player);
+        TravelerVaultStorage.syncVaultCount(player);
+        player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+            SoundEvents.f_11673_, SoundSource.PLAYERS, 0.85f, 1.15f);
+        player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+            SoundEvents.f_11983_, SoundSource.PLAYERS, 0.75f, 1.30f);
+        Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.driver_equipped")
             .m_130940_(ChatFormatting.GREEN));
     }
 
@@ -202,7 +281,7 @@ public final class CronusGearManager {
             .m_130940_(ChatFormatting.AQUA));
     }
 
-    /** 一键拿取整套变身器（故障驱动器Ⅱ + 假面骑士编年史转玩卡带）。 */
+    /** 一键整备变身器：自动将【故障驱动器Ⅱ】佩戴至腰间，并取出【假面骑士编年史转玩卡带】至背包！ */
     public static void handleTakeSet(ServerPlayer player) {
         if (!canAccessCronusGear(player)) {
             return;
@@ -210,8 +289,8 @@ public final class CronusGearManager {
         PlayerSystemData data = SystemDataManager.get(player);
         int dState = computeDriverState(player, data);
         int gState = computeGashatState(player, data);
-        if (dState == STATE_STORED || dState == STATE_LOST) {
-            handleDriverTake(player);
+        if (dState == STATE_STORED || dState == STATE_LOST || dState == STATE_HELD) {
+            handleDriverEquip(player);
         }
         if (gState == STATE_STORED || gState == STATE_LOST) {
             handleGashatTake(player);
@@ -295,12 +374,20 @@ public final class CronusGearManager {
             }
         }
 
-        // 2. 变身武装【Gashacon 缺陷护罩Ⅱ】与变身常驻增益（夜视/水下呼吸）生命周期守护
+        // 2. 变身武装【Gashacon 缺陷护罩Ⅱ】、3D 装甲同步与变身常驻增益（夜视/水下呼吸）生命周期守护
         boolean transformedCronus = CronusKeys.TEMPLATE_ID.equals(data.loadedTemplateId())
             && CronusKeys.isTransformed(data);
         if (transformedCronus) {
+            // 若是通过腰间佩戴【故障驱动器Ⅱ】+ 右键卡带变身的，摘下腰带时自动干净解除变身
+            if (data.value(CronusKeys.KEY_HENSHIN_VIA_DRIVER, 0.0) > 0.5 && !CronusItems.isWearingDriver(player)) {
+                CronusSkills.performHenshinOff(player, data);
+                return;
+            }
             if (player.f_19797_ % 20 == 0) {
                 grantSummonedBugvisor(player, data);
+            }
+            if (player.f_19797_ % 40 == 0) {
+                CronusNet.syncSuitState(player, true);
             }
         } else {
             // 若已卸下 Cronus 模板或解除变身，回收自动赋予的缺陷护罩Ⅱ与 Cronus 常驻夜视/水下呼吸
@@ -312,6 +399,31 @@ public final class CronusGearManager {
             } else if (player.f_19797_ % 20 == 0) {
                 retractSummonedBugvisor(player);
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onStartTracking(PlayerEvent.StartTracking event) {
+        if (event.getEntity() instanceof ServerPlayer viewer && event.getTarget() instanceof ServerPlayer subject) {
+            PlayerSystemData active = CronusKeys.activeData(subject);
+            boolean transformed = active != null && CronusKeys.isTransformed(active);
+            CronusNet.syncSuitStateTo(subject, viewer, transformed);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer sp) {
+            PlayerSystemData active = CronusKeys.activeData(sp);
+            CronusNet.syncSuitState(sp, active != null && CronusKeys.isTransformed(active));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer sp) {
+            PlayerSystemData active = CronusKeys.activeData(sp);
+            CronusNet.syncSuitState(sp, active != null && CronusKeys.isTransformed(active));
         }
     }
 
@@ -384,7 +496,10 @@ public final class CronusGearManager {
     private static int computeDriverState(ServerPlayer player, PlayerSystemData data) {
         long token = (long) data.value(CronusKeys.KEY_DRIVER_TOKEN, 0.0);
         if (token <= 0L) {
-            return STATE_STORED;
+            return CronusItems.isWearingDriver(player) ? STATE_WORN : STATE_STORED;
+        }
+        if (isWearingOwnedDriver(player, player.m_20148_(), token)) {
+            return STATE_WORN;
         }
         if (hasOwnedDriver(player, player.m_20148_(), token)) {
             return STATE_HELD;
@@ -393,6 +508,10 @@ public final class CronusGearManager {
             return STATE_DROPPED_NEARBY;
         }
         return STATE_LOST;
+    }
+
+    private static boolean isWearingOwnedDriver(ServerPlayer p, UUID ownerId, long token) {
+        return matchesOwnedDriver(p.m_6844_(EquipmentSlot.LEGS), ownerId, token);
     }
 
     private static int computeGashatState(ServerPlayer player, PlayerSystemData data) {
@@ -450,6 +569,7 @@ public final class CronusGearManager {
 
     private static boolean hasOwnedDriver(ServerPlayer p, UUID ownerId, long token) {
         Inventory inv = p.m_150109_();
+        for (ItemStack s : inv.f_35975_) if (matchesOwnedDriver(s, ownerId, token)) return true;
         for (ItemStack s : inv.f_35974_) if (matchesOwnedDriver(s, ownerId, token)) return true;
         for (ItemStack s : inv.f_35976_) if (matchesOwnedDriver(s, ownerId, token)) return true;
         if (matchesOwnedDriver(p.f_36096_.m_142621_(), ownerId, token)) return true;
@@ -470,6 +590,7 @@ public final class CronusGearManager {
 
     private static boolean isGashatInsideAnyDriver(ServerPlayer p, UUID ownerId, long gToken) {
         Inventory inv = p.m_150109_();
+        for (ItemStack s : inv.f_35975_) if (driverHoldsGashat(s, ownerId, gToken)) return true;
         for (ItemStack s : inv.f_35974_) if (driverHoldsGashat(s, ownerId, gToken)) return true;
         for (ItemStack s : inv.f_35976_) if (driverHoldsGashat(s, ownerId, gToken)) return true;
         if (driverHoldsGashat(p.f_36096_.m_142621_(), ownerId, gToken)) return true;
@@ -528,11 +649,12 @@ public final class CronusGearManager {
     private static boolean removePlayerDrivers(ServerPlayer p, UUID ownerId, long token, boolean[] hadGashat) {
         boolean removed = false;
         Inventory inv = p.m_150109_();
+        removed |= removeDriversInList(inv.f_35975_, ownerId, token, hadGashat);
         removed |= removeDriversInList(inv.f_35974_, ownerId, token, hadGashat);
         removed |= removeDriversInList(inv.f_35976_, ownerId, token, hadGashat);
         ItemStack carried = p.f_36096_.m_142621_();
         if (matchesOwnedDriver(carried, ownerId, token)) {
-            if (CronusItems.isDriverLoaded(carried)) hadGashat[0] = true;
+            if (CronusItems.isDriverLoaded(carried) && CronusItems.loadedGashatToken(carried) > 0L) hadGashat[0] = true;
             p.f_36096_.m_142503_(ItemStack.f_41583_);
             removed = true;
         }
@@ -549,7 +671,7 @@ public final class CronusGearManager {
         for (int i = 0; i < list.size(); i++) {
             ItemStack s = list.get(i);
             if (matchesOwnedDriver(s, ownerId, token)) {
-                if (CronusItems.isDriverLoaded(s)) hadGashat[0] = true;
+                if (CronusItems.isDriverLoaded(s) && CronusItems.loadedGashatToken(s) > 0L) hadGashat[0] = true;
                 list.set(i, ItemStack.f_41583_);
                 removed = true;
             }
@@ -562,7 +684,7 @@ public final class CronusGearManager {
         for (int i = 0; i < c.m_6643_(); i++) {
             ItemStack s = c.m_8020_(i);
             if (matchesOwnedDriver(s, ownerId, token)) {
-                if (CronusItems.isDriverLoaded(s)) hadGashat[0] = true;
+                if (CronusItems.isDriverLoaded(s) && CronusItems.loadedGashatToken(s) > 0L) hadGashat[0] = true;
                 c.m_6836_(i, ItemStack.f_41583_);
                 removed = true;
             }
@@ -652,6 +774,7 @@ public final class CronusGearManager {
         long validDriver = (long) data.value(CronusKeys.KEY_DRIVER_TOKEN, 0.0);
         long validGashat = (long) data.value(CronusKeys.KEY_GASHAT_TOKEN, 0.0);
         Inventory inv = p.m_150109_();
+        purgeStaleList(inv.f_35975_, selfId, validDriver, validGashat);
         purgeStaleList(inv.f_35974_, selfId, validDriver, validGashat);
         purgeStaleList(inv.f_35976_, selfId, validDriver, validGashat);
     }

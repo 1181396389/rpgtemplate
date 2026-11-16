@@ -59,6 +59,7 @@ public final class PanelActions {
             case "mask_store" -> PerceptionMaskManager.handleStore(player);
             case "vault_open" -> TravelerVaultStorage.openVault(player);
             case "cronus_driver_take" -> CronusGearManager.handleDriverTake(player);
+            case "cronus_driver_equip" -> CronusGearManager.handleDriverEquip(player);
             case "cronus_driver_store" -> CronusGearManager.handleDriverStore(player);
             case "cronus_gashat_take" -> CronusGearManager.handleGashatTake(player);
             case "cronus_gashat_store" -> CronusGearManager.handleGashatStore(player);

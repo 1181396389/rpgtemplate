@@ -16,13 +16,17 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
@@ -106,6 +110,19 @@ public final class CronusItems {
         return !stack.m_41619_() && stack.m_41720_() == GASHACON_BUGVISOR_II.get();
     }
 
+    /** 读取实体腰间（护腿槽位）装备的【故障驱动器Ⅱ】；未装备时返回空物品堆。 */
+    public static ItemStack getWornDriver(LivingEntity entity) {
+        if (entity == null) {
+            return ItemStack.f_41583_;
+        }
+        ItemStack legs = entity.m_6844_(EquipmentSlot.LEGS);
+        return isDriver(legs) ? legs : ItemStack.f_41583_;
+    }
+
+    public static boolean isWearingDriver(LivingEntity entity) {
+        return !getWornDriver(entity).m_41619_();
+    }
+
     public static void stampOwned(ItemStack stack, UUID owner, long token) {
         CompoundTag tag = stack.m_41784_();
         if (owner != null) {
@@ -184,11 +201,31 @@ public final class CronusItems {
         }
     }
 
-    // ==================== 1. 故障驱动器Ⅱ ====================
+    // ==================== 1. 故障驱动器Ⅱ（可装备至腰间 / 护腿槽位） ====================
 
-    public static final class BuggleDriverItem extends Item {
+    public static final class BuggleDriverItem extends Item implements Equipable {
         public BuggleDriverItem() {
             super(new Item.Properties().m_41487_(1).m_41497_(Rarity.EPIC).m_41486_());
+        }
+
+        @Override
+        public EquipmentSlot m_40402_() {
+            return EquipmentSlot.LEGS;
+        }
+
+        @Override
+        public SoundEvent m_150681_() {
+            return SoundEvents.f_11673_; // ARMOR_EQUIP_IRON
+        }
+
+        @Override
+        public EquipmentSlot getEquipmentSlot(ItemStack stack) {
+            return EquipmentSlot.LEGS;
+        }
+
+        @Override
+        public boolean canEquip(ItemStack stack, EquipmentSlot armorType, Entity entity) {
+            return armorType == EquipmentSlot.LEGS;
         }
 
         @Override
@@ -199,70 +236,34 @@ public final class CronusItems {
         @Override
         public InteractionResultHolder<ItemStack> m_7203_(Level level, Player player, InteractionHand hand) {
             ItemStack driver = player.m_21120_(hand);
-            if (!(player instanceof ServerPlayer sp)) {
-                return InteractionResultHolder.m_19090_(driver);
-            }
-
-            // 潜行右键：若已插卡，则安全拔出《假面骑士编年史》转玩卡带（若处于变身态则先行解除变身）
-            if (sp.m_6144_() && isDriverLoaded(driver)) {
-                PlayerSystemData active = CronusKeys.activeData(sp);
-                if (active != null && CronusKeys.isTransformed(active)) {
-                    CronusSkills.performHenshinOff(sp, active);
-                }
-                ItemStack gashat = new ItemStack(CHRONICLE_GASHAT.get());
+            // 兼容旧版：若手持旧存档中已插卡的驱动器且潜行右键，安全弹出旧卡带
+            if (player instanceof ServerPlayer sp && sp.m_6144_() && isDriverLoaded(driver)) {
                 UUID gOwner = loadedGashatOwner(driver);
                 long gToken = loadedGashatToken(driver);
-                if (gOwner != null && gToken > 0L) {
-                    stampOwned(gashat, gOwner, gToken);
-                }
                 clearDriverLoaded(driver);
-                if (!sp.m_150109_().m_36054_(gashat)) {
-                    sp.m_36176_(gashat, false);
-                }
-                sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
-                    SoundEvents.f_11736_, SoundSource.PLAYERS, 0.75f, 0.75f);
-                CronusGearManager.syncGearStates(sp);
-                Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.gashat_ejected")
-                    .m_130940_(ChatFormatting.AQUA));
-                return InteractionResultHolder.m_19096_(driver);
-            }
-
-            // 校验玩家已拥有并加载 Cronus 模板
-            if (!SystemDataManager.available(sp)) {
-                return InteractionResultHolder.m_19098_(driver);
-            }
-            PlayerSystemData sys = SystemDataManager.get(sp);
-            if (!CronusKeys.ownsCronusTemplate(sys)) {
-                Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.driver_need_template")
-                    .m_130940_(ChatFormatting.RED));
-                return InteractionResultHolder.m_19098_(driver);
-            }
-            PlayerSystemData active = CronusKeys.activeData(sp);
-            if (active == null) {
-                Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.driver_need_load")
-                    .m_130940_(ChatFormatting.YELLOW));
-                return InteractionResultHolder.m_19098_(driver);
-            }
-
-            // 若驱动器尚未插卡，自动检索副手/背包中的《假面骑士编年史》转玩卡带并插入
-            if (!isDriverLoaded(driver)) {
-                if (tryInsertGashatFromPlayer(sp, driver)) {
+                if (gToken > 0L) {
+                    ItemStack gashat = new ItemStack(CHRONICLE_GASHAT.get());
+                    stampOwned(gashat, gOwner, gToken);
+                    if (!sp.m_150109_().m_36054_(gashat)) {
+                        sp.m_36176_(gashat, false);
+                    }
+                    CronusGearManager.syncGearStates(sp);
+                    Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.gashat_ejected")
+                        .m_130940_(ChatFormatting.AQUA));
                     return InteractionResultHolder.m_19096_(driver);
                 }
-                sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
-                    SoundEvents.f_11736_, SoundSource.PLAYERS, 0.55f, 0.65f);
-                Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.driver_need_gashat")
-                    .m_130940_(ChatFormatting.YELLOW));
-                return InteractionResultHolder.m_19098_(driver);
             }
 
-            // 已插卡状态右键：触发完整手动变身 / 解除变身
-            if (sp.m_36335_().m_41519_(this)) {
-                return InteractionResultHolder.m_19098_(driver);
+            // 右键一键将【故障驱动器Ⅱ】装备至腰间（护腿槽位），与已有护腿安全互换
+            InteractionResultHolder<ItemStack> res = this.m_269277_(this, level, player, hand);
+            if (player instanceof ServerPlayer sp && res.m_19089_().m_19077_()) {
+                sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
+                    SoundEvents.f_11983_, SoundSource.PLAYERS, 0.70f, 1.25f);
+                CronusGearManager.syncGearStates(sp);
+                Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.driver_equipped")
+                    .m_130940_(ChatFormatting.GREEN));
             }
-            sp.m_36335_().m_41524_(this, 24);
-            CronusSkills.toggleHenshinManual(sp, active, sp.m_9236_().m_46467_());
-            return InteractionResultHolder.m_19096_(driver);
+            return res;
         }
 
         @Override
@@ -274,14 +275,12 @@ public final class CronusItems {
                 .m_130940_(loaded ? ChatFormatting.GREEN : ChatFormatting.GRAY));
             tips.add(Component.m_237115_("tooltip.rpgtemplate.buggle_driver_ii.usage")
                 .m_130940_(ChatFormatting.DARK_AQUA));
-            if (loaded) {
-                tips.add(Component.m_237115_("tooltip.rpgtemplate.buggle_driver_ii.eject")
-                    .m_130940_(ChatFormatting.DARK_GRAY));
-            }
+            tips.add(Component.m_237115_("tooltip.rpgtemplate.buggle_driver_ii.eject")
+                .m_130940_(ChatFormatting.DARK_GRAY));
         }
     }
 
-    // ==================== 2. 假面骑士编年史转玩卡带 ====================
+    // ==================== 2. 假面骑士编年史转玩卡带（腰佩驱动器后右键快捷变身！） ====================
 
     public static final class ChronicleGashatItem extends Item {
         public ChronicleGashatItem() {
@@ -294,21 +293,40 @@ public final class CronusItems {
             if (!(player instanceof ServerPlayer sp)) {
                 return InteractionResultHolder.m_19090_(gashat);
             }
-            // 若玩家副手或背包内有未插卡的故障驱动器Ⅱ，右键直接插入驱动器！
-            ItemStack targetDriver = findUnloadedDriver(sp);
-            if (!targetDriver.m_41619_()) {
-                UUID gOwner = ownerOf(gashat);
-                long gToken = tokenOf(gashat);
-                setDriverLoaded(targetDriver, gOwner, gToken);
-                gashat.m_41774_(1);
-                onGashatInsertedFx(sp);
+
+            // 核心玩法：腰间（护腿槽）已装备【故障驱动器Ⅱ】时，右键卡带直接触发快捷版快速变身（仅显示卡片 + 闪电 + 时钟）！
+            if (isWearingDriver(sp)) {
+                if (!SystemDataManager.available(sp)) {
+                    return InteractionResultHolder.m_19098_(gashat);
+                }
+                PlayerSystemData sys = SystemDataManager.get(sp);
+                if (!CronusKeys.ownsCronusTemplate(sys)) {
+                    Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.driver_need_template")
+                        .m_130940_(ChatFormatting.RED));
+                    return InteractionResultHolder.m_19098_(gashat);
+                }
+                PlayerSystemData active = CronusKeys.activeData(sp);
+                if (active == null) {
+                    Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.driver_need_load")
+                        .m_130940_(ChatFormatting.YELLOW));
+                    return InteractionResultHolder.m_19098_(gashat);
+                }
+                if (sp.m_36335_().m_41519_(this)) {
+                    return InteractionResultHolder.m_19098_(gashat);
+                }
+                sp.m_36335_().m_41524_(this, 24);
+                CronusSkills.toggleHenshinFast(sp, active, sp.m_9236_().m_46467_());
                 return InteractionResultHolder.m_19096_(gashat);
             }
-            // 否则播放编年史卡带待机启动音效与提示
+
+            // 未将故障驱动器Ⅱ装备至腰间：播放待机音效并提示先将驱动器装备至身上
             sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
                 SoundEvents.f_11983_, SoundSource.PLAYERS, 0.85f, 1.45f);
-            Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.gashat_standby")
-                .m_130940_(ChatFormatting.GREEN));
+            boolean hasDriverInBag = hasDriverInInventory(sp);
+            Msg.actionBar(sp, Component.m_237115_(hasDriverInBag
+                    ? "message.rpgtemplate.cronus.gashat_wear_driver"
+                    : "message.rpgtemplate.cronus.gashat_standby")
+                .m_130940_(ChatFormatting.YELLOW));
             return InteractionResultHolder.m_19096_(gashat);
         }
 
@@ -512,58 +530,16 @@ public final class CronusItems {
         }
     }
 
-    // ==================== 内部插卡检索辅助 ====================
+    // ==================== 内部检索辅助 ====================
 
-    private static boolean tryInsertGashatFromPlayer(ServerPlayer sp, ItemStack driver) {
-        Inventory inv = sp.m_150109_();
-        // 优先副手，再查快捷栏与背包
-        for (ItemStack s : inv.f_35976_) {
-            if (isGashat(s)) {
-                setDriverLoaded(driver, ownerOf(s), tokenOf(s));
-                s.m_41774_(1);
-                onGashatInsertedFx(sp);
-                return true;
-            }
-        }
-        for (int i = 0; i < inv.f_35974_.size(); i++) {
-            ItemStack s = inv.f_35974_.get(i);
-            if (isGashat(s)) {
-                setDriverLoaded(driver, ownerOf(s), tokenOf(s));
-                s.m_41774_(1);
-                onGashatInsertedFx(sp);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static ItemStack findUnloadedDriver(ServerPlayer sp) {
+    private static boolean hasDriverInInventory(ServerPlayer sp) {
         Inventory inv = sp.m_150109_();
         for (ItemStack s : inv.f_35976_) {
-            if (isDriver(s) && !isDriverLoaded(s)) {
-                return s;
-            }
+            if (isDriver(s)) return true;
         }
         for (ItemStack s : inv.f_35974_) {
-            if (isDriver(s) && !isDriverLoaded(s)) {
-                return s;
-            }
+            if (isDriver(s)) return true;
         }
-        return ItemStack.f_41583_;
-    }
-
-    private static void onGashatInsertedFx(ServerPlayer sp) {
-        sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
-            SoundEvents.f_11983_, SoundSource.PLAYERS, 0.9f, 1.35f);
-        sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
-            SoundEvents.f_11736_, SoundSource.PLAYERS, 0.8f, 1.15f);
-        if (sp.m_9236_() instanceof ServerLevel sl) {
-            CronusNet.sendNear(sl, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
-                new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, sp.m_19879_(),
-                    sp.m_20185_(), sp.m_20186_() + 0.06, sp.m_20189_(), 2.2f, 0));
-        }
-        CronusGearManager.syncGearStates(sp);
-        Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.gashat_inserted")
-            .m_130940_(ChatFormatting.GREEN));
+        return false;
     }
 }

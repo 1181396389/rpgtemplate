@@ -2,18 +2,20 @@ package com.rpgtemplate.cronus.client;
 
 import com.rpgtemplate.cronus.CronusItems;
 import com.rpgtemplate.cronus.CronusKeys;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 /**
- * 假面骑士 Cronus 物品动态模型谓词注册（客户端）：
+ * 假面骑士 Cronus 客户端初始化：
  * <ul>
- *   <li>{@code rpgtemplate:driver_loaded}：故障驱动器Ⅱ 是否已插入编年史转玩卡带。</li>
- *   <li>{@code rpgtemplate:bugvisor_mode}：Gashacon 缺陷护罩Ⅱ 当前形态（0 = 电锯模式，1 = 光线枪模式）。</li>
+ *   <li>物品动态模型谓词注册（{@code rpgtemplate:driver_loaded}、{@code rpgtemplate:bugvisor_mode}）。</li>
+ *   <li>将 3D 假面骑士 Cronus 装甲与腰带渲染层 {@link CronusSuitLayer} 挂载至全部玩家皮肤渲染器（default / slim）。</li>
  * </ul>
  */
 @Mod.EventBusSubscriber(modid = "rpgtemplate", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -35,5 +37,15 @@ public final class CronusClientSetup {
                 (stack, level, entity, seed) ->
                     CronusItems.bugvisorMode(stack) == CronusKeys.MODE_GUN ? 1.0f : 0.0f);
         });
+    }
+
+    @SubscribeEvent
+    public static void onAddLayers(EntityRenderersEvent.AddLayers event) {
+        for (String skin : event.getSkins()) {
+            PlayerRenderer renderer = event.getSkin(skin);
+            if (renderer != null) {
+                CronusSuitLayer.attach(renderer);
+            }
+        }
     }
 }
