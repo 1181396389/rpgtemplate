@@ -32,8 +32,22 @@ public final class CronusKeys {
     public static final String KEY_WEAPON_MODE = "cr.weapon_mode";
     /** 1.0 = 已由 Cronus 变身施加常驻夜视/水下呼吸增益（解除变身时自动回收）。 */
     public static final String KEY_BUFFS_APPLIED = "cr.buffs_applied";
-    /** 1.0 = 通过腰间装备【故障驱动器Ⅱ】+ 右键卡带变身（卸下腰带时自动解除变身）。 */
+    /** 1.0 = 通过腰间装备【故障驱动器Ⅱ】+ 右键卡带变身（兼容字段，解除仅限技能）。 */
     public static final String KEY_HENSHIN_VIA_DRIVER = "cr.henshin_via_driver";
+    /** 变身动画结束、3D 假面骑士 Cronus 装甲显现的世界 tick（此前保持人形态 + 3D 腰带）。 */
+    public static final String KEY_SUIT_REVEAL_TICK = "cr.suit_reveal_tick";
+    /** 技能变身中 2D 飞入卡带精准插入 3D 腰带槽位并点亮实体卡带的世界 tick。 */
+    public static final String KEY_BELT_GASHAT_TICK = "cr.belt_gashat_tick";
+    /** 1.0 = 本次变身由右键消耗【假面骑士编年史转玩卡带】触发，解除变身时自动归还卡带。 */
+    public static final String KEY_GASHAT_IN_HENSHIN = "cr.gashat_in_henshin";
+    /** 本次右键变身所收纳卡带的唯一令牌（用于解除变身时原样归还且杜绝面板重复补发）。 */
+    public static final String KEY_GASHAT_HELD_TOKEN = "cr.gashat_held_token";
+
+    /** 技能 1 完整变身演出：卡带飞入锁定腰带（tFrame=126 ≈ 83 ticks）与落雷收束装甲显现（150 ticks）。 */
+    public static final int HENSHIN_FULL_GASHAT_DOCK_TICKS = 83;
+    public static final int HENSHIN_FULL_REVEAL_TICKS = 150;
+    /** 右键卡带快捷变身演出：落雷收束装甲显现（39 ticks ≈ 1.95s）。 */
+    public static final int HENSHIN_FAST_REVEAL_TICKS = 39;
 
     /** 面板「物品」界面专属装备收录与唯一令牌状态（获得 Cronus 模板后自动解锁）。 */
     public static final String KEY_GEAR_UNLOCKED = "cr.gear_unlocked";
@@ -154,26 +168,41 @@ public final class CronusKeys {
         return mult;
     }
 
-    /** 玩家解除变身时：清理病毒过载之外由 Cronus 施加的常驻增益、腰带卡带指示灯、3D 装甲同步与召唤武装。 */
-    public static void clearTransformedState(ServerPlayer player, PlayerSystemData data) {
+    /**
+     * 玩家解除变身时：清理常驻增益、腰带卡带指示灯、3D 装甲同步、召唤武装，
+     * 并在本次变身为右键【假面骑士编年史转玩卡带】触发时原样归还卡带至背包。
+     *
+     * @return 是否归还了之前因右键变身收纳的编年史转玩卡带
+     */
+    public static boolean clearTransformedState(ServerPlayer player, PlayerSystemData data) {
+        boolean shouldReturnGashat = data != null && data.value(KEY_GASHAT_IN_HENSHIN, 0.0) > 0.5;
+        long heldToken = data != null ? (long) data.value(KEY_GASHAT_HELD_TOKEN, 0.0) : 0L;
+
         if (data != null) {
             data.setValue(KEY_TRANSFORMED, 0.0);
             data.setValue(KEY_TIME_DEF, 0.0);
             data.setValue(KEY_HENSHIN_VIA_DRIVER, 0.0);
+            data.setValue(KEY_SUIT_REVEAL_TICK, 0.0);
+            data.setValue(KEY_BELT_GASHAT_TICK, 0.0);
+            data.setValue(KEY_GASHAT_IN_HENSHIN, 0.0);
+            data.setValue(KEY_GASHAT_HELD_TOKEN, 0.0);
         }
         if (player != null && data != null && data.value(KEY_BUFFS_APPLIED, 0.0) > 0.5) {
             player.m_21195_(MobEffects.f_19611_); // NIGHT_VISION
             player.m_21195_(MobEffects.f_19608_); // WATER_BREATHING
             data.setValue(KEY_BUFFS_APPLIED, 0.0);
         }
+        boolean returnedGashat = false;
         if (player != null) {
-            var wornDriver = CronusItems.getWornDriver(player);
-            if (!wornDriver.m_41619_() && CronusItems.isDriverLoaded(wornDriver)) {
-                CronusItems.clearDriverLoaded(wornDriver);
+            CronusGearManager.clearAllDriverLoadedFlags(player);
+            if (shouldReturnGashat) {
+                CronusGearManager.returnConsumedGashat(player, data, heldToken);
+                returnedGashat = true;
             }
             CronusGearManager.retractSummonedBugvisor(player);
-            CronusNet.syncSuitState(player, false);
+            CronusNet.syncSuitState(player, false, 0, 0);
         }
+        return returnedGashat;
     }
 
     /** 增加或平复 Bugster 病毒抗体负荷；满 100% 时触发驱动器过热反噬并强制解除时停/变身。 */

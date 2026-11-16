@@ -173,6 +173,11 @@ public final class CronusGearManager {
             return;
         }
         PlayerSystemData data = SystemDataManager.get(player);
+        if (CronusKeys.isTransformed(data)) {
+            Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gear_locked_in_henshin")
+                .m_130940_(ChatFormatting.YELLOW));
+            return;
+        }
         long activeToken = (long) data.value(CronusKeys.KEY_DRIVER_TOKEN, 0.0);
         boolean[] hadLoadedGashat = {false};
         boolean removed = removePlayerDrivers(player, player.m_20148_(), activeToken, hadLoadedGashat);
@@ -205,6 +210,12 @@ public final class CronusGearManager {
             return;
         }
         PlayerSystemData data = SystemDataManager.get(player);
+        if (data.value(CronusKeys.KEY_GASHAT_IN_HENSHIN, 0.0) > 0.5) {
+            updateGashatState(player, data, STATE_IN_DRIVER);
+            Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gear_gashat_in_driver")
+                .m_130940_(ChatFormatting.GREEN));
+            return;
+        }
         long activeToken = (long) data.value(CronusKeys.KEY_GASHAT_TOKEN, 0.0);
         if (activeToken > 0L) {
             if (isGashatInsideAnyDriver(player, player.m_20148_(), activeToken)) {
@@ -258,6 +269,11 @@ public final class CronusGearManager {
             return;
         }
         PlayerSystemData data = SystemDataManager.get(player);
+        if (data.value(CronusKeys.KEY_GASHAT_IN_HENSHIN, 0.0) > 0.5) {
+            Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gear_locked_in_henshin")
+                .m_130940_(ChatFormatting.YELLOW));
+            return;
+        }
         long activeToken = (long) data.value(CronusKeys.KEY_GASHAT_TOKEN, 0.0);
         boolean removed = removePlayerGashats(player, player.m_20148_(), activeToken);
         if (!removed) {
@@ -375,22 +391,30 @@ public final class CronusGearManager {
         }
 
         // 2. 变身武装【Gashacon 缺陷护罩Ⅱ】、3D 装甲同步与变身常驻增益（夜视/水下呼吸）生命周期守护
+        //    （解除变身仅允许通过【编年史变身】技能触发，摘下驱动器不会误解除变身）
         boolean transformedCronus = CronusKeys.TEMPLATE_ID.equals(data.loadedTemplateId())
             && CronusKeys.isTransformed(data);
         if (transformedCronus) {
-            // 若是通过腰间佩戴【故障驱动器Ⅱ】+ 右键卡带变身的，摘下腰带时自动干净解除变身
-            if (data.value(CronusKeys.KEY_HENSHIN_VIA_DRIVER, 0.0) > 0.5 && !CronusItems.isWearingDriver(player)) {
-                CronusSkills.performHenshinOff(player, data);
-                return;
+            long now = player.m_9236_().m_46467_();
+            long revealTick = Math.round(data.value(CronusKeys.KEY_SUIT_REVEAL_TICK, 0.0));
+            long beltGashatTick = Math.round(data.value(CronusKeys.KEY_BELT_GASHAT_TICK, 0.0));
+
+            // 技能变身中当飞入卡带精准锁定腰带（tFrame=126）后，点亮佩戴中故障驱动器Ⅱ的插卡指示状态
+            if (now >= beltGashatTick) {
+                ItemStack wornDriver = CronusItems.getWornDriver(player);
+                if (!wornDriver.m_41619_() && !CronusItems.isDriverLoaded(wornDriver)) {
+                    CronusItems.setDriverLoaded(wornDriver, player.m_20148_(), 0L);
+                }
             }
-            if (player.f_19797_ % 20 == 0) {
+            // 在变身动画结束、3D Cronus 装甲正式显现的瞬间同步赋予【Gashacon 缺陷护罩Ⅱ】
+            if (now >= revealTick && (now == revealTick || player.f_19797_ % 20 == 0)) {
                 grantSummonedBugvisor(player, data);
             }
             if (player.f_19797_ % 40 == 0) {
-                CronusNet.syncSuitState(player, true);
+                CronusNet.syncSuitState(player, data);
             }
         } else {
-            // 若已卸下 Cronus 模板或解除变身，回收自动赋予的缺陷护罩Ⅱ与 Cronus 常驻夜视/水下呼吸
+            // 若已卸下 Cronus 模板或解除变身，回收自动赋予的缺陷护罩Ⅱ与 Cronus 常驻夜视/水下呼吸（并归还收纳的卡带）
             if (data.value(CronusKeys.KEY_BUFFS_APPLIED, 0.0) > 0.5
                 || (CronusKeys.isTransformed(data) && !CronusKeys.TEMPLATE_ID.equals(data.loadedTemplateId()))) {
                 CronusKeys.clearTransformedState(player, data);
@@ -402,12 +426,65 @@ public final class CronusGearManager {
         }
     }
 
+    /** 清理玩家身上/背包/仓库所有故障驱动器Ⅱ上的插卡亮灯标记（解除变身时调用）。 */
+    public static void clearAllDriverLoadedFlags(ServerPlayer player) {
+        if (player == null) {
+            return;
+        }
+        Inventory inv = player.m_150109_();
+        clearDriverLoadedInList(inv.f_35975_);
+        clearDriverLoadedInList(inv.f_35974_);
+        clearDriverLoadedInList(inv.f_35976_);
+        ItemStack carried = player.f_36096_.m_142621_();
+        if (CronusItems.isDriver(carried) && CronusItems.isDriverLoaded(carried)) {
+            CronusItems.clearDriverLoaded(carried);
+        }
+        clearDriverLoadedInContainer(player.m_36327_());
+        SimpleContainer vault = TravelerVaultStorage.containerOf(player);
+        if (vault != null) {
+            clearDriverLoadedInContainer(vault);
+        }
+    }
+
+    private static void clearDriverLoadedInList(NonNullList<ItemStack> list) {
+        for (ItemStack s : list) {
+            if (CronusItems.isDriver(s) && CronusItems.isDriverLoaded(s)) {
+                CronusItems.clearDriverLoaded(s);
+            }
+        }
+    }
+
+    private static void clearDriverLoadedInContainer(Container c) {
+        for (int i = 0; i < c.m_6643_(); i++) {
+            ItemStack s = c.m_8020_(i);
+            if (CronusItems.isDriver(s) && CronusItems.isDriverLoaded(s)) {
+                CronusItems.clearDriverLoaded(s);
+            }
+        }
+    }
+
+    /** 解除变身时，将右键变身期间收纳进腰带的【假面骑士编年史转玩卡带】原样归还至玩家背包。 */
+    public static void returnConsumedGashat(ServerPlayer player, PlayerSystemData data, long heldToken) {
+        if (player == null) {
+            return;
+        }
+        ItemStack returned = new ItemStack(CronusItems.CHRONICLE_GASHAT.get());
+        if (heldToken > 0L) {
+            CronusItems.stampOwned(returned, player.m_20148_(), heldToken);
+        }
+        if (!player.m_150109_().m_36054_(returned)) {
+            player.m_36176_(returned, false);
+        }
+        player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+            SoundEvents.f_11983_, SoundSource.PLAYERS, 0.85f, 1.45f);
+        syncGearStates(player);
+    }
+
     @SubscribeEvent
     public static void onStartTracking(PlayerEvent.StartTracking event) {
         if (event.getEntity() instanceof ServerPlayer viewer && event.getTarget() instanceof ServerPlayer subject) {
             PlayerSystemData active = CronusKeys.activeData(subject);
-            boolean transformed = active != null && CronusKeys.isTransformed(active);
-            CronusNet.syncSuitStateTo(subject, viewer, transformed);
+            CronusNet.syncSuitStateTo(subject, viewer, active);
         }
     }
 
@@ -415,7 +492,7 @@ public final class CronusGearManager {
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
             PlayerSystemData active = CronusKeys.activeData(sp);
-            CronusNet.syncSuitState(sp, active != null && CronusKeys.isTransformed(active));
+            CronusNet.syncSuitState(sp, active);
         }
     }
 
@@ -423,7 +500,7 @@ public final class CronusGearManager {
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
             PlayerSystemData active = CronusKeys.activeData(sp);
-            CronusNet.syncSuitState(sp, active != null && CronusKeys.isTransformed(active));
+            CronusNet.syncSuitState(sp, active);
         }
     }
 
@@ -515,6 +592,9 @@ public final class CronusGearManager {
     }
 
     private static int computeGashatState(ServerPlayer player, PlayerSystemData data) {
+        if (data.value(CronusKeys.KEY_GASHAT_IN_HENSHIN, 0.0) > 0.5) {
+            return STATE_IN_DRIVER;
+        }
         long token = (long) data.value(CronusKeys.KEY_GASHAT_TOKEN, 0.0);
         if (token <= 0L) {
             return STATE_STORED;

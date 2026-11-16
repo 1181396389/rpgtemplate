@@ -20,9 +20,10 @@ import net.minecraft.world.entity.HumanoidArm;
 /**
  * 假面骑士 Cronus 超精细 3D 变身装甲与腰带模型（256x256 逻辑 UV 映射 512x512 超高清像素贴图）。
  * <ul>
- *   <li><b>头部精细化（0.50x 亚体素精雕，16 部件）</b>：34x32 高清 Ex-Aid 螺旋复眼（漆黑瞳心+双圈荧光绿环）、
- *       立体 V 型眉甲与眉心冠鳍、贴合式斜切颊甲、单线 ^ 型下颌面罩与尖锐下巴、4 片后掠皇室蓝黑发刺头冠、
- *       以及阶梯闪电形双侧荧光绿耳翼。</li>
+ *   <li><b>头部精细化（0.40x 亚体素实体精雕，28 实体部件，参照 S.H.Figuarts 实拍特写）</b>：
+ *       圆顶分段收窄式骑士头盔轮廓、内嵌熏黑 Ex-Aid 螺旋复眼护目镜（36x18 超清同心翠绿螺旋纹）、
+ *       立体金属黄绿 V 型眉甲与斜切侧颊甲、冷峻黑曜倒 V 呼吸面罩 + 尖锐金属绿 V 型下巴护盾、
+ *       多段实体弯曲后掠 Ex-Aid 皇室蓝黑/金属绿主发刺冠与前额 V 刃、以及三段阶梯实体闪电耳翼。</li>
  *   <li><b>腰带精细化（0.34x 亚体素精雕，28 部件忠实还原 DX 故障驱动器Ⅱ）</b>：高规格黑纹腰带与后扣、
  *       八角切面银钛外框 + 金属翡翠青外壳、中央八角全息屏幕（变身点亮假面骑士 Cronus 绿光剪影；未变身为熏黑待机玻璃）、
  *       左翼圆形浮雕红「A」键与双枪口喷嘴、右翼圆形浮雕青「B」键与锯齿链锯刀刃、顶部斜向插卡桥（含青色 LED、红色锁扣、青色三角饰块）
@@ -58,9 +59,9 @@ public final class CronusSuitModel {
         this.root = createLayerDefinition().m_171564_();
         this.head = root.m_171324_("head");
         this.headHd = head.m_171324_("head_hd");
-        this.headHd.f_233553_ = 0.50f;
-        this.headHd.f_233554_ = 0.50f;
-        this.headHd.f_233555_ = 0.50f;
+        this.headHd.f_233553_ = 0.40f;
+        this.headHd.f_233554_ = 0.40f;
+        this.headHd.f_233555_ = 0.40f;
 
         this.body = root.m_171324_("body");
         this.beltGroup = body.m_171324_("belt_group");
@@ -91,72 +92,117 @@ public final class CronusSuitModel {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.m_171576_();
 
-        // ==================== 1. HEAD（0.50x 亚体素精雕头盔、螺旋复眼、眉甲、面罩、后掠发刺、闪电耳翼） ====================
+        // ==================== 1. HEAD（0.40x 亚体素实体精雕 S.H.Figuarts 级 Cronus 头盔，零空心薄片感） ====================
         PartDefinition head = root.m_171599_("head", CubeListBuilder.m_171558_(), PartPose.f_171404_);
         PartDefinition headHd = head.m_171599_("head_hd",
             CubeListBuilder.m_171558_()
-                // 高精头盔主体（17x16x17 @ 0.50x，包裹原版头部且零穿模，正面 34x32 超清复眼）
-                .m_171514_(0, 84).m_171488_(-8.5f, -16.5f, -8.5f, 17.0f, 16.0f, 17.0f, new CubeDeformation(0.35f)),
+                // 上部圆弧盔顶 + 阶梯收窄顶冠 + 窄收下颌内芯（塑造真正收窄式骑士头盔剪影而非方块！）
+                .m_171514_(0, 200).m_171488_(-9.0f, -18.8f, -9.0f, 18.0f, 12.0f, 18.0f, new CubeDeformation(0.25f))
+                .m_171514_(74, 200).m_171488_(-7.5f, -21.2f, -8.0f, 15.0f, 3.0f, 16.0f, new CubeDeformation(0.20f))
+                .m_171514_(138, 200).m_171488_(-7.0f, -6.8f, -7.8f, 14.0f, 7.0f, 15.0f, new CubeDeformation(0.20f))
+                // 内嵌式熏黑 Ex-Aid 复眼护目镜（36x18 超清同心翠绿螺旋纹）+ 冷峻黑曜倒 V 呼吸面罩
+                .m_171514_(0, 232).m_171481_(-9.0f, -15.4f, -10.0f, 18.0f, 9.0f, 2.0f)
+                .m_171514_(44, 232).m_171481_(-7.0f, -7.0f, -10.4f, 14.0f, 6.0f, 3.0f),
             PartPose.f_171404_);
 
-        // 立体 V 型眉骨护额 + 中央 V 形额冠鳍
+        // 立体金属黄绿 V 型眉骨护额（悬挑覆盖熏黑护目镜上沿）
         headHd.m_171599_("h_brow_r",
-            CubeListBuilder.m_171558_().m_171514_(70, 84).m_171481_(-4.5f, -1.0f, -1.0f, 9.0f, 2.0f, 2.0f),
-            PartPose.m_171423_(-4.5f, -13.2f, -9.0f, 0.10f, 0.14f, 0.28f));
+            CubeListBuilder.m_171558_().m_171514_(108, 232).m_171481_(-5.0f, -1.0f, -1.0f, 10.0f, 2.0f, 2.0f),
+            PartPose.m_171423_(-5.4f, -15.2f, -10.6f, 0.12f, 0.16f, 0.34f));
         headHd.m_171599_("h_brow_l",
-            CubeListBuilder.m_171558_().m_171514_(70, 84).m_171481_(-4.5f, -1.0f, -1.0f, 9.0f, 2.0f, 2.0f),
-            PartPose.m_171423_(4.5f, -13.2f, -9.0f, 0.10f, -0.14f, -0.28f));
-        headHd.m_171599_("h_forehead_v",
-            CubeListBuilder.m_171558_().m_171514_(94, 84).m_171481_(-2.0f, -1.2f, -1.0f, 4.0f, 6.0f, 2.0f),
-            PartPose.m_171423_(0.0f, -14.6f, -9.4f, -0.10f, 0.0f, 0.0f));
+            CubeListBuilder.m_171558_().m_171514_(108, 232).m_171481_(-5.0f, -1.0f, -1.0f, 10.0f, 2.0f, 2.0f),
+            PartPose.m_171423_(5.4f, -15.2f, -10.6f, 0.12f, -0.16f, -0.34f));
 
-        // 贴合式斜切侧颊甲 + 尖锐 ^ 型面罩与下巴尖
+        // 立体实体斜切侧颊甲 + 金属黄绿尖锐 V 型下巴护盾
         headHd.m_171599_("h_cheek_r",
-            CubeListBuilder.m_171558_().m_171514_(108, 84).m_171481_(-1.2f, -3.0f, -3.4f, 2.0f, 6.0f, 5.0f),
-            PartPose.m_171423_(-8.3f, -4.4f, -4.8f, 0.04f, 0.12f, -0.14f));
+            CubeListBuilder.m_171558_().m_171514_(136, 232).m_171481_(-1.5f, -3.5f, -3.0f, 3.0f, 7.0f, 5.0f),
+            PartPose.m_171423_(-8.4f, -5.2f, -6.2f, 0.10f, 0.24f, -0.22f));
         headHd.m_171599_("h_cheek_l",
-            CubeListBuilder.m_171558_().m_171514_(108, 84).m_171481_(-0.8f, -3.0f, -3.4f, 2.0f, 6.0f, 5.0f),
-            PartPose.m_171423_(8.3f, -4.4f, -4.8f, 0.04f, -0.12f, 0.14f));
-        headHd.m_171599_("h_jaw",
-            CubeListBuilder.m_171558_().m_171514_(126, 84).m_171481_(-5.0f, -2.2f, -1.4f, 10.0f, 4.0f, 3.0f),
-            PartPose.m_171423_(0.0f, -2.2f, -9.1f, 0.08f, 0.0f, 0.0f));
-        headHd.m_171599_("h_chin",
-            CubeListBuilder.m_171558_().m_171514_(154, 84).m_171481_(-2.5f, -1.4f, -1.1f, 5.0f, 3.0f, 2.0f),
-            PartPose.m_171423_(0.0f, -0.4f, -9.2f, -0.22f, 0.0f, 0.0f));
+            CubeListBuilder.m_171558_().m_171514_(136, 232).m_171481_(-1.5f, -3.5f, -3.0f, 3.0f, 7.0f, 5.0f),
+            PartPose.m_171423_(8.4f, -5.2f, -6.2f, 0.10f, -0.24f, 0.22f));
+        headHd.m_171599_("h_chin_shield",
+            CubeListBuilder.m_171558_().m_171514_(82, 232).m_171481_(-4.0f, -1.8f, -1.5f, 8.0f, 4.0f, 3.0f),
+            PartPose.m_171423_(0.0f, -1.4f, -10.2f, -0.26f, 0.0f, 0.0f));
 
-        // 4 片标志性后掠新月发刺头冠（含皇室蓝光泽主刃 + 翠绿锋刃侧刺）
-        headHd.m_171599_("hair_hero_1",
-            CubeListBuilder.m_171558_().m_171514_(70, 96)
-                .m_171488_(-1.5f, -13.8f, -3.2f, 3.0f, 15.0f, 7.0f, new CubeDeformation(-0.10f)),
-            PartPose.m_171423_(-1.2f, -15.6f, -5.2f, -0.34f, 0.0f, 0.24f));
-        headHd.m_171599_("hair_hero_2",
-            CubeListBuilder.m_171558_().m_171514_(94, 96)
-                .m_171488_(-1.0f, -12.0f, -2.8f, 2.0f, 13.0f, 6.0f, new CubeDeformation(-0.05f)),
-            PartPose.m_171423_(1.4f, -15.6f, -0.6f, -0.58f, 0.0f, 0.18f));
-        headHd.m_171599_("hair_mid_r",
-            CubeListBuilder.m_171558_().m_171514_(94, 96)
-                .m_171488_(-1.0f, -10.0f, -2.6f, 2.0f, 13.0f, 6.0f, new CubeDeformation(-0.20f)),
-            PartPose.m_171423_(-4.4f, -15.0f, -5.0f, -0.28f, 0.16f, -0.28f));
-        headHd.m_171599_("hair_mid_l",
-            CubeListBuilder.m_171558_().m_171514_(94, 96)
-                .m_171488_(-1.0f, -10.8f, -2.6f, 2.0f, 13.0f, 6.0f, new CubeDeformation(-0.20f)),
-            PartPose.m_171423_(4.4f, -15.0f, -4.4f, -0.34f, -0.14f, 0.44f));
+        // 中央前额 V 刃（2 段实体棱锥）
+        PartDefinition hairVCenter = headHd.m_171599_("hair_v_center",
+            CubeListBuilder.m_171558_().m_171514_(0, 84).m_171481_(-1.5f, -6.5f, -1.5f, 3.0f, 7.0f, 3.0f),
+            PartPose.m_171423_(0.0f, -15.0f, -10.8f, -0.16f, 0.0f, 0.0f));
+        hairVCenter.m_171599_("hair_v_tip",
+            CubeListBuilder.m_171558_().m_171514_(14, 84).m_171481_(-1.0f, -4.8f, -1.0f, 2.0f, 5.0f, 2.0f),
+            PartPose.m_171423_(0.0f, -6.2f, -0.2f, -0.14f, 0.0f, 0.0f));
 
-        // 两侧黑曜耳座 + 阶梯闪电形荧光绿耳翼尖刃
-        headHd.m_171599_("ear_pod_r",
-            CubeListBuilder.m_171558_().m_171514_(114, 96).m_171481_(-1.2f, -3.2f, -2.4f, 2.0f, 6.0f, 5.0f),
-            PartPose.m_171423_(-8.8f, -8.4f, -1.8f, 0.0f, 0.0f, -0.08f));
-        headHd.m_171599_("ear_blade_r",
-            CubeListBuilder.m_171558_().m_171514_(130, 96)
-                .m_171488_(-1.0f, -12.4f, -2.0f, 2.0f, 13.0f, 4.0f, new CubeDeformation(-0.12f)),
-            PartPose.m_171423_(-9.1f, -9.2f, -1.4f, -0.22f, 0.0f, -0.32f));
-        headHd.m_171599_("ear_pod_l",
-            CubeListBuilder.m_171558_().m_171514_(114, 96).m_171481_(-0.8f, -3.2f, -2.4f, 2.0f, 6.0f, 5.0f),
-            PartPose.m_171423_(8.8f, -8.4f, -1.8f, 0.0f, 0.0f, 0.08f));
-        headHd.m_171599_("ear_blade_l",
-            CubeListBuilder.m_171558_().m_171514_(130, 96)
-                .m_171488_(-1.0f, -12.4f, -2.0f, 2.0f, 13.0f, 4.0f, new CubeDeformation(-0.12f)),
-            PartPose.m_171423_(9.1f, -9.2f, -1.4f, -0.22f, 0.0f, 0.32f));
+        // 两侧斜飞前额刘海发刺（2 段实体棱锥）
+        PartDefinition hairBangLeft = headHd.m_171599_("hair_bang_left",
+            CubeListBuilder.m_171558_().m_171514_(126, 84).m_171481_(-1.5f, -6.5f, -2.0f, 3.0f, 7.0f, 4.0f),
+            PartPose.m_171423_(-3.6f, -18.0f, -8.8f, -0.18f, 0.14f, -0.48f));
+        hairBangLeft.m_171599_("hair_bang_left_t",
+            CubeListBuilder.m_171558_().m_171514_(144, 84).m_171481_(-1.0f, -4.8f, -1.0f, 2.0f, 5.0f, 2.0f),
+            PartPose.m_171423_(0.0f, -6.2f, 0.2f, -0.18f, 0.0f, -0.14f));
+        PartDefinition hairBangRight = headHd.m_171599_("hair_bang_right",
+            CubeListBuilder.m_171558_().m_171514_(126, 84).m_171481_(-1.5f, -6.8f, -2.0f, 3.0f, 7.0f, 4.0f),
+            PartPose.m_171423_(3.8f, -18.2f, -8.6f, -0.18f, -0.14f, 0.52f));
+        hairBangRight.m_171599_("hair_bang_right_t",
+            CubeListBuilder.m_171558_().m_171514_(144, 84).m_171481_(-1.0f, -4.8f, -1.0f, 2.0f, 5.0f, 2.0f),
+            PartPose.m_171423_(0.0f, -6.5f, 0.2f, -0.18f, 0.0f, 0.16f));
+
+        // 标志性不对称向右上弯曲后掠 Ex-Aid 镰刀主发刺冠（3 段实体弧形渐变棱锥，带金属绿前刃与皇室蓝黑背面）
+        PartDefinition hairSweep1 = headHd.m_171599_("hair_sweep_1",
+            CubeListBuilder.m_171558_().m_171514_(24, 84).m_171481_(-2.5f, -7.5f, -3.5f, 5.0f, 8.0f, 7.0f),
+            PartPose.m_171423_(-2.0f, -20.0f, -5.6f, -0.24f, 0.0f, 0.34f));
+        PartDefinition hairSweep1m = hairSweep1.m_171599_("hair_sweep_1m",
+            CubeListBuilder.m_171558_().m_171514_(52, 84).m_171481_(-2.0f, -7.5f, -2.5f, 4.0f, 8.0f, 5.0f),
+            PartPose.m_171423_(0.3f, -7.2f, 0.6f, -0.22f, 0.0f, 0.24f));
+        hairSweep1m.m_171599_("hair_sweep_1t",
+            CubeListBuilder.m_171558_().m_171514_(74, 84).m_171481_(-1.0f, -5.6f, -1.5f, 2.0f, 6.0f, 3.0f),
+            PartPose.m_171423_(0.3f, -7.2f, 0.6f, -0.22f, 0.0f, 0.22f));
+
+        // 次级层叠后掠发刺 + 侧翼后掠发刺 + 后脑气动脊刃（均为 2 段实体弯曲棱锥）
+        PartDefinition hairSweep2 = headHd.m_171599_("hair_sweep_2",
+            CubeListBuilder.m_171558_().m_171514_(88, 84).m_171481_(-2.0f, -8.4f, -3.0f, 4.0f, 9.0f, 6.0f),
+            PartPose.m_171423_(1.2f, -19.6f, -1.4f, -0.38f, 0.0f, 0.56f));
+        hairSweep2.m_171599_("hair_sweep_2t",
+            CubeListBuilder.m_171558_().m_171514_(112, 84).m_171481_(-1.0f, -5.6f, -1.5f, 2.0f, 6.0f, 3.0f),
+            PartPose.m_171423_(0.3f, -8.0f, 0.6f, -0.24f, 0.0f, 0.22f));
+
+        PartDefinition hairSweep3 = headHd.m_171599_("hair_sweep_3",
+            CubeListBuilder.m_171558_().m_171514_(88, 84)
+                .m_171488_(-2.0f, -7.6f, -2.8f, 4.0f, 9.0f, 6.0f, new CubeDeformation(-0.25f)),
+            PartPose.m_171423_(3.4f, -18.4f, 2.4f, -0.54f, 0.0f, 0.78f));
+        hairSweep3.m_171599_("hair_sweep_3t",
+            CubeListBuilder.m_171558_().m_171514_(112, 84)
+                .m_171488_(-1.0f, -5.2f, -1.5f, 2.0f, 6.0f, 3.0f, new CubeDeformation(-0.15f)),
+            PartPose.m_171423_(0.2f, -7.2f, 0.5f, -0.24f, 0.0f, 0.20f));
+
+        PartDefinition hairBackFin = headHd.m_171599_("hair_back_fin",
+            CubeListBuilder.m_171558_().m_171514_(88, 84)
+                .m_171488_(-2.0f, -7.8f, -2.8f, 4.0f, 9.0f, 6.0f, new CubeDeformation(-0.30f)),
+            PartPose.m_171423_(-0.6f, -18.8f, 4.4f, -0.84f, 0.0f, 0.22f));
+        hairBackFin.m_171599_("hair_back_fin_t",
+            CubeListBuilder.m_171558_().m_171514_(112, 84)
+                .m_171488_(-1.0f, -5.0f, -1.5f, 2.0f, 6.0f, 3.0f, new CubeDeformation(-0.20f)),
+            PartPose.m_171423_(0.0f, -7.4f, 0.4f, -0.22f, 0.0f, 0.14f));
+
+        // 两侧三段阶梯实体金属黄绿闪电耳翼（耳基座含黑曜凹槽 + 中段阶梯翼 + 锋锐天线尖）
+        PartDefinition earWingR = headHd.m_171599_("ear_wing_r",
+            CubeListBuilder.m_171558_().m_171514_(156, 84).m_171481_(-1.8f, -5.8f, -2.5f, 3.0f, 7.0f, 5.0f),
+            PartPose.m_171423_(-9.6f, -9.8f, -2.8f, -0.18f, 0.08f, -0.32f));
+        PartDefinition earMidR = earWingR.m_171599_("ear_mid_r",
+            CubeListBuilder.m_171558_().m_171514_(176, 84).m_171481_(-1.2f, -6.4f, -2.0f, 2.0f, 7.0f, 4.0f),
+            PartPose.m_171423_(-0.6f, -5.4f, 0.4f, -0.14f, 0.0f, -0.10f));
+        earMidR.m_171599_("ear_tip_r",
+            CubeListBuilder.m_171558_().m_171514_(192, 84).m_171481_(-0.5f, -4.8f, -1.0f, 1.0f, 5.0f, 2.0f),
+            PartPose.m_171423_(-0.2f, -6.0f, 0.2f, -0.12f, 0.0f, -0.06f));
+
+        PartDefinition earWingL = headHd.m_171599_("ear_wing_l",
+            CubeListBuilder.m_171558_().m_171514_(156, 84).m_171481_(-1.2f, -5.8f, -2.5f, 3.0f, 7.0f, 5.0f),
+            PartPose.m_171423_(9.6f, -9.8f, -2.8f, -0.18f, -0.08f, 0.32f));
+        PartDefinition earMidL = earWingL.m_171599_("ear_mid_l",
+            CubeListBuilder.m_171558_().m_171514_(176, 84).m_171481_(-0.8f, -6.4f, -2.0f, 2.0f, 7.0f, 4.0f),
+            PartPose.m_171423_(0.6f, -5.4f, 0.4f, -0.14f, 0.0f, 0.10f));
+        earMidL.m_171599_("ear_tip_l",
+            CubeListBuilder.m_171558_().m_171514_(192, 84).m_171481_(-0.5f, -4.8f, -1.0f, 1.0f, 5.0f, 2.0f),
+            PartPose.m_171423_(0.2f, -6.0f, 0.2f, -0.12f, 0.0f, 0.06f));
 
         // ==================== 2. BODY（胸甲、四点仪表、绿色电路、0.34x 超精细故障驱动器Ⅱ腰带、动态长风衣） ====================
         PartDefinition body = root.m_171599_("body",

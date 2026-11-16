@@ -22,7 +22,7 @@ public abstract class CronusArmorHideMixin {
                                                          LivingEntity living, float limbSwing, float limbSwingAmount,
                                                          float partialTick, float ageInTicks, float netHeadYaw,
                                                          float headPitch, CallbackInfo ci) {
-        if (CronusSuitAppearance.isTransformed(living)) {
+        if (CronusSuitAppearance.isSuitVisible(living)) {
             ci.cancel();
         }
     }

@@ -1,5 +1,6 @@
 package com.rpgtemplate.cronus;
 
+import com.rpgtemplate.core.data.PlayerSystemData;
 import java.util.Optional;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -57,23 +58,52 @@ public final class CronusNet {
     }
 
     public static void syncSuitState(ServerPlayer player, boolean transformed) {
+        syncSuitState(player, transformed, 0, 0);
+    }
+
+    public static void syncSuitState(ServerPlayer player, boolean transformed, int revealDelayTicks, int beltGashatDelayTicks) {
         if (player == null) {
             return;
         }
         sendTrackingAndSelf(player, new CronusFxMsg(
             CronusFxMsg.KIND_SUIT_STATE, player.m_19879_(),
             player.m_20185_(), player.m_20186_(), player.m_20189_(),
-            1.0f, transformed ? 1 : 0));
+            Math.max(0, beltGashatDelayTicks), 0.0, 0.0,
+            Math.max(0, revealDelayTicks), transformed ? 1 : 0));
     }
 
-    public static void syncSuitStateTo(ServerPlayer subject, ServerPlayer viewer, boolean transformed) {
+    public static void syncSuitState(ServerPlayer player, PlayerSystemData data) {
+        if (player == null) {
+            return;
+        }
+        boolean transformed = data != null && CronusKeys.isTransformed(data);
+        if (!transformed) {
+            syncSuitState(player, false, 0, 0);
+            return;
+        }
+        long now = player.m_9236_().m_46467_();
+        int remainReveal = (int) Math.max(0L, Math.round(data.value(CronusKeys.KEY_SUIT_REVEAL_TICK, 0.0)) - now);
+        int remainGashat = (int) Math.max(0L, Math.round(data.value(CronusKeys.KEY_BELT_GASHAT_TICK, 0.0)) - now);
+        syncSuitState(player, true, remainReveal, remainGashat);
+    }
+
+    public static void syncSuitStateTo(ServerPlayer subject, ServerPlayer viewer, PlayerSystemData data) {
         if (subject == null || viewer == null) {
             return;
+        }
+        boolean transformed = data != null && CronusKeys.isTransformed(data);
+        int remainReveal = 0;
+        int remainGashat = 0;
+        if (transformed) {
+            long now = subject.m_9236_().m_46467_();
+            remainReveal = (int) Math.max(0L, Math.round(data.value(CronusKeys.KEY_SUIT_REVEAL_TICK, 0.0)) - now);
+            remainGashat = (int) Math.max(0L, Math.round(data.value(CronusKeys.KEY_BELT_GASHAT_TICK, 0.0)) - now);
         }
         sendTo(viewer, new CronusFxMsg(
             CronusFxMsg.KIND_SUIT_STATE, subject.m_19879_(),
             subject.m_20185_(), subject.m_20186_(), subject.m_20189_(),
-            1.0f, transformed ? 1 : 0));
+            remainGashat, 0.0, 0.0,
+            remainReveal, transformed ? 1 : 0));
     }
 
     public static void popupOn(Entity target, int popupType) {

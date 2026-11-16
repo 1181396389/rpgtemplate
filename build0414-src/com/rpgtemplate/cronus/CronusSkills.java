@@ -53,16 +53,15 @@ public final class CronusSkills {
 
     /** 统一变身执行（{@code fast=false} 为技能 1 完整 7.8s 演出；{@code fast=true} 为装备腰带后右键卡带的快捷版 2.2s 快速变身）。 */
     public static void performHenshinOn(ServerPlayer player, PlayerSystemData data, long now, boolean fast) {
+        int revealDelay = fast ? CronusKeys.HENSHIN_FAST_REVEAL_TICKS : CronusKeys.HENSHIN_FULL_REVEAL_TICKS;
+        int beltGashatDelay = fast ? 0 : CronusKeys.HENSHIN_FULL_GASHAT_DOCK_TICKS;
+
         data.setValue(CronusKeys.KEY_TRANSFORMED, 1.0);
         data.setValue(CronusKeys.KEY_TRANSFORM_SINCE, (double) now);
         data.setValue(CronusKeys.KEY_TIME_DEF, 0.05);
         data.setValue(CronusKeys.KEY_HENSHIN_VIA_DRIVER, fast ? 1.0 : 0.0);
-
-        // 若腰间佩戴了【故障驱动器Ⅱ】，点亮插卡显示（3D 腰带中央显现编年史卡带）
-        var wornDriver = CronusItems.getWornDriver(player);
-        if (!wornDriver.m_41619_()) {
-            CronusItems.setDriverLoaded(wornDriver, player.m_20148_(), 0L);
-        }
+        data.setValue(CronusKeys.KEY_SUIT_REVEAL_TICK, (double) (now + revealDelay));
+        data.setValue(CronusKeys.KEY_BELT_GASHAT_TICK, (double) (now + beltGashatDelay));
 
         // 变身即赋予长时夜视（5分钟，不闪烁）、长时水下呼吸并立即净化既有中毒
         player.m_21195_(MobEffects.f_19614_); // POISON
@@ -71,12 +70,11 @@ public final class CronusSkills {
         player.m_20301_(player.m_6062_());
         data.setValue(CronusKeys.KEY_BUFFS_APPLIED, 1.0);
 
-        // 变身自动装备【Gashacon 缺陷护罩Ⅱ】并向周围全体玩家同步 3D Cronus 装甲外观
-        CronusGearManager.grantSummonedBugvisor(player, data);
-        CronusNet.syncSuitState(player, true);
+        // 先广播带动画延时的 3D 装甲同步包（在变身动画结束后再显现盔甲，此前保持人形态与 3D 故障驱动器Ⅱ）
+        CronusNet.syncSuitState(player, true, revealDelay, beltGashatDelay);
 
         if (fast) {
-            // 快捷版变身干脆利落音效：卡带启动 + 时钟敲击 + 翠绿落雷
+            // 快捷版变身干脆利落音效：卡带插入 + 时钟敲击 + 翠绿落雷
             player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
                 SoundEvents.f_11983_, SoundSource.PLAYERS, 0.95f, 1.38f);
             player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
@@ -107,35 +105,63 @@ public final class CronusSkills {
         performHenshinOn(player, data, now, false);
     }
 
-    /** 统一解除变身执行（终止时停、收回缺陷护罩Ⅱ、撤除常驻夜视/水下呼吸、同步还原外观）。 */
+    /** 统一解除变身执行（仅通过技能触发：终止时停、收回缺陷护罩Ⅱ、归还右键变身消耗的卡带、同步还原外观）。 */
     public static void performHenshinOff(ServerPlayer player, PlayerSystemData data) {
         if (CronusKeys.isPaused(data)) {
             CronusPauseManager.restart(player, data, 1.20, false);
         }
-        CronusKeys.clearTransformedState(player, data);
-        Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.henshin_off")
-            .m_130940_(ChatFormatting.GRAY));
+        boolean returnedGashat = CronusKeys.clearTransformedState(player, data);
+        Msg.actionBar(player, Component.m_237115_(returnedGashat
+                ? "message.rpgtemplate.cronus.henshin_off_gashat_returned"
+                : "message.rpgtemplate.cronus.henshin_off")
+            .m_130940_(returnedGashat ? ChatFormatting.AQUA : ChatFormatting.GRAY));
         SystemDataManager.markDirty((Player) player);
         SystemDataManager.sync(player);
     }
 
-    /** 供腰间装备【故障驱动器Ⅱ】后右键【假面骑士编年史转玩卡带】触发快捷版变身 / 解除变身。 */
-    public static void toggleHenshinFast(ServerPlayer player, PlayerSystemData data, long now) {
+    /**
+     * 腰间装备【故障驱动器Ⅱ】后右键【假面骑士编年史转玩卡带】触发快捷版变身：
+     * <ul>
+     *   <li>若已变身则不可再用卡带解除（只能使用【编年史变身】技能解除并归还卡带）。</li>
+     *   <li>变身成功后直接消耗背包中的编年史转玩卡带（插入驱动器），解除变身时自动原样归还。</li>
+     * </ul>
+     */
+    public static boolean tryHenshinWithGashat(ServerPlayer player, PlayerSystemData data,
+                                               net.minecraft.world.item.ItemStack gashat, long now) {
         if (!checkDriverReady(player, data, now)) {
-            return;
+            return false;
         }
         if (CronusKeys.isTransformed(data)) {
-            performHenshinOff(player, data);
-            return;
+            Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.gashat_skill_only_off")
+                .m_130940_(ChatFormatting.YELLOW));
+            return false;
         }
         double cost = 4.0;
         if (data.mp() < cost) {
             Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.driver_low_mp")
                 .m_130940_(ChatFormatting.RED));
-            return;
+            return false;
         }
         data.setMp(Math.max(0.0, data.mp() - cost));
+
+        // 记下卡带原属主与唯一令牌，消耗手中卡带并插入腰间故障驱动器Ⅱ
+        java.util.UUID gOwner = CronusItems.ownerOf(gashat);
+        if (gOwner == null) {
+            gOwner = player.m_20148_();
+        }
+        long gToken = CronusItems.tokenOf(gashat);
+        gashat.m_41774_(1);
+
+        var wornDriver = CronusItems.getWornDriver(player);
+        if (!wornDriver.m_41619_()) {
+            CronusItems.setDriverLoaded(wornDriver, gOwner, gToken);
+        }
+        data.setValue(CronusKeys.KEY_GASHAT_IN_HENSHIN, 1.0);
+        data.setValue(CronusKeys.KEY_GASHAT_HELD_TOKEN, (double) gToken);
+        data.setValue(CronusKeys.KEY_GASHAT_STATE, (double) CronusGearManager.STATE_IN_DRIVER);
+
         performHenshinOn(player, data, now, true);
+        return true;
     }
 
     /** 技能 1：编年史变身（檀正宗人形态 ⇄ 假面骑士 Cronus 完整演出切换；与腰带卡带快捷变身完全互通）。 */

@@ -217,7 +217,9 @@ public final class CronusClientFx {
             case CronusFxMsg.KIND_HENSHIN_FAST ->
                 CronusSpriteFx.spawnFastHenshin(msg.entityId, msg.x, msg.y, msg.z);
             case CronusFxMsg.KIND_SUIT_STATE ->
-                CronusSuitAppearance.setRemoteTransformed(msg.entityId, msg.extra != 0);
+                CronusSuitAppearance.setSuitState(msg.entityId, msg.extra != 0,
+                    Math.max(0, Math.round(msg.param)),
+                    Math.max(0, (int) Math.round(msg.tx)));
             case CronusFxMsg.KIND_SPRITE_FX ->
                 CronusSpriteFx.spawnBurst(msg.extra, msg.entityId, msg.x, msg.y, msg.z, msg.param);
             case CronusFxMsg.KIND_ENERGY_ICON ->

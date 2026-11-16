@@ -42,13 +42,21 @@ public final class CronusSuitLayer extends RenderLayer<AbstractClientPlayer, Pla
             return;
         }
         int overlay = LivingEntityRenderer.m_115338_(player, 0.0f);
-        if (CronusSuitAppearance.isTransformed(player)) {
+        if (CronusSuitAppearance.isSuitVisible(player)) {
             CronusSuitModel.get().renderFullSuit(
                 pose, buffers, light, overlay, this.m_117386_(), player,
                 limbSwing, limbSwingAmount, partialTick);
             return;
         }
         ItemStack wornDriver = CronusItems.getWornDriver(player);
+        if (CronusSuitAppearance.isHenshinAnimating(player)) {
+            // 变身动画期间保持人形态，在腰间渲染 3D 故障驱动器Ⅱ（技能变身中当飞入卡带锁定腰带瞬间点亮实体卡带与屏幕）
+            boolean loaded = CronusSuitAppearance.isHenshinBeltGashatDocked(player)
+                || (!wornDriver.m_41619_() && CronusItems.isDriverLoaded(wornDriver));
+            CronusSuitModel.get().renderBeltOnly(
+                pose, buffers, light, overlay, this.m_117386_(), loaded);
+            return;
+        }
         if (!wornDriver.m_41619_()) {
             CronusSuitModel.get().renderBeltOnly(
                 pose, buffers, light, overlay, this.m_117386_(), CronusItems.isDriverLoaded(wornDriver));

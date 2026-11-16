@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
@@ -525,8 +526,9 @@ public final class CronusSpriteFx {
                 fwdX, fwdZ, stageW * 0.85, stageH * 0.95, alpha * 0.72f);
         }
 
-        // Layer 3（腰前纵深）：3D 编年史卡带旋转飞入驱动器（帧 34..126 飞行，126..210 锁定腰间）
-        if (tFrame >= 34.0f && tFrame <= 212.0f) {
+        // Layer 3（腰带精准对齐）：3D 编年史卡带旋转飞入，精准对准腰间 3D 故障驱动器Ⅱ 左上插卡槽位直接插入！
+        // 帧 34..126 旋转飞入插槽；帧 126..136 无缝淡出交接给腰间 3D 驱动器亮起的实体卡带！
+        if (tFrame >= 34.0f && tFrame <= 136.0f) {
             int idx;
             if (tFrame <= 126.0f) {
                 float prog = Mth.m_14036_((tFrame - 34.0f) / 92.0f, 0.0f, 1.0f);
@@ -534,10 +536,40 @@ public final class CronusSpriteFx {
             } else {
                 idx = ATLAS_GASHAT.validFrames - 1;
             }
-            float alpha = tFrame > 202.0f ? Mth.m_14036_((212.0f - tFrame) / 10.0f, 0f, 1f) : 1.0f;
+            float alpha = tFrame > 126.0f ? Mth.m_14036_((136.0f - tFrame) / 10.0f, 0f, 1f) : 1.0f;
+
+            // 跟随玩家真实躯干朝向（不随镜头前后镜像翻转），确保第三人称与联机视角下卡带精准插入腰带右胯斜插槽
+            double bodyYawDeg = h.yawDeg;
+            if (ent instanceof LivingEntity living) {
+                bodyYawDeg = Mth.m_14189_(pt, living.f_20884_, living.f_20883_);
+            }
+            double bYawRad = Math.toRadians(bodyYawDeg);
+            double gFwdX = -Math.sin(bYawRad);
+            double gFwdZ = Math.cos(bYawRad);
+            double bodyLeftX = Math.cos(bYawRad);
+            double bodyLeftZ = Math.sin(bYawRad);
+
+            // 按 0.85x 比例使卡带尺寸与腰间 3D 故障驱动器Ⅱ 实体卡带 1:1 匹配，并精确解算锚点使末帧卡带直插腰带插槽：
+            // 末帧中心精确落于：身体右胯 -0.145 * bodyLeft，腰带槽位高 py + 0.965，腰带正面 +0.21 * gFwd！
+            double gScale = 0.85;
+            double gStageW = stageW * gScale;
+            double gStageH = stageH * gScale;
+            double crouchDrop = (ent != null && ent.m_6047_()) ? -0.20 : 0.0;
+            double gOriginX = selfFirstPerson
+                ? (originX + fwdX * 0.25 + rightX * 0.137)
+                : (px + gFwdX * 0.21 + bodyLeftX * 0.137);
+            double gOriginY = selfFirstPerson
+                ? (py + 0.88)
+                : (py + 0.520 + crouchDrop);
+            double gOriginZ = selfFirstPerson
+                ? (originZ + fwdZ * 0.25 + rightZ * 0.137)
+                : (pz + gFwdZ * 0.21 + bodyLeftZ * 0.137);
+            double gRightX = selfFirstPerson ? rightX : bodyLeftX;
+            double gRightZ = selfFirstPerson ? rightZ : bodyLeftZ;
+
             drawStageLayer(src, mat, ATLAS_GASHAT, idx,
-                originX + fwdX * 0.42, originY, originZ + fwdZ * 0.42,
-                rightX, rightZ, stageW, stageH, alpha);
+                gOriginX, gOriginY, gOriginZ,
+                gRightX, gRightZ, gStageW, gStageH, alpha);
         }
 
         // Layer 4（最前辉光层）：金色发光罗马数字 I~XII 逐一飞入成型（帧 72..193 成型，193..214 满环脉动）

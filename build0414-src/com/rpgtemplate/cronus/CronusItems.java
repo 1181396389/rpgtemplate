@@ -236,8 +236,14 @@ public final class CronusItems {
         @Override
         public InteractionResultHolder<ItemStack> m_7203_(Level level, Player player, InteractionHand hand) {
             ItemStack driver = player.m_21120_(hand);
-            // 兼容旧版：若手持旧存档中已插卡的驱动器且潜行右键，安全弹出旧卡带
+            // 兼容旧版：若手持旧存档中已插卡的驱动器且潜行右键，未变身时安全弹出旧卡带（变身期间禁止手动拔卡）
             if (player instanceof ServerPlayer sp && sp.m_6144_() && isDriverLoaded(driver)) {
+                PlayerSystemData active = CronusKeys.activeData(sp);
+                if (active != null && CronusKeys.isTransformed(active)) {
+                    Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.gashat_skill_only_off")
+                        .m_130940_(ChatFormatting.YELLOW));
+                    return InteractionResultHolder.m_19098_(driver);
+                }
                 UUID gOwner = loadedGashatOwner(driver);
                 long gToken = loadedGashatToken(driver);
                 clearDriverLoaded(driver);
@@ -294,7 +300,7 @@ public final class CronusItems {
                 return InteractionResultHolder.m_19090_(gashat);
             }
 
-            // 核心玩法：腰间（护腿槽）已装备【故障驱动器Ⅱ】时，右键卡带直接触发快捷版快速变身（仅显示卡片 + 闪电 + 时钟）！
+            // 核心玩法：腰间（护腿槽）已装备【故障驱动器Ⅱ】时，右键卡带将其直接插入腰带并触发快捷版变身（卡带消失，只能用技能解除并归还）！
             if (isWearingDriver(sp)) {
                 if (!SystemDataManager.available(sp)) {
                     return InteractionResultHolder.m_19098_(gashat);
@@ -315,8 +321,16 @@ public final class CronusItems {
                     return InteractionResultHolder.m_19098_(gashat);
                 }
                 sp.m_36335_().m_41524_(this, 24);
-                CronusSkills.toggleHenshinFast(sp, active, sp.m_9236_().m_46467_());
-                return InteractionResultHolder.m_19096_(gashat);
+                boolean started = CronusSkills.tryHenshinWithGashat(sp, active, gashat, sp.m_9236_().m_46467_());
+                return started ? InteractionResultHolder.m_19096_(gashat) : InteractionResultHolder.m_19098_(gashat);
+            }
+
+            // 已处于变身态但未佩戴驱动器时也明确提示只能用技能解除变身
+            PlayerSystemData activeNow = CronusKeys.activeData(sp);
+            if (activeNow != null && CronusKeys.isTransformed(activeNow)) {
+                Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.gashat_skill_only_off")
+                    .m_130940_(ChatFormatting.YELLOW));
+                return InteractionResultHolder.m_19098_(gashat);
             }
 
             // 未将故障驱动器Ⅱ装备至腰间：播放待机音效并提示先将驱动器装备至身上
