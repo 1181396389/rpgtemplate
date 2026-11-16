@@ -1,6 +1,6 @@
 # rpgtemplate (万象模板) — Minecraft 1.21.1 NeoForge
 
-面向 Minecraft `1.21.1` / NeoForge `21.1.x` 的 RPG 跨次元模板模组完整 Mojmap 独立源码仓库（分支 `neoforge-1.21.1`；Forge 1.20.1 版本请见 `main` 分支）。
+面向 Minecraft `1.21.1` / NeoForge `21.1.x` 的 RPG 跨次元模板模组完整 Mojmap 独立源码仓库（分支 `neoforge`；Forge 1.20.1 版本请见 `main` 分支）。
 
 ## 直接构建可运行 `.jar`
 
@@ -43,7 +43,7 @@ dist/rpgtemplate-0.4.14-neoforge-1.21.1.jar
 
 ### GitHub Actions 自动构建
 
-每次推送到 `neoforge-1.21.1` 分支、提交 Pull Request 或在仓库 **Actions → Build Mod JAR (NeoForge 1.21.1)** 手动点击 **Run workflow** 时，GitHub Actions 会使用 JDK 21 自动执行 `./build.sh --clean`，并在 **Artifacts** 中提供可直接下载的 `rpgtemplate-neoforge-1.21.1-jar`。
+每次推送到 `neoforge` 分支、提交 Pull Request 或在仓库 **Actions → Build Mod JAR (NeoForge 1.21.1)** 手动点击 **Run workflow** 时，GitHub Actions 会使用 JDK 21 自动执行 `./build.sh --clean`，并在 **Artifacts** 中提供可直接下载的 `rpgtemplate-neoforge-1.21.1-jar`。推送 `v*-neoforge*` 标签（如 `v0.4.15-neoforge-1.21.1`）会自动创建对应 GitHub Release 并附带成品 `.jar`。
 
 ## 构建流水线与 1.21.1 迁移要点
 
