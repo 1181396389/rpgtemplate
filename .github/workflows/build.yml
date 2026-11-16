@@ -1,17 +1,12 @@
-name: Build Mod JAR
+name: Build rpgtemplate NeoForge 1.21.1 JAR
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    branches: [neoforge-1.21.1]
+    tags: ["v*-neoforge-1.21.1"]
   pull_request:
-    branches: [ main ]
+    branches: [neoforge-1.21.1]
   workflow_dispatch:
-    inputs:
-      mod_version:
-        description: 'Optional override for mod version (defaults to build.properties)'
-        required: false
-        default: ''
 
 permissions:
   contents: write
@@ -23,43 +18,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17 (Temurin)
+      - name: Set up JDK 21 (Temurin)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "21"
 
-      - name: Cache Forge 1.20.1 SRG SDK & Minecraft libraries
+      - name: Cache NeoForge 1.21.1 SDK & Minecraft libraries
         uses: actions/cache@v4
         with:
           path: .build-cache
-          key: forge-srg-sdk-${{ hashFiles('build.properties') }}
+          key: rpgtemplate-nf21-sdk-${{ hashFiles('build.properties') }}
 
-      - name: Build and verify mod JAR
-        shell: bash
+      - name: Build & verify NeoForge 1.21.1 JAR
         run: |
           chmod +x build.sh
-          EXTRA_ARGS=()
-          if [[ -n "${{ github.event.inputs.mod_version }}" ]]; then
-            EXTRA_ARGS+=(--version "${{ github.event.inputs.mod_version }}")
-          elif [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" == v* ]]; then
-            EXTRA_ARGS+=(--version "${GITHUB_REF_NAME#v}")
-          fi
-          ./build.sh "${EXTRA_ARGS[@]}"
-          ls -lh dist/
+          ./build.sh --clean
 
-      - name: Upload mod JAR artifact
+      - name: Upload NeoForge 1.21.1 JAR artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rpgtemplate-jar
-          path: dist/rpgtemplate-*.jar
+          name: rpgtemplate-neoforge-1.21.1-jar
+          path: dist/rpgtemplate-*-neoforge-1.21.1.jar
           if-no-files-found: error
-
-      - name: Publish GitHub Release on version tag
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${GITHUB_REF_NAME}" dist/rpgtemplate-*.jar \
-            --title "rpgtemplate ${GITHUB_REF_NAME}" \
-            --generate-notes

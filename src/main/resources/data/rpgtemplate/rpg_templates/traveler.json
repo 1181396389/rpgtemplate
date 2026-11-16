@@ -1,0 +1,26 @@
+{
+  "name": "穿越者",
+  "source": "万象模板",
+  "period": "",
+  "quality": "BASE",
+  "type": "BALANCED",
+  "bonus": {
+    "hp": 0.0,
+    "mp": 0.0,
+    "sp": 0.0,
+    "def": 0.0
+  },
+  "skills": [],
+  "passives": [
+    {
+      "type": "rpgtemplate:strong_luck",
+      "name": "强运",
+      "description": "被世界选中的幸运儿。幸运 +1（影响战利品与钓鱼），跨次元抽取时 SR 及以上品质的概率提升 15%。",
+      "params": {
+        "luck_attribute": 1.0,
+        "draw_luck": 0.15
+      }
+    }
+  ],
+  "description": "Lv.0 基础模板。来自异世界的普通人，除了运气好以外一无所有。"
+}

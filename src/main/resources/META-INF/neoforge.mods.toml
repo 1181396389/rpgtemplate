@@ -1,0 +1,35 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="rpgtemplate"
+version="0.4.14"
+displayName="rpgtemplate 0.4.14 (NeoForge 1.21.1)"
+description='''
+RPG Character Template & Tactical Skill System for Minecraft 1.21.1 (NeoForge).
+Includes Kamen Rider Cronus (EX), Nothing There (EX), Sukuna / King of Curses, Perception Blocking Mask, Transition Templates, and Tactical Skill Bar.
+'''
+
+[[mixins]]
+config="rpgtemplate.nothingthere.mixins.json"
+
+[[mixins]]
+config="rpgtemplate.mask.mixins.json"
+
+[[mixins]]
+config="rpgtemplate.cronus.mixins.json"
+
+[[dependencies.rpgtemplate]]
+modId="neoforge"
+type="required"
+versionRange="[21.1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.rpgtemplate]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.22)"
+ordering="NONE"
+side="BOTH"

@@ -1,0 +1,24 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:spawner",
+    "minecraft:end_portal_frame",
+    "minecraft:respawn_anchor",
+    {
+      "id": "minecraft:reinforced_deepslate",
+      "required": false
+    },
+    {
+      "id": "minecraft:trial_spawner",
+      "required": false
+    },
+    {
+      "id": "minecraft:vault",
+      "required": false
+    },
+    {
+      "id": "#c:relocation_not_supported",
+      "required": false
+    }
+  ]
+}

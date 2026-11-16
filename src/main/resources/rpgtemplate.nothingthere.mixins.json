@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.rpgtemplate.nothingthere.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "NtBodyMixin",
+    "NtHungerMixin"
+  ],
+  "client": [
+    "NtRendererMixin",
+    "NtPlayerModelMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
