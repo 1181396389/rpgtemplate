@@ -305,6 +305,23 @@ public final class CronusCombatAndPassives {
         LivingEntity victim = event.getEntity();
         DamageSource source = event.getSource();
 
+        // 0. 若目标正处于任意【Pause】完全时停状态且伤害并非来自 Cronus 攻击或 Restart 爆发，拦截自然火焰/中毒/凋零/窒息/摔落等时间渗漏伤害
+        if (!CronusPauseManager.isResolvingRestart()
+            && !(source.m_7639_() instanceof ServerPlayer sp && CronusPauseManager.isTargetFullFrozenBy(sp, victim))
+            && CronusPauseManager.isEntityFullFrozenByAny(victim)) {
+            String srcId = source.m_19385_();
+            if (srcId != null && (srcId.contains("fire") || srcId.contains("Fire")
+                || srcId.contains("magic") || srcId.contains("wither")
+                || srcId.contains("drown") || srcId.contains("fall")
+                || srcId.contains("starve") || srcId.contains("inWall")
+                || srcId.contains("cramming") || srcId.contains("freeze")
+                || srcId.contains("lava") || srcId.contains("hotFloor"))) {
+                event.setAmount(0.0f);
+                event.setCanceled(true);
+                return;
+            }
+        }
+
         // A. 攻击方为 Cronus：处理【伤害拳套强化】【交锋标记】【管理员权限增伤】与【时停悬停伤害池】
         if (source.m_7639_() instanceof ServerPlayer attacker) {
             PlayerSystemData atkData = CronusKeys.activeData(attacker);

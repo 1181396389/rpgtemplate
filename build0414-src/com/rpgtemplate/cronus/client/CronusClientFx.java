@@ -8,9 +8,11 @@ import com.rpgtemplate.cronus.CronusKeys;
 import com.rpgtemplate.forge.client.ClientSystemData;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -57,13 +59,54 @@ public final class CronusClientFx {
     private static final List<FinisherPillarFx> FINISHER_PILLARS = new ArrayList<>();
     private static final List<RippleFx> RIPPLES = new ArrayList<>();
     private static final List<TrapFx> TRAPS = new ArrayList<>();
+    /** 各活跃【Pause】领域同步而来的完全冻结实体 ID 映射（ownerId -> frozenEntityIds）。 */
+    private static final Map<Integer, Set<Integer>> FROZEN_BY_DOMAIN = new HashMap<>();
+    /** 客户端 O(1) 查询表：所有正处于完全时停状态的实体 ID（供客户端定格 Mixin 与 3D 时空枷锁渲染共用）。 */
+    private static final Set<Integer> FROZEN_IDS = new HashSet<>();
+    /** 时停期间击打冻结目标留下的悬停发光时空斩痕（直至 Restart 引爆清除）。 */
+    private static final List<FrozenScarFx> FROZEN_SCARS = new ArrayList<>();
     private static long clientTick = 0L;
+
+    /** 客户端 O(1) 判断某实体是否正处于 Cronus【Pause】完全时停冻结状态。 */
+    public static boolean isEntityFrozen(int entityId) {
+        return !FROZEN_IDS.isEmpty() && FROZEN_IDS.contains(entityId);
+    }
+
+    private static void rebuildFrozenIdIndex() {
+        FROZEN_IDS.clear();
+        for (Set<Integer> s : FROZEN_BY_DOMAIN.values()) {
+            FROZEN_IDS.addAll(s);
+        }
+    }
+
+    private static final class FrozenScarFx {
+        final int targetId;
+        double x, y, z;
+        final float yawRad;
+        final float tiltRad;
+        final float scale;
+        final boolean armorPiercing;
+        int age;
+        final int maxAge = 240;
+
+        FrozenScarFx(int targetId, double x, double y, double z, float scale, boolean armorPiercing) {
+            this.targetId = targetId;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.yawRad = (float) (Math.random() * Math.PI * 2.0);
+            this.tiltRad = (float) (Math.toRadians(18.0 + Math.random() * 54.0) * (Math.random() < 0.5 ? 1.0 : -1.0));
+            this.scale = Mth.m_14036_(scale, 0.70f, 2.0f);
+            this.armorPiercing = armorPiercing;
+        }
+    }
 
     private static final class DomainFx {
         final int ownerId;
         double x, y, z;
         float radius;
         int age;
+        int enterAge;
         int maxAge;
         boolean restarting;
 
@@ -256,9 +299,16 @@ public final class CronusClientFx {
                     }
                 }
                 DOMAINS.add(new DomainFx(msg.entityId, msg.x, msg.y, msg.z, msg.param, Math.max(35, msg.extra), false));
+                Minecraft mc = Minecraft.m_91087_();
+                if (mc.f_91074_ != null && (msg.entityId == mc.f_91074_.m_19879_()
+                    || mc.f_91074_.m_20275_(msg.x, msg.y, msg.z) <= (msg.param + 6.0) * (msg.param + 6.0))) {
+                    CronusHudOverlay.triggerPauseEnter();
+                }
             }
             case CronusFxMsg.KIND_DOMAIN_RESTART -> {
                 DOMAINS.removeIf(d -> d.ownerId == msg.entityId);
+                FROZEN_BY_DOMAIN.remove(msg.entityId);
+                rebuildFrozenIdIndex();
                 double r = Math.max(1.0, msg.param + 3.0);
                 double rSq = r * r;
                 TRAPS.removeIf(t -> {
@@ -266,7 +316,41 @@ public final class CronusClientFx {
                     double dz = t.z - msg.z;
                     return dx * dx + dz * dz <= rSq;
                 });
-                DOMAINS.add(new DomainFx(msg.entityId, msg.x, msg.y, msg.z, msg.param, 22, true));
+                Iterator<FrozenScarFx> scIt = FROZEN_SCARS.iterator();
+                while (scIt.hasNext()) {
+                    FrozenScarFx sc = scIt.next();
+                    double dx = sc.x - msg.x;
+                    double dz = sc.z - msg.z;
+                    if (dx * dx + dz * dz <= rSq) {
+                        if (IMPACTS.size() < 56) {
+                            IMPACTS.add(new HitImpactFx(sc.x, sc.y, sc.z, CronusFxMsg.POPUP_CRITICAL));
+                        }
+                        scIt.remove();
+                    }
+                }
+                DOMAINS.add(new DomainFx(msg.entityId, msg.x, msg.y, msg.z, msg.param, 24, true));
+                Minecraft mc = Minecraft.m_91087_();
+                if (mc.f_91074_ != null && (msg.entityId == mc.f_91074_.m_19879_()
+                    || mc.f_91074_.m_20275_(msg.x, msg.y, msg.z) <= (msg.param + 8.0) * (msg.param + 8.0))) {
+                    CronusHudOverlay.triggerRestartFlash();
+                }
+            }
+            case CronusFxMsg.KIND_PAUSE_FROZEN_SYNC -> {
+                if (msg.extra != 0 || msg.intArray.length == 0) {
+                    FROZEN_BY_DOMAIN.remove(msg.entityId);
+                } else {
+                    Set<Integer> set = new HashSet<>(msg.intArray.length * 2);
+                    for (int id : msg.intArray) {
+                        set.add(id);
+                    }
+                    FROZEN_BY_DOMAIN.put(msg.entityId, set);
+                }
+                rebuildFrozenIdIndex();
+            }
+            case CronusFxMsg.KIND_PAUSE_HIT_SCAR -> {
+                if (FROZEN_SCARS.size() < 96) {
+                    FROZEN_SCARS.add(new FrozenScarFx(msg.entityId, msg.x, msg.y, msg.z, msg.param, msg.extra != 0));
+                }
             }
             case CronusFxMsg.KIND_ARCADE_POPUP -> {
                 if (POPUPS.size() < 48) {
@@ -359,6 +443,9 @@ public final class CronusClientFx {
             FINISHER_PILLARS.clear();
             RIPPLES.clear();
             TRAPS.clear();
+            FROZEN_BY_DOMAIN.clear();
+            FROZEN_IDS.clear();
+            FROZEN_SCARS.clear();
             CronusSpriteFx.clear();
             return;
         }
@@ -371,8 +458,19 @@ public final class CronusClientFx {
         Iterator<DomainFx> dit = DOMAINS.iterator();
         while (dit.hasNext()) {
             DomainFx d = dit.next();
+            d.enterAge++;
             if (++d.age >= d.maxAge) {
+                if (!d.restarting && FROZEN_BY_DOMAIN.remove(d.ownerId) != null) {
+                    rebuildFrozenIdIndex();
+                }
                 dit.remove();
+            }
+        }
+        Iterator<FrozenScarFx> scit = FROZEN_SCARS.iterator();
+        while (scit.hasNext()) {
+            FrozenScarFx sc = scit.next();
+            if (++sc.age >= sc.maxAge || (DOMAINS.isEmpty() && sc.age > 8)) {
+                scit.remove();
             }
         }
         Iterator<PopupFx> pit = POPUPS.iterator();
@@ -458,7 +556,8 @@ public final class CronusClientFx {
             && CronusKeys.TEMPLATE_ID.equals(selfData.loadedTemplateId());
         if (!selfIsCronus && DOMAINS.isEmpty() && POPUPS.isEmpty() && IMPACTS.isEmpty()
             && BEAMS.isEmpty() && CONTINUOUS_BEAMS.isEmpty() && BLASTS.isEmpty() && SAW_CHARGES.isEmpty()
-            && FINISHER_PILLARS.isEmpty() && RIPPLES.isEmpty() && TRAPS.isEmpty() && !CronusSpriteFx.hasActive()) {
+            && FINISHER_PILLARS.isEmpty() && RIPPLES.isEmpty() && TRAPS.isEmpty()
+            && FROZEN_IDS.isEmpty() && FROZEN_SCARS.isEmpty() && !CronusSpriteFx.hasActive()) {
             return;
         }
 
@@ -521,9 +620,19 @@ public final class CronusClientFx {
             src.m_109912_(solidRt);
         }
         if (!IMPACTS.isEmpty() || !BEAMS.isEmpty() || !CONTINUOUS_BEAMS.isEmpty()
-            || !BLASTS.isEmpty() || !SAW_CHARGES.isEmpty() || !FINISHER_PILLARS.isEmpty()) {
+            || !BLASTS.isEmpty() || !SAW_CHARGES.isEmpty() || !FINISHER_PILLARS.isEmpty()
+            || !DOMAINS.isEmpty() || !FROZEN_IDS.isEmpty() || !FROZEN_SCARS.isEmpty()) {
             RenderType impactRt = CronusRenderTypes.additive(WHITE);
             VertexConsumer ivc = src.m_6299_(impactRt);
+            for (DomainFx d : DOMAINS) {
+                renderPauseDomeShell(ivc, mat, d, pt);
+            }
+            if (!FROZEN_IDS.isEmpty()) {
+                renderFrozenEntityOverlays(ivc, mat, mc, pt);
+            }
+            for (FrozenScarFx sc : FROZEN_SCARS) {
+                renderFrozenHitScar(ivc, mat, cam, sc, pt);
+            }
             for (HitImpactFx imp : IMPACTS) {
                 renderHitImpact(ivc, mat, cam, imp, pt);
             }
@@ -621,22 +730,223 @@ public final class CronusClientFx {
 
         // 时针与分针：Pause 期间呈机械卡顿定格抖动，Restart 期间飞速顺时针狂转并升起光柱
         double secStep = d.restarting
-            ? (d.age + pt) * 0.85
-            : Math.floor((clientTick) / 20.0) * (Math.PI * 2.0 / 60.0);
+            ? (d.age + pt) * 0.92
+            : Math.floor((clientTick) / 20.0) * (Math.PI * 2.0 / 60.0)
+                + (((clientTick % 20L) == 0L) ? 0.015 : 0.0);
         double minAng = -Math.PI * 0.5 + secStep;
         double hourAng = -Math.PI * 0.5 + secStep * 0.25 + 1.1;
         drawRadialSpoke(vc, mat, d.x, y + 0.018, d.z, minAng, -0.55f, r * 0.76f, 0.16f, mainRgb, alpha * 0.95f);
         drawRadialSpoke(vc, mat, d.x, y + 0.022, d.z, hourAng, -0.40f, r * 0.50f, 0.22f, subRgb, alpha * 0.95f);
 
+        // 双重逆向精密内齿轮环（Pause 呈机械步进卡顿，Restart 极速旋转）
+        float gearBase = d.restarting ? (d.age + pt) * 0.22f : (float) (Math.floor(clientTick / 10.0) * 0.045);
+        drawFlatRing(vc, mat, d.x, y + 0.008, d.z, r * 0.54f - 0.08f, r * 0.54f, 48, mainRgb, alpha * 0.65f);
+        drawFlatRing(vc, mat, d.x, y + 0.010, d.z, r * 0.34f - 0.06f, r * 0.34f, 36, subRgb, alpha * 0.58f);
+        for (int g = 0; g < 16; g++) {
+            double ga = gearBase + (Math.PI * 2.0 * g) / 16.0;
+            drawRadialSpoke(vc, mat, d.x, y + 0.012, d.z, ga, r * 0.52f, r * 0.59f, 0.07f, mainRgb, alpha * 0.72f);
+        }
+        for (int g = 0; g < 12; g++) {
+            double ga = -gearBase * 1.4 + (Math.PI * 2.0 * g) / 12.0;
+            drawRadialSpoke(vc, mat, d.x, y + 0.014, d.z, ga, r * 0.31f, r * 0.38f, 0.06f, subRgb, alpha * 0.68f);
+        }
+
         if (d.restarting) {
-            float pillarH = 7.5f * (1.0f - t * 0.4f);
+            float pillarH = 9.0f * (1.0f - t * 0.35f);
             for (int k = 0; k < 12; k++) {
-                double ang = (Math.PI * 2.0 * k) / 12.0 + t * 0.9;
+                double ang = (Math.PI * 2.0 * k) / 12.0 + t * 0.95;
                 double px = d.x + Math.cos(ang) * (r * 0.85f);
                 double pz = d.z + Math.sin(ang) * (r * 0.85f);
-                drawVerticalBeam(vc, mat, px, y, pz, 0.14f, pillarH, 0x2AF598, alpha * 0.75f);
+                drawVerticalBeam(vc, mat, px, y, pz, 0.16f, pillarH, (k % 2 == 0) ? 0x2AF598 : 0xFFE066, alpha * 0.82f);
             }
         }
+    }
+
+    /** 3D 时停球形结界穹顶、12 时辰翡翠经纬光柱与开启/重开空间冲击波（加色纯几何，不遮挡视野）。 */
+    private static void renderPauseDomeShell(VertexConsumer ivc, Matrix4f mat, DomainFx d, float pt) {
+        if (d.restarting) {
+            // Restart 碎裂扩散波：高速扩张的翠金双纬环 + 径向碎裂光弧
+            float t = Mth.m_14036_((d.age + pt) / (float) Math.max(1, d.maxAge), 0.0f, 1.0f);
+            float inv = 1.0f - t;
+            float waveR = d.radius * (0.92f + t * 0.42f);
+            drawAdditiveHorizRing(ivc, mat, d.x, d.y + 0.35 + t * 2.2, d.z, waveR - 0.38f, waveR, 48, 0xFFE066, inv * 0.72f);
+            drawAdditiveHorizRing(ivc, mat, d.x, d.y + 1.8 + t * 4.5, d.z, waveR * 0.86f - 0.25f, waveR * 0.86f, 40, 0x18F29A, inv * 0.58f);
+            return;
+        }
+
+        // Pause 开启前 14 ticks：从 0 极速扩张至满半径的球形时空冲击壳
+        float enterT = Mth.m_14036_((d.enterAge + pt) / 14.0f, 0.0f, 1.0f);
+        float ease = 1.0f - (1.0f - enterT) * (1.0f - enterT) * (1.0f - enterT);
+        float curR = Math.max(0.8f, d.radius * ease);
+        float domeH = curR * 0.78f;
+
+        // 1. 扩张瞬间亮翠金冲击环
+        if (enterT < 1.0f) {
+            float shockA = (1.0f - enterT) * 0.82f;
+            drawAdditiveHorizRing(ivc, mat, d.x, d.y + 0.55, d.z, Math.max(0.1f, curR - 0.55f), curR + 0.15f, 48, 0x66FFCC, shockA);
+            drawAdditiveHorizRing(ivc, mat, d.x, d.y + domeH * 0.42, d.z, Math.max(0.1f, curR * 0.84f - 0.32f), curR * 0.84f, 40, 0xFFE066, shockA * 0.78f);
+        }
+
+        // 2. 12 道纤细优雅的边界时辰翡翠光柱（标示 3D 时停覆盖边界，极低遮挡）
+        float pulse = 0.76f + 0.24f * Mth.m_14031_((clientTick + pt) * 0.14f);
+        float pillarA = 0.22f * pulse;
+        for (int h = 0; h < 12; h++) {
+            double ang = (Math.PI * 2.0 * h) / 12.0;
+            double px = d.x + Math.cos(ang) * curR;
+            double pz = d.z + Math.sin(ang) * curR;
+            int col = (h % 3 == 0) ? 0xF5D056 : 0x18F29A;
+            float hw = (h % 3 == 0) ? 0.09f : 0.055f;
+            float ph = (h % 3 == 0) ? domeH * 0.82f : domeH * 0.52f;
+            emitAdditiveVerticalStrip(ivc, mat, px, d.y + 0.06, pz, hw, ph, col, pillarA);
+        }
+
+        // 3. 3D 球面双纬环 + 4 条极淡半球经线弧（通透清晰、不挡准星）
+        drawAdditiveHorizRing(ivc, mat, d.x, d.y + domeH * 0.42, d.z, curR * 0.89f - 0.06f, curR * 0.89f, 48, 0x18F29A, 0.20f * pulse);
+        drawAdditiveHorizRing(ivc, mat, d.x, d.y + domeH * 0.76, d.z, curR * 0.58f - 0.05f, curR * 0.58f, 36, 0xD4AF37, 0.18f * pulse);
+        for (int m = 0; m < 4; m++) {
+            double az = (Math.PI * m) / 4.0;
+            double ca = Math.cos(az), sa = Math.sin(az);
+            int segs = 14;
+            for (int s = 0; s < segs; s++) {
+                double e0 = (Math.PI * s) / segs;
+                double e1 = (Math.PI * (s + 1)) / segs;
+                float r0 = (float) (Math.cos(e0) * curR), y0 = (float) (d.y + Math.sin(e0) * domeH);
+                float r1 = (float) (Math.cos(e1) * curR), y1 = (float) (d.y + Math.sin(e1) * domeH);
+                float x0 = (float) (d.x + ca * r0), z0 = (float) (d.z + sa * r0);
+                float x1 = (float) (d.x + ca * r1), z1 = (float) (d.z + sa * r1);
+                float nx = (float) (-sa * 0.055), nz = (float) (ca * 0.055);
+                emitAdditiveQuad(ivc, mat,
+                    x0 - nx, y0, z0 - nz,
+                    x0 + nx, y0, z0 + nz,
+                    x1 + nx, y1, z1 + nz,
+                    x1 - nx, y1, z1 - nz,
+                    0x18F29A, 0.14f * pulse);
+            }
+        }
+    }
+
+    /** 为每个处于【Pause】完全冻结状态的实体渲染 3D 时空枷锁环（生物）或停滞八面体晶笼（投射物/TNT/方块/掉落物）。 */
+    private static void renderFrozenEntityOverlays(VertexConsumer ivc, Matrix4f mat, Minecraft mc, float pt) {
+        if (mc.f_91073_ == null) {
+            return;
+        }
+        float pulse = 0.75f + 0.25f * Mth.m_14031_((clientTick + pt) * 0.22f);
+        int drawn = 0;
+        for (Integer id : FROZEN_IDS) {
+            if (drawn >= 64) {
+                break;
+            }
+            Entity ent = mc.f_91073_.m_6815_(id);
+            if (ent == null || !ent.m_6084_()) {
+                continue;
+            }
+            drawn++;
+            double ex = ent.m_20185_();
+            double ey = ent.m_20186_();
+            double ez = ent.m_20189_();
+            if (ent instanceof LivingEntity) {
+                float w = Math.max(0.55f, ent.m_20205_() * 0.78f);
+                float h = Math.max(0.9f, ent.m_20206_());
+                // 双层交叉倾斜锁止的翡翠金绿时空枷锁环
+                drawAdditiveTiltedRing(ivc, mat, ex, ey + h * 0.48, ez, w, w + 0.075f, 0.42f, 0.35f, 20, 0x18F29A, 0.62f * pulse);
+                drawAdditiveTiltedRing(ivc, mat, ex, ey + h * 0.56, ez, w * 0.92f, w * 0.92f + 0.06f, -0.45f, 1.85f, 20, 0xF5D056, 0.52f * pulse);
+                drawAdditiveHorizRing(ivc, mat, ex, ey + 0.06, ez, w * 0.85f, w * 0.95f, 18, 0x18F29A, 0.48f * pulse);
+            } else {
+                // 冻结的投射物 / TNT / 下落方块 / 掉落物：翠金停滞菱形时间晶笼
+                float r = Math.max(0.28f, Math.min(0.85f, ent.m_20205_() * 0.75f + 0.16f));
+                double cy = ey + ent.m_20206_() * 0.5;
+                drawAdditiveTiltedRing(ivc, mat, ex, cy, ez, r, r + 0.045f, 0.75f, 0.4f, 8, 0x38FFBB, 0.78f * pulse);
+                drawAdditiveTiltedRing(ivc, mat, ex, cy, ez, r, r + 0.045f, -0.75f, 1.97f, 8, 0xFFE066, 0.68f * pulse);
+                emitAdditiveVerticalStrip(ivc, mat, ex, cy - r * 0.9, ez, 0.03f, r * 1.8f, 0xD8FFF0, 0.65f * pulse);
+            }
+        }
+    }
+
+    /** 渲染时停期间对冻结目标留下的悬停发光时空斩痕（交叉光刃 + 锁定准星，Restart 时齐发引爆）。 */
+    private static void renderFrozenHitScar(VertexConsumer ivc, Matrix4f mat, Vec3 cam, FrozenScarFx sc, float pt) {
+        float pulse = 0.78f + 0.22f * Mth.m_14031_((clientTick + pt + sc.targetId * 7) * 0.35f);
+        int mainRgb = sc.armorPiercing ? 0xFFE566 : 0x2AF598;
+        int coreRgb = sc.armorPiercing ? 0xFFFBE0 : 0xD8FFF0;
+        BillboardBasis b = BillboardBasis.towardsCamera(cam, sc.x, sc.y, sc.z);
+        float len = 0.55f * sc.scale;
+        float thick = 0.055f * sc.scale;
+        double cs = Math.cos(sc.tiltRad), sn = Math.sin(sc.tiltRad);
+        double dx = (b.rx * cs + b.ux * sn) * len;
+        double dy = (b.ry * cs + b.uy * sn) * len;
+        double dz = (b.rz * cs + b.uz * sn) * len;
+        double px = (-b.rx * sn + b.ux * cs) * thick;
+        double py = (-b.ry * sn + b.uy * cs) * thick;
+        double pz = (-b.rz * sn + b.uz * cs) * thick;
+
+        // 主斩痕外辉光 + 白炽内核
+        emitAdditiveQuad(ivc, mat,
+            (float) (sc.x - dx), (float) (sc.y - dy), (float) (sc.z - dz),
+            (float) (sc.x + px), (float) (sc.y + py), (float) (sc.z + pz),
+            (float) (sc.x + dx), (float) (sc.y + dy), (float) (sc.z + dz),
+            (float) (sc.x - px), (float) (sc.y - py), (float) (sc.z - pz),
+            mainRgb, 0.82f * pulse);
+        emitAdditiveQuad(ivc, mat,
+            (float) (sc.x - dx * 0.85), (float) (sc.y - dy * 0.85), (float) (sc.z - dz * 0.85),
+            (float) (sc.x + px * 0.42), (float) (sc.y + py * 0.42), (float) (sc.z + pz * 0.42),
+            (float) (sc.x + dx * 0.85), (float) (sc.y + dy * 0.85), (float) (sc.z + dz * 0.85),
+            (float) (sc.x - px * 0.42), (float) (sc.y - py * 0.42), (float) (sc.z - pz * 0.42),
+            coreRgb, 0.90f * pulse);
+    }
+
+    private static void drawAdditiveHorizRing(VertexConsumer ivc, Matrix4f mat, double cx, double y, double cz,
+                                              float inR, float outR, int segs, int rgb, float alpha) {
+        for (int i = 0; i < segs; i++) {
+            double a0 = (Math.PI * 2.0 * i) / segs;
+            double a1 = (Math.PI * 2.0 * (i + 1)) / segs;
+            float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0);
+            float c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
+            emitAdditiveQuad(ivc, mat,
+                (float) cx + c0 * inR, (float) y, (float) cz + s0 * inR,
+                (float) cx + c0 * outR, (float) y, (float) cz + s0 * outR,
+                (float) cx + c1 * outR, (float) y, (float) cz + s1 * outR,
+                (float) cx + c1 * inR, (float) y, (float) cz + s1 * inR,
+                rgb, alpha);
+        }
+    }
+
+    private static void drawAdditiveTiltedRing(VertexConsumer ivc, Matrix4f mat, double cx, double cy, double cz,
+                                               float inR, float outR, float tiltX, float rotY, int segs, int rgb, float alpha) {
+        double ct = Math.cos(tiltX), st = Math.sin(tiltX);
+        double cyr = Math.cos(rotY), syr = Math.sin(rotY);
+        for (int i = 0; i < segs; i++) {
+            double a0 = (Math.PI * 2.0 * i) / segs;
+            double a1 = (Math.PI * 2.0 * (i + 1)) / segs;
+            float[] p0i = tiltedRingPt(cx, cy, cz, inR, a0, ct, st, cyr, syr);
+            float[] p0o = tiltedRingPt(cx, cy, cz, outR, a0, ct, st, cyr, syr);
+            float[] p1o = tiltedRingPt(cx, cy, cz, outR, a1, ct, st, cyr, syr);
+            float[] p1i = tiltedRingPt(cx, cy, cz, inR, a1, ct, st, cyr, syr);
+            emitAdditiveQuad(ivc, mat,
+                p0i[0], p0i[1], p0i[2],
+                p0o[0], p0o[1], p0o[2],
+                p1o[0], p1o[1], p1o[2],
+                p1i[0], p1i[1], p1i[2],
+                rgb, alpha);
+        }
+    }
+
+    private static float[] tiltedRingPt(double cx, double cy, double cz, float r, double a,
+                                        double ct, double st, double cyr, double syr) {
+        double lx = Math.cos(a) * r;
+        double lz = Math.sin(a) * r;
+        double ly = lz * st;
+        double lz2 = lz * ct;
+        double wx = lx * cyr - lz2 * syr;
+        double wz = lx * syr + lz2 * cyr;
+        return new float[]{(float) (cx + wx), (float) (cy + ly), (float) (cz + wz)};
+    }
+
+    private static void emitAdditiveVerticalStrip(VertexConsumer ivc, Matrix4f mat, double x, double y, double z,
+                                                  float halfW, float height, int rgb, float alpha) {
+        float x0 = (float) x - halfW, x1 = (float) x + halfW;
+        float z0 = (float) z - halfW, z1 = (float) z + halfW;
+        float y0 = (float) y, y1 = (float) y + height;
+        emitAdditiveQuad(ivc, mat, x0, y0, (float) z, x1, y0, (float) z, x1, y1, (float) z, x0, y1, (float) z, rgb, alpha);
+        emitAdditiveQuad(ivc, mat, (float) x, y0, z0, (float) x, y0, z1, (float) x, y1, z1, (float) x, y1, z0, rgb, alpha);
     }
 
     // ==================== 2. 波纹与回旋踢旋转表针 ====================

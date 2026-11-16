@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [],
   "client": [
-    "CronusArmorHideMixin"
+    "CronusArmorHideMixin",
+    "CronusClientLevelFreezeMixin",
+    "CronusLivingRenderFreezeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

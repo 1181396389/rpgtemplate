@@ -42,8 +42,26 @@ public final class CronusHudOverlay {
     private static int finisherStyle = -1;
     private static int finisherTicks = 0;
     private static int finisherMaxTicks = 1;
+    /** 【Pause】开启瞬间冷翠时空冻结闪屏倒计时（18 ticks）。 */
+    private static int pauseEnterTicks = 0;
+    private static final int PAUSE_ENTER_MAX = 18;
+    /** 【Restart】时间重开瞬间翠金碎屏解冻脉冲倒计时（16 ticks）。 */
+    private static int restartFlashTicks = 0;
+    private static final int RESTART_FLASH_MAX = 16;
 
     private CronusHudOverlay() {
+    }
+
+    /** 触发【Pause】开启瞬间冷翠时钟扫屏演出。 */
+    public static void triggerPauseEnter() {
+        pauseEnterTicks = PAUSE_ENTER_MAX;
+        restartFlashTicks = 0;
+    }
+
+    /** 触发【Restart】时间重开瞬间翠金碎屏与时间复流脉冲。 */
+    public static void triggerRestartFlash() {
+        restartFlashTicks = RESTART_FLASH_MAX;
+        pauseEnterTicks = 0;
     }
 
     /** 触发必杀技对角线特摄切入演出（不干扰操作视角与战斗准星）。 */
@@ -74,12 +92,22 @@ public final class CronusHudOverlay {
         if (mc.f_91073_ == null) {
             finisherTicks = 0;
             finisherStyle = -1;
+            pauseEnterTicks = 0;
+            restartFlashTicks = 0;
             return;
         }
-        if (!mc.m_91104_() && finisherTicks > 0) {
-            finisherTicks--;
-            if (finisherTicks <= 0) {
-                finisherStyle = -1;
+        if (!mc.m_91104_()) {
+            if (finisherTicks > 0) {
+                finisherTicks--;
+                if (finisherTicks <= 0) {
+                    finisherStyle = -1;
+                }
+            }
+            if (pauseEnterTicks > 0) {
+                pauseEnterTicks--;
+            }
+            if (restartFlashTicks > 0) {
+                restartFlashTicks--;
             }
         }
     }
@@ -97,7 +125,7 @@ public final class CronusHudOverlay {
         boolean isCronus = data != null && data.isActivated()
             && CronusKeys.TEMPLATE_ID.equals(data.loadedTemplateId());
         List<CronusSpriteFx.EnergyIconFx> selfEnergyIcons = CronusSpriteFx.activeIconsFor(mc.f_91074_.m_19879_());
-        if (!isCronus && finisherTicks <= 0 && selfEnergyIcons.isEmpty()) {
+        if (!isCronus && finisherTicks <= 0 && pauseEnterTicks <= 0 && restartFlashTicks <= 0 && selfEnergyIcons.isEmpty()) {
             return;
         }
 
@@ -111,20 +139,17 @@ public final class CronusHudOverlay {
             renderActiveEnergyIconsHud(g, sw, selfEnergyIcons);
         }
 
-        // 1. 【Pause】时停期间的屏幕边缘深翠绿时计暗角框
+        // 1. 【Pause】时停氛围：多层羽化冷翡翠暗角 + 四角精密钟表刻度 + 顶部 PAUSE 剩余秒数与悬停伤害实时读数
         if (isCronus && CronusKeys.isPaused(data)) {
-            int edge = 14;
-            g.m_280509_(0, 0, sw, edge, 0x38083A24);
-            g.m_280509_(0, sh - edge, sw, sh, 0x38083A24);
-            g.m_280509_(0, edge, edge, sh - edge, 0x2C083A24);
-            g.m_280509_(sw - edge, edge, sw, sh - edge, 0x2C083A24);
-            // 四角金绿精密刻度线
-            g.m_280509_(6, 6, 36, 8, 0xAA18F29A);
-            g.m_280509_(6, 6, 8, 36, 0xAA18F29A);
-            g.m_280509_(sw - 36, 6, sw - 6, 8, 0xAA18F29A);
-            g.m_280509_(sw - 8, 6, sw - 6, 36, 0xAA18F29A);
-            g.m_280509_(6, sh - 8, 36, sh - 6, 0xAAD4AF37);
-            g.m_280509_(sw - 36, sh - 8, sw - 6, sh - 6, 0xAAD4AF37);
+            renderPauseAtmosphereHud(g, mc.f_91062_, sw, sh, data);
+        }
+        // 1b. 【Pause】开启瞬间冷翠时空定格闪屏 + 编年史时计扫影
+        if (pauseEnterTicks > 0) {
+            renderPauseEnterFlash(g, sw, sh, pt);
+        }
+        // 1c. 【Restart】时间重开瞬间翠金碎屏复流脉冲
+        if (restartFlashTicks > 0) {
+            renderRestartResumeFlash(g, sw, sh, pt);
         }
 
         // 2. Bugster 病毒负荷 ≥75% 时的屏幕边缘轻微数据故障扫描条
@@ -356,6 +381,138 @@ public final class CronusHudOverlay {
             if (fillW > 0) {
                 g.m_280509_(barX, barY, barX + fillW, barY + 2, 0xFF000000 | accent);
             }
+        }
+        RenderSystem.disableBlend();
+    }
+
+    private static void renderPauseAtmosphereHud(GuiGraphics g, Font font, int sw, int sh, PlayerSystemData data) {
+        long ms = System.currentTimeMillis();
+        float breath = 0.78f + 0.22f * Mth.m_14031_(ms * 0.0042f);
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // 极淡全屏冷翠色偏薄纱（营造“世界静止”的通透色温差，绝不影响视线清晰度）
+        g.m_280509_(0, 0, sw, sh, 0x1004281C);
+
+        // 多层羽化屏幕边缘冷翠暗角（由外到内四阶渐变，告别生硬黑边）
+        int[] widths = {6, 14, 24, 38};
+        int[] alphas = {0x44, 0x2A, 0x16, 0x0A};
+        for (int i = 0; i < widths.length; i++) {
+            int w = widths[i];
+            int prev = (i == 0) ? 0 : widths[i - 1];
+            int col = (alphas[i] << 24) | 0x052C1E;
+            g.m_280509_(0, prev, sw, w, col);
+            g.m_280509_(0, sh - w, sw, sh - prev, col);
+            g.m_280509_(prev, w, w, sh - w, col);
+            g.m_280509_(sw - w, w, sw - prev, sh - w, col);
+        }
+
+        // 右下角极淡旋转编年史钟盘水印
+        int dialSize = Math.max(76, Math.round(Math.min(sw, sh) * 0.22f));
+        PoseStack pose = g.m_280168_();
+        pose.m_85836_();
+        pose.m_252880_(sw - dialSize * 0.34f, sh - dialSize * 0.34f, 0.0f);
+        pose.m_252781_(Axis.f_252403_.m_252977_((ms % 40000L) * 0.002f));
+        g.m_280246_(0.45f, 1.0f, 0.78f, 0.14f * breath);
+        g.m_280411_(HENSHIN_CLOCK_TEX, -dialSize / 2, -dialSize / 2, dialSize, dialSize,
+            0.0f, 0.0f, 512, 512, 512, 512);
+        g.m_280246_(1.0f, 1.0f, 1.0f, 1.0f);
+        pose.m_85849_();
+
+        // 四角精密金绿时计准星角标
+        int aGreen = (Mth.m_14045_((int) (175 * breath), 90, 220) << 24) | 0x18F29A;
+        int aGold = (Mth.m_14045_((int) (185 * breath), 95, 230) << 24) | 0xF5D056;
+        g.m_280509_(8, 8, 42, 10, aGreen);
+        g.m_280509_(8, 8, 10, 38, aGreen);
+        g.m_280509_(sw - 42, 8, sw - 8, 10, aGreen);
+        g.m_280509_(sw - 10, 8, sw - 8, 38, aGreen);
+        g.m_280509_(8, sh - 10, 42, sh - 8, aGold);
+        g.m_280509_(8, sh - 38, 10, sh - 8, aGold);
+        g.m_280509_(sw - 42, sh - 10, sw - 8, sh - 8, aGold);
+        g.m_280509_(sw - 10, sh - 38, sw - 8, sh - 8, aGold);
+
+        // 顶部居中极简 PAUSE 遥测条（剩余维持秒数 + 悬停待爆发总伤害）
+        double leftSec = Math.max(0.0, data.value(CronusKeys.KEY_PAUSE_LEFT_SEC, 0.0));
+        double pendingDmg = Math.max(0.0, data.value(CronusKeys.KEY_PENDING_DMG, 0.0));
+        String label = pendingDmg > 0.5
+            ? String.format("PAUSE  %.1fs  |  BURST +%.0f", leftSec, pendingDmg)
+            : String.format("PAUSE  %.1fs", leftSec);
+        int textW = font.m_92895_(label);
+        int pillW = Math.max(118, textW + 24);
+        int pillX = (sw - pillW) / 2;
+        int pillY = 44;
+        g.m_280509_(pillX, pillY, pillX + pillW, pillY + 15, 0x9E071B15);
+        g.m_280509_(pillX, pillY, pillX + pillW, pillY + 1, aGreen);
+        g.m_280509_(pillX, pillY + 14, pillX + pillW, pillY + 15, pendingDmg > 0.5 ? aGold : 0x6618F29A);
+        float secFrac = Mth.m_14036_((float) (leftSec / 16.0), 0.0f, 1.0f);
+        int fillW = Math.round((pillW - 4) * secFrac);
+        if (fillW > 0) {
+            int barCol = leftSec < 3.0 ? 0xCCFF5E62 : 0xBB18F29A;
+            g.m_280509_(pillX + 2, pillY + 12, pillX + 2 + fillW, pillY + 14, barCol);
+        }
+        g.m_280653_(font, Component.m_237113_(label), sw / 2, pillY + 3,
+            pendingDmg > 0.5 ? 0xFFF29C : 0xA8FFDF);
+
+        RenderSystem.disableBlend();
+    }
+
+    private static void renderPauseEnterFlash(GuiGraphics g, int sw, int sh, float pt) {
+        float elapsed = (PAUSE_ENTER_MAX - pauseEnterTicks) + pt;
+        float p = Mth.m_14036_(elapsed / (float) PAUSE_ENTER_MAX, 0.0f, 1.0f);
+        float inv = 1.0f - p;
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // 前 6 ticks 瞬时冷翠反冲光幕
+        if (p < 0.45f) {
+            float fp = 1.0f - p / 0.45f;
+            int a = Mth.m_14045_((int) (fp * fp * 115.0f), 0, 120);
+            g.m_280509_(0, 0, sw, sh, (a << 24) | 0x20FFAA);
+        }
+
+        // 屏幕中央极速收敛并骤停的半透明巨型编年史时钟虚影
+        int size = Math.round(Math.min(sw, sh) * (1.28f - 0.34f * (1.0f - inv * inv)));
+        float clockAlpha = inv * inv * 0.42f;
+        if (clockAlpha > 0.02f) {
+            PoseStack pose = g.m_280168_();
+            pose.m_85836_();
+            pose.m_252880_(sw * 0.5f, sh * 0.5f, 0.0f);
+            pose.m_252781_(Axis.f_252403_.m_252977_(-22.0f * inv * inv));
+            g.m_280246_(0.72f, 1.0f, 0.88f, clockAlpha);
+            g.m_280411_(HENSHIN_CLOCK_TEX, -size / 2, -size / 2, size, size,
+                0.0f, 0.0f, 512, 512, 512, 512);
+            g.m_280246_(1.0f, 1.0f, 1.0f, 1.0f);
+            pose.m_85849_();
+        }
+        RenderSystem.disableBlend();
+    }
+
+    private static void renderRestartResumeFlash(GuiGraphics g, int sw, int sh, float pt) {
+        float elapsed = (RESTART_FLASH_MAX - restartFlashTicks) + pt;
+        float p = Mth.m_14036_(elapsed / (float) RESTART_FLASH_MAX, 0.0f, 1.0f);
+        float inv = 1.0f - p;
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // 暖金时间复流瞬闪 + 轻度翠金碎屏纹理扩开
+        if (p < 0.42f) {
+            float fp = 1.0f - p / 0.42f;
+            int a = Mth.m_14045_((int) (fp * fp * 105.0f), 0, 110);
+            g.m_280509_(0, 0, sw, sh, (a << 24) | 0xFFE57A);
+        }
+        float shatterAlpha = inv * 0.36f;
+        if (shatterAlpha > 0.02f) {
+            float sc = 1.0f + p * 0.14f;
+            PoseStack pose = g.m_280168_();
+            pose.m_85836_();
+            pose.m_252880_(sw * 0.5f, sh * 0.5f, 0.0f);
+            pose.m_85841_(sc, sc, 1.0f);
+            g.m_280246_(1.0f, 0.96f, 0.72f, shatterAlpha);
+            g.m_280411_(GLASS_SHATTER_TEX, -sw / 2, -sh / 2, sw, sh,
+                0.0f, 0.0f, 512, 512, 512, 512);
+            g.m_280246_(1.0f, 1.0f, 1.0f, 1.0f);
+            pose.m_85849_();
         }
         RenderSystem.disableBlend();
     }

@@ -44,6 +44,10 @@ public final class CronusFxMsg {
     public static final byte KIND_CHAINSAW_CHARGE = 15;
     /** 必杀技发动特摄渲染演出（对角线暗黑翠绿横幅切入 + 3D 翠绿冲天能量光柱 + 时计齿轮/碎屏绝版特效）。 */
     public static final byte KIND_FINISHER_FX = 16;
+    /** 时停被完全冻结实体 ID 快照同步（entityId=领域施法者 ID，extra=0 更新冻结集 / 1 清空，intArray=冻结实体 ID 列表）。 */
+    public static final byte KIND_PAUSE_FROZEN_SYNC = 17;
+    /** 时停积蓄命中斩痕（entityId=目标实体 ID，x/y/z=命中点，param=伤害强度，extra=0 常规 / 1 无视护甲翠金）。 */
+    public static final byte KIND_PAUSE_HIT_SCAR = 18;
 
     public static final int FINISHER_CRITICAL_JUDGMENT = 0;
     public static final int FINISHER_CRITICAL_JUDGMENT_PAUSE = 1;
@@ -74,6 +78,8 @@ public final class CronusFxMsg {
     public static final int POPUP_GUARD = 3;
     public static final int POPUP_ITEM_GET = 4;
 
+    private static final int[] EMPTY_IDS = new int[0];
+
     public final byte kind;
     public final int entityId;
     public final double x;
@@ -84,13 +90,19 @@ public final class CronusFxMsg {
     public final double tz;
     public final float param;
     public final int extra;
+    public final int[] intArray;
 
     public CronusFxMsg(byte kind, int entityId, double x, double y, double z, float param, int extra) {
-        this(kind, entityId, x, y, z, x, y, z, param, extra);
+        this(kind, entityId, x, y, z, x, y, z, param, extra, EMPTY_IDS);
     }
 
     public CronusFxMsg(byte kind, int entityId, double x, double y, double z,
                        double tx, double ty, double tz, float param, int extra) {
+        this(kind, entityId, x, y, z, tx, ty, tz, param, extra, EMPTY_IDS);
+    }
+
+    public CronusFxMsg(byte kind, int entityId, double x, double y, double z,
+                       double tx, double ty, double tz, float param, int extra, int[] intArray) {
         this.kind = kind;
         this.entityId = entityId;
         this.x = x;
@@ -101,6 +113,11 @@ public final class CronusFxMsg {
         this.tz = tz;
         this.param = param;
         this.extra = extra;
+        this.intArray = (intArray == null) ? EMPTY_IDS : intArray;
+    }
+
+    public static CronusFxMsg frozenSync(int ownerId, double x, double y, double z, boolean clear, int[] ids) {
+        return new CronusFxMsg(KIND_PAUSE_FROZEN_SYNC, ownerId, x, y, z, x, y, z, 0f, clear ? 1 : 0, ids);
     }
 
     public static void encode(CronusFxMsg m, FriendlyByteBuf buf) {
@@ -111,10 +128,16 @@ public final class CronusFxMsg {
         buf.writeDouble(m.z);
         buf.writeFloat(m.param);
         buf.m_130130_(m.extra);
-        if (m.kind == KIND_BEAM_LINE || m.kind == KIND_CONTINUOUS_BEAM) {
+        if (m.kind == KIND_BEAM_LINE || m.kind == KIND_CONTINUOUS_BEAM || m.kind == KIND_SUIT_STATE) {
             buf.writeDouble(m.tx);
             buf.writeDouble(m.ty);
             buf.writeDouble(m.tz);
+        } else if (m.kind == KIND_PAUSE_FROZEN_SYNC) {
+            int n = Math.min(m.intArray.length, 128);
+            buf.m_130130_(n);
+            for (int i = 0; i < n; i++) {
+                buf.m_130130_(m.intArray[i]);
+            }
         }
     }
 
@@ -126,13 +149,21 @@ public final class CronusFxMsg {
         double z = buf.readDouble();
         float param = buf.readFloat();
         int extra = buf.m_130242_();
-        if (kind == KIND_BEAM_LINE || kind == KIND_CONTINUOUS_BEAM) {
+        if (kind == KIND_BEAM_LINE || kind == KIND_CONTINUOUS_BEAM || kind == KIND_SUIT_STATE) {
             double tx = buf.readDouble();
             double ty = buf.readDouble();
             double tz = buf.readDouble();
-            return new CronusFxMsg(kind, entityId, x, y, z, tx, ty, tz, param, extra);
+            return new CronusFxMsg(kind, entityId, x, y, z, tx, ty, tz, param, extra, EMPTY_IDS);
         }
-        return new CronusFxMsg(kind, entityId, x, y, z, param, extra);
+        if (kind == KIND_PAUSE_FROZEN_SYNC) {
+            int n = Math.max(0, Math.min(buf.m_130242_(), 128));
+            int[] ids = new int[n];
+            for (int i = 0; i < n; i++) {
+                ids[i] = buf.m_130242_();
+            }
+            return new CronusFxMsg(kind, entityId, x, y, z, x, y, z, param, extra, ids);
+        }
+        return new CronusFxMsg(kind, entityId, x, y, z, x, y, z, param, extra, EMPTY_IDS);
     }
 
     public static void handle(CronusFxMsg msg, Supplier<NetworkEvent.Context> ctxSupplier) {

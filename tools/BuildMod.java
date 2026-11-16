@@ -67,6 +67,7 @@ public final class BuildMod {
     );
 
     private static final Set<String> LEGACY_EXACT_ENTRIES = Set.of(
+        "META-INF/release-0.4.7.md",
         "rpgtemplate.build.client.mixins.json",
         "rpgtemplate.fx.mixins.json",
         "com/rpgtemplate/forge/fx/FxStyle.class",
@@ -754,8 +755,25 @@ public final class BuildMod {
                     if (line.startsWith("MixinConfigs:")) {
                         for (String cfg : line.substring("MixinConfigs:".length()).trim().split(",")) {
                             String c = cfg.trim();
-                            if (!c.isEmpty() && !allEntries.contains(c)) {
-                                failures.add("MANIFEST.MF MixinConfig missing from JAR: " + c);
+                            if (!c.isEmpty()) {
+                                if (!allEntries.contains(c)) {
+                                    failures.add("MANIFEST.MF MixinConfig missing from JAR: " + c);
+                                } else {
+                                    Map<String, Object> mjson = (Map<String, Object>) JsonCodec.parse(
+                                        new String(readAll(zf, zf.getEntry(c)), StandardCharsets.UTF_8));
+                                    String pkg = String.valueOf(mjson.getOrDefault("package", "")).replace('.', '/');
+                                    for (String arrKey : List.of("mixins", "client", "server")) {
+                                        Object arr = mjson.get(arrKey);
+                                        if (arr instanceof List<?> list) {
+                                            for (Object cls : list) {
+                                                String rel = pkg + "/" + String.valueOf(cls).replace('.', '/');
+                                                if (!classes.containsKey(rel)) {
+                                                    failures.add("Mixin class declared in " + c + " missing: " + rel);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -804,8 +822,9 @@ public final class BuildMod {
                 }
             }
 
-            // 5. Validate merged sounds.json, lang files, and all template JSONs
+            // 5. Validate merged sounds.json (+ OGG closure), model->texture closure, lang files, and all template JSONs
             ZipEntry soundsEntry = zf.getEntry("assets/rpgtemplate/sounds.json");
+            int checkedOggs = 0;
             if (soundsEntry == null) {
                 failures.add("Missing assets/rpgtemplate/sounds.json");
             } else {
@@ -814,6 +833,39 @@ public final class BuildMod {
                 for (String req : List.of("nt_goodbye_windup", "nt_ego_bgm", "cronus_henshin", "cronus_pause")) {
                     if (!sounds.containsKey(req)) {
                         failures.add("sounds.json missing expected key: " + req);
+                    }
+                }
+                for (Map.Entry<String, Object> se : sounds.entrySet()) {
+                    if (se.getValue() instanceof Map<?, ?> def && def.get("sounds") instanceof List<?> slist) {
+                        for (Object item : slist) {
+                            String sname = (item instanceof String s) ? s
+                                : (item instanceof Map<?, ?> sm && sm.get("name") != null ? String.valueOf(sm.get("name")) : "");
+                            if (sname.startsWith("rpgtemplate:")) {
+                                String oggPath = "assets/rpgtemplate/sounds/" + sname.substring("rpgtemplate:".length()) + ".ogg";
+                                checkedOggs++;
+                                if (!allEntries.contains(oggPath)) {
+                                    failures.add("sounds.json key '" + se.getKey() + "' references missing OGG: " + oggPath);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            int checkedModelTex = 0;
+            for (String name : allEntries) {
+                if (name.startsWith("assets/rpgtemplate/models/") && name.endsWith(".json")) {
+                    Object parsed = JsonCodec.parse(new String(readAll(zf, zf.getEntry(name)), StandardCharsets.UTF_8));
+                    if (parsed instanceof Map<?, ?> mj && mj.get("textures") instanceof Map<?, ?> tmap) {
+                        for (Object tv : tmap.values()) {
+                            if (tv instanceof String ts && ts.startsWith("rpgtemplate:")) {
+                                String pngPath = "assets/rpgtemplate/textures/" + ts.substring("rpgtemplate:".length()) + ".png";
+                                checkedModelTex++;
+                                if (!allEntries.contains(pngPath)) {
+                                    failures.add("Model " + name + " references missing texture: " + pngPath);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -866,7 +918,8 @@ public final class BuildMod {
             }
 
             System.out.println("  Verified OK: " + classes.size() + " classes (0 broken internal links), "
-                + templateCount + " templates, clean Manifest/MixinConfigs/sounds.json/lang.");
+                + templateCount + " templates, " + checkedOggs + " sound OGG refs, "
+                + checkedModelTex + " model texture refs, clean Manifest/MixinConfigs/sounds.json/lang.");
         }
     }
 

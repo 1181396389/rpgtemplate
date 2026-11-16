@@ -3,7 +3,7 @@
     "sounds": [
       {
         "name": "rpgtemplate:cronus_henshin",
-        "stream": false
+        "stream": true
       }
     ]
   },
@@ -11,7 +11,7 @@
     "sounds": [
       {
         "name": "rpgtemplate:cronus_henshin_fast",
-        "stream": false
+        "stream": true
       }
     ]
   },

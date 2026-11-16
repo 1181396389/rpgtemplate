@@ -59,11 +59,11 @@ public final class CronusSpriteFx {
     }
 
     private static final Atlas ATLAS_CARD = new Atlas(
-        "textures/fx/cronus_card_atlas.png", 8, 8, 64, 2048, 2048,
+        "textures/fx/cronus_card_atlas.png", 8, 8, 64, 1024, 1024,
         420, 0, 1080, 1080, false);
 
     private static final Atlas ATLAS_CLOCK = new Atlas(
-        "textures/fx/cronus_clock_atlas.png", 8, 8, 64, 2048, 1824,
+        "textures/fx/cronus_clock_atlas.png", 8, 8, 64, 1024, 912,
         440, 120, 1080, 960, true);
 
     private static final Atlas ATLAS_GASHAT = new Atlas(
@@ -71,11 +71,11 @@ public final class CronusSpriteFx {
         776, 376, 752, 680, false);
 
     private static final Atlas ATLAS_ARC = new Atlas(
-        "textures/fx/cronus_lightning_arc_atlas.png", 6, 6, 34, 2304, 1296,
+        "textures/fx/cronus_lightning_arc_atlas.png", 6, 6, 34, 1728, 972,
         0, 0, 1920, 1080, true);
 
     private static final Atlas ATLAS_BOLT = new Atlas(
-        "textures/fx/cronus_lightning_bolt_atlas.png", 6, 4, 24, 1920, 1152,
+        "textures/fx/cronus_lightning_bolt_atlas.png", 6, 4, 24, 1440, 864,
         350, 0, 1240, 1080, true);
 
     /** 假面骑士克洛诺斯变身背部巨型钟表（完整呈现后于合体瞬间沿中线左右裂开）。 */

@@ -27,7 +27,7 @@
     "sounds": [
       {
         "name": "rpgtemplate:nt_ego_bgm",
-        "stream": false
+        "stream": true
       }
     ]
   }
