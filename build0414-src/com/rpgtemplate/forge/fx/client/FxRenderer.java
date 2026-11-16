@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.rpgtemplate.forge.fx.Fx;
 import com.rpgtemplate.forge.fx.FxMsg;
-import com.rpgtemplate.forge.fx.FxStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -58,13 +57,6 @@ public final class FxRenderer {
         while (MOTES.size() > MAX) {
             MOTES.remove(0);
         }
-    }
-
-    /** 客户端本地生成一个图元（addParticle 拦截用，不经过网络）。 */
-    public static void spawnLocal(FxStyle style, double x, double y, double z,
-                                  double vx, double vy, double vz) {
-        accept(new FxMsg(style.shape, style.rgb, style.size, style.life, style.spread,
-                (int) (x * 31.0 + y * 17.0 + z * 7.0), new double[]{x, y, z}));
     }
 
     // ---------------------------------------------------------------- 事件

@@ -47,6 +47,7 @@ public final class CronusClientFx {
 
     private static final List<DomainFx> DOMAINS = new ArrayList<>();
     private static final List<PopupFx> POPUPS = new ArrayList<>();
+    private static final List<HitImpactFx> IMPACTS = new ArrayList<>();
     private static final List<RippleFx> RIPPLES = new ArrayList<>();
     private static final List<TrapFx> TRAPS = new ArrayList<>();
     private static long clientTick = 0L;
@@ -72,15 +73,43 @@ public final class CronusClientFx {
 
     private static final class PopupFx {
         final double x, y, z;
+        final double driftX, driftZ;
+        final float tiltRad;
         final int kind;
         int age;
-        final int maxAge = 22;
+        final int maxAge;
 
         PopupFx(double x, double y, double z, int kind) {
             this.x = x;
             this.y = y;
             this.z = z;
+            double ang = Math.random() * Math.PI * 2.0;
+            double spd = 0.24 + Math.random() * 0.24;
+            this.driftX = Math.cos(ang) * spd;
+            this.driftZ = Math.sin(ang) * spd;
+            this.tiltRad = (float) ((Math.random() - 0.5) * Math.toRadians(20.0));
             this.kind = kind;
+            this.maxAge = (kind == CronusFxMsg.POPUP_CRITICAL || kind == CronusFxMsg.POPUP_ITEM_GET) ? 26 : 22;
+        }
+    }
+
+    /** 打击瞬间 3D 空间冲击波环 + 立体斩击光弧 + 放射穿刺尖芒（纯动态几何，零廉价粒子）。 */
+    private static final class HitImpactFx {
+        final double x, y, z;
+        final int kind; // POPUP_HIT / GREAT / CRITICAL / GUARD
+        final float yawRad;
+        final float slashTiltRad;
+        int age;
+        final int maxAge;
+
+        HitImpactFx(double x, double y, double z, int kind) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.kind = kind;
+            this.yawRad = (float) (Math.random() * Math.PI * 2.0);
+            this.slashTiltRad = (float) (Math.toRadians(24.0 + Math.random() * 38.0) * (Math.random() < 0.5 ? 1.0 : -1.0));
+            this.maxAge = (kind == CronusFxMsg.POPUP_CRITICAL) ? 13 : (kind == CronusFxMsg.POPUP_GREAT ? 11 : 9);
         }
     }
 
@@ -149,10 +178,13 @@ public final class CronusClientFx {
             }
             case CronusFxMsg.KIND_ARCADE_POPUP -> {
                 if (POPUPS.size() < 48) {
-                    double jx = (Math.random() - 0.5) * 0.45;
-                    double jy = (Math.random() - 0.2) * 0.30;
-                    double jz = (Math.random() - 0.5) * 0.45;
+                    double jx = (Math.random() - 0.5) * 0.55;
+                    double jy = (Math.random() - 0.15) * 0.35;
+                    double jz = (Math.random() - 0.5) * 0.55;
                     POPUPS.add(new PopupFx(msg.x + jx, msg.y + jy, msg.z + jz, msg.extra));
+                }
+                if (msg.extra != CronusFxMsg.POPUP_ITEM_GET && IMPACTS.size() < 48) {
+                    IMPACTS.add(new HitImpactFx(msg.x, msg.y - 0.15, msg.z, msg.extra));
                 }
             }
             case CronusFxMsg.KIND_RIDER_KICK ->
@@ -163,6 +195,12 @@ public final class CronusClientFx {
                 CronusHudOverlay.triggerOutBanner();
             case CronusFxMsg.KIND_CLOCK_RIPPLE ->
                 RIPPLES.add(new RippleFx(msg.x, msg.y, msg.z, msg.param, msg.extra, 18));
+            case CronusFxMsg.KIND_HENSHIN_SEQ ->
+                CronusSpriteFx.spawnHenshin(msg.entityId, msg.x, msg.y, msg.z);
+            case CronusFxMsg.KIND_SPRITE_FX ->
+                CronusSpriteFx.spawnBurst(msg.extra, msg.entityId, msg.x, msg.y, msg.z, msg.param);
+            case CronusFxMsg.KIND_ENERGY_ICON ->
+                CronusSpriteFx.spawnEnergyIcon(msg.entityId, msg.extra, msg.x, msg.y, msg.z, (int) Math.max(20.0f, msg.param));
             default -> {
             }
         }
@@ -177,14 +215,17 @@ public final class CronusClientFx {
         if (mc.f_91073_ == null) {
             DOMAINS.clear();
             POPUPS.clear();
+            IMPACTS.clear();
             RIPPLES.clear();
             TRAPS.clear();
+            CronusSpriteFx.clear();
             return;
         }
         if (mc.m_91104_()) {
             return;
         }
         clientTick++;
+        CronusSpriteFx.tick(mc);
 
         Iterator<DomainFx> dit = DOMAINS.iterator();
         while (dit.hasNext()) {
@@ -195,8 +236,16 @@ public final class CronusClientFx {
         }
         Iterator<PopupFx> pit = POPUPS.iterator();
         while (pit.hasNext()) {
-            if (++pit.next().age >= 22) {
+            PopupFx p = pit.next();
+            if (++p.age >= p.maxAge) {
                 pit.remove();
+            }
+        }
+        Iterator<HitImpactFx> iit = IMPACTS.iterator();
+        while (iit.hasNext()) {
+            HitImpactFx imp = iit.next();
+            if (++imp.age >= imp.maxAge) {
+                iit.remove();
             }
         }
         Iterator<RippleFx> rit = RIPPLES.iterator();
@@ -235,7 +284,8 @@ public final class CronusClientFx {
         PlayerSystemData selfData = ClientSystemData.get();
         boolean selfIsCronus = selfData != null && selfData.isActivated()
             && CronusKeys.TEMPLATE_ID.equals(selfData.loadedTemplateId());
-        if (!selfIsCronus && DOMAINS.isEmpty() && POPUPS.isEmpty() && RIPPLES.isEmpty() && TRAPS.isEmpty()) {
+        if (!selfIsCronus && DOMAINS.isEmpty() && POPUPS.isEmpty() && IMPACTS.isEmpty()
+            && RIPPLES.isEmpty() && TRAPS.isEmpty() && !CronusSpriteFx.hasActive()) {
             return;
         }
 
@@ -265,15 +315,40 @@ public final class CronusClientFx {
             renderSuspendedTrap(vc, mat, t, pt);
         }
 
-        // 4. 自身变身态背部微型编年史金绿光轮（为后续外部盔甲模型提供即时变身视觉锚点）
-        if (selfIsCronus && CronusKeys.isTransformed(selfData) && !mc.f_91066_.m_92176_().m_90612_()) {
+        // 4. 自身变身态背部微型编年史金绿光轮（变身巨型钟表演期间隐藏，避免与主钟表重叠）
+        if (selfIsCronus && CronusKeys.isTransformed(selfData)
+            && !mc.f_91066_.m_92176_().m_90612_()
+            && !CronusSpriteFx.isEntityInHenshin(self.m_19879_())) {
             double px = Mth.m_14139_(pt, self.f_19854_, self.m_20185_());
             double py = Mth.m_14139_(pt, self.f_19855_, self.m_20186_()) + 1.15;
             double pz = Mth.m_14139_(pt, self.f_19856_, self.m_20189_());
             renderBackHalo(vc, mat, px, py, pz, self.m_146908_(), (clientTick + pt) * 0.05f);
         }
 
-        // 5. Cronus 视角下自动扫描周围 <15% HP 目标，渲染头顶霓虹绿「OUT」绝版标记
+        src.m_109912_(type);
+
+        // 5. 打击瞬间 3D 加色辉光冲击波、斩击光弧与穿刺星芒（纯几何动态特效，零廉价粒子）
+        if (!IMPACTS.isEmpty()) {
+            RenderType impactRt = CronusRenderTypes.additive(WHITE);
+            VertexConsumer ivc = src.m_6299_(impactRt);
+            for (HitImpactFx imp : IMPACTS) {
+                renderHitImpact(ivc, mat, cam, imp, pt);
+            }
+            src.m_109912_(impactRt);
+        }
+
+        // 6. 在地面 Pause/Restart 时钟领域叠加高清发光黄金罗马数字环
+        if (!DOMAINS.isEmpty()) {
+            for (DomainFx d : DOMAINS) {
+                float t = (d.age + pt) / (float) d.maxAge;
+                float alpha = d.restarting ? (1.0f - t) * 0.95f : 0.88f;
+                float r = d.restarting ? d.radius * (1.0f + t * 0.22f) : d.radius;
+                float rot = d.restarting ? t * 2.4f : 0.0f;
+                CronusSpriteFx.renderGroundClockOverlay(src, mat, d.x, d.y + 0.075, d.z, r, rot, alpha);
+            }
+        }
+
+        // 7. Cronus 视角下自动扫描周围 <15% HP 目标，渲染高清特摄「OUT!」绝版贴图标记
         if (selfIsCronus) {
             boolean paused = CronusKeys.isPaused(selfData);
             AABB scan = self.m_20191_().m_82377_(24.0, 12.0, 24.0);
@@ -283,20 +358,22 @@ public final class CronusClientFx {
                 }
                 if (ent.m_21223_() <= ent.m_21233_() * 0.15f) {
                     double ex = Mth.m_14139_(pt, ent.f_19854_, ent.m_20185_());
-                    double ey = Mth.m_14139_(pt, ent.f_19855_, ent.m_20186_()) + ent.m_20206_() + 0.55;
+                    double ey = Mth.m_14139_(pt, ent.f_19855_, ent.m_20186_()) + ent.m_20206_() + 0.62;
                     double ez = Mth.m_14139_(pt, ent.f_19856_, ent.m_20189_());
-                    renderOverheadOutBadge(vc, mat, cam, ex, ey, ez, paused, clientTick + pt);
+                    renderOverheadOutBadge(src, mat, cam, ex, ey, ez, paused, clientTick + pt);
                 }
             }
         }
 
-        // 6. 原剧街机风 3D 动态矢量字（HIT! / GREAT! / CRITICAL! / GUARD! / ITEM GET!）
+        // 8. 高清特摄漫画风 3D 打击弹出贴图（HIT! / GREAT! / CRITICAL! / GUARD! / ITEM GET!）
         for (PopupFx p : POPUPS) {
-            renderArcadePopup(vc, mat, cam, p, pt);
+            renderArcadePopup(src, mat, cam, p, pt);
         }
 
         pose.m_85849_();
-        src.m_109912_(type);
+
+        // 9. 3D 特摄序列图集演出（背部巨型变身钟表 / 7.8s 五层变身 / 头顶能量道具能力币 / 放射绿雷 / 天降落雷）
+        CronusSpriteFx.renderAll(mc, src, pose, cam, pt);
     }
 
     // ==================== 1. 罗马数字时钟领域 ====================
@@ -407,84 +484,295 @@ public final class CronusClientFx {
         drawRadialSpoke(vc, mat, bx, y + 0.55, bz, spin, 0.0f, 0.44f, 0.04f, 0xFFE066, 0.75f);
     }
 
-    // ==================== 4. 头顶霓虹绿「OUT」绝版标识 ====================
+    // ==================== 4. 头顶高清特摄「OUT!」绝版标识 ====================
 
-    private static void renderOverheadOutBadge(VertexConsumer vc, Matrix4f mat, Vec3 cam,
+    private static void renderOverheadOutBadge(MultiBufferSource.BufferSource src, Matrix4f mat, Vec3 cam,
                                                double x, double y, double z, boolean paused, float time) {
-        float pulse = paused ? (0.85f + 0.15f * Mth.m_14031_(time * 0.6f)) : 0.80f;
-        float bob = 0.06f * Mth.m_14031_(time * 0.18f);
-        BillboardBasis basis = BillboardBasis.towardsCamera(cam, x, y + bob, z);
-        float scale = paused ? 0.082f : 0.068f;
-
-        // 黑色硬朗描边底衬 + 荧光绿「OUT」矢量字 + 下方倒三角处决准星
-        drawVectorText(vc, mat, basis.offset(0.0, 0.0, -0.015), "OUT", scale, 0x061A12, pulse * 0.92f, 0.08f);
-        drawVectorText(vc, mat, basis, "OUT", scale, paused ? 0x38FF9C : 0x18F29A, pulse, 0.0f);
-
-        // 下指处决箭头
-        quadBillboard(vc, mat, basis, -0.14f, -0.18f, 0.14f, -0.12f, 0xFFE066, pulse);
-        quadBillboard(vc, mat, basis, -0.06f, -0.26f, 0.06f, -0.18f, 0xFFE066, pulse);
+        float pulse = paused ? (0.88f + 0.12f * Mth.m_14031_(time * 0.55f)) : 0.90f;
+        float bob = 0.065f * Mth.m_14031_(time * 0.18f);
+        float scale = paused ? (1.06f + 0.08f * Mth.m_14031_(time * 0.45f)) : 0.92f;
+        float tilt = paused ? 0.05f * Mth.m_14031_(time * 0.35f) : 0.0f;
+        CronusSpriteFx.renderHitSticker(src, mat, cam, x, y + bob, z, 5,
+            0.70f * scale, 0.465f * scale, tilt, pulse);
     }
 
-    // ==================== 5. 原剧街机风 3D 矢量打击弹出字 ====================
+    // ==================== 5. 高清特摄漫画风 3D 打击弹出贴图 ====================
 
-    private static void renderArcadePopup(VertexConsumer vc, Matrix4f mat, Vec3 cam, PopupFx p, float pt) {
+    private static void renderArcadePopup(MultiBufferSource.BufferSource src, Matrix4f mat, Vec3 cam,
+                                          PopupFx p, float pt) {
         float t = Mth.m_14036_((p.age + pt) / (float) p.maxAge, 0.0f, 1.0f);
-        // 弹跳放大曲线：前 20% 迅速张开，随后稳健上浮淡出
-        float popScale = t < 0.18f ? (0.45f + (t / 0.18f) * 0.75f) : (1.20f - (t - 0.18f) * 0.25f);
-        float alpha = t > 0.70f ? (1.0f - (t - 0.70f) / 0.30f) : 0.98f;
-        double py = p.y + t * 0.55;
+        float easeOut = 1.0f - (1.0f - t) * (1.0f - t);
 
-        String label;
-        int mainColor;
-        int accentColor;
-        float baseSize;
+        // 街机漫画弹跳曲线：0..14% 瞬间重击弹出(0.28->1.26)，14..28% 回弹定格(1.26->1.00)，末段轻盈淡出
+        float popScale;
+        if (t < 0.14f) {
+            float u = t / 0.14f;
+            popScale = 0.28f + 0.98f * (1.0f - (1.0f - u) * (1.0f - u));
+        } else if (t < 0.28f) {
+            float u = (t - 0.14f) / 0.14f;
+            popScale = 1.26f - 0.26f * u;
+        } else {
+            popScale = 1.00f + (t - 0.28f) * 0.08f;
+        }
+        float alpha = t > 0.72f ? Mth.m_14036_((1.0f - t) / 0.28f, 0.0f, 1.0f) : 0.99f;
+
+        double px = p.x + p.driftX * easeOut;
+        double py = p.y + 0.18 + easeOut * 0.62;
+        double pz = p.z + p.driftZ * easeOut;
+
+        int cellIdx;
+        float baseHalfW;
         switch (p.kind) {
             case CronusFxMsg.POPUP_GREAT -> {
-                label = "GREAT!";
-                mainColor = 0xFFB703;
-                accentColor = 0xFFF3B0;
-                baseSize = 0.072f;
+                cellIdx = 1;
+                baseHalfW = 0.80f;
             }
             case CronusFxMsg.POPUP_CRITICAL -> {
-                label = "CRITICAL!";
-                mainColor = 0xFF2E93;
-                accentColor = 0xFFE066;
-                baseSize = 0.086f;
+                cellIdx = 2;
+                baseHalfW = 0.98f;
             }
             case CronusFxMsg.POPUP_GUARD -> {
-                label = "GUARD!";
-                mainColor = 0x2EC4B6;
-                accentColor = 0xCBF3F0;
-                baseSize = 0.068f;
+                cellIdx = 3;
+                baseHalfW = 0.74f;
             }
             case CronusFxMsg.POPUP_ITEM_GET -> {
-                label = "ITEM GET!";
-                mainColor = 0xFFD166;
-                accentColor = 0x18F29A;
-                baseSize = 0.074f;
+                cellIdx = 4;
+                baseHalfW = 0.82f;
             }
             default -> {
-                label = "HIT!";
-                mainColor = 0x35F2FF;
-                accentColor = 0xFFE44D;
-                baseSize = 0.066f;
+                cellIdx = 0;
+                baseHalfW = 0.64f;
+            }
+        }
+        float halfW = baseHalfW * popScale;
+        float halfH = halfW * (341.0f / 512.0f);
+        CronusSpriteFx.renderHitSticker(src, mat, cam, px, py, pz, cellIdx, halfW, halfH, p.tiltRad, alpha);
+    }
+
+    // ==================== 6. 3D 立体打击冲击波、斩击光弧与闪光星芒 ====================
+
+    private static void renderHitImpact(VertexConsumer vc, Matrix4f mat, Vec3 cam, HitImpactFx imp, float pt) {
+        float t = Mth.m_14036_((imp.age + pt) / (float) imp.maxAge, 0.0f, 1.0f);
+        float ease = 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);
+        float alpha = (1.0f - t) * (1.0f - t * 0.35f);
+        if (alpha <= 0.02f) {
+            return;
+        }
+
+        // 按打击等级分层配置配色、尺寸与斩击弧数量
+        int mainRgb, subRgb, coreRgb;
+        float ringScale;
+        int spikeCount;
+        switch (imp.kind) {
+            case CronusFxMsg.POPUP_GREAT -> {
+                mainRgb = 0xFFB703;
+                subRgb = 0xFF4D2A;
+                coreRgb = 0xFFF7C2;
+                ringScale = 1.38f;
+                spikeCount = 8;
+            }
+            case CronusFxMsg.POPUP_CRITICAL -> {
+                mainRgb = 0xFF2E93;
+                subRgb = 0x18F29A;
+                coreRgb = 0xFFF4B8;
+                ringScale = 1.85f;
+                spikeCount = 10;
+            }
+            case CronusFxMsg.POPUP_GUARD -> {
+                mainRgb = 0x2CE8DC;
+                subRgb = 0xA8FFF9;
+                coreRgb = 0xFFFFFF;
+                ringScale = 1.25f;
+                spikeCount = 6;
+            }
+            default -> {
+                mainRgb = 0x35F2FF;
+                subRgb = 0xFFE44D;
+                coreRgb = 0xFFFFFF;
+                ringScale = 1.00f;
+                spikeCount = 6;
             }
         }
 
-        float s = baseSize * popScale;
-        BillboardBasis basis = BillboardBasis.towardsCamera(cam, p.x, py, p.z);
+        BillboardBasis bb = BillboardBasis.towardsCamera(cam, imp.x, imp.y, imp.z);
 
-        // 街机爆炸底衬芒星（CRITICAL! / GREAT! 专属）
-        if (p.kind == CronusFxMsg.POPUP_CRITICAL || p.kind == CronusFxMsg.POPUP_GREAT) {
-            float burstW = label.length() * s * 2.2f;
-            quadBillboard(vc, mat, basis.offset(0, 0, -0.03), -burstW, -s * 0.7f, burstW, s * 0.7f, accentColor, alpha * 0.32f);
+        // A. 命中前 3 帧的高能十字星闪光核
+        if (t < 0.38f) {
+            float flashP = 1.0f - t / 0.38f;
+            float starLen = (0.52f + 0.55f * (1.0f - flashP)) * ringScale;
+            float starThick = 0.085f * ringScale * flashP;
+            drawBillboardDiamond(vc, mat, bb, starLen, starThick, imp.slashTiltRad, coreRgb, flashP * 0.95f);
+            drawBillboardDiamond(vc, mat, bb, starLen * 0.72f, starThick * 0.85f,
+                imp.slashTiltRad + (float) (Math.PI * 0.5), mainRgb, flashP * 0.85f);
         }
-        // 厚黑立体街机阴影层 + 高亮霓虹主字层
-        drawVectorText(vc, mat, basis.offset(s * 0.25, -s * 0.25, -0.02), label, s, 0x0B0E14, alpha * 0.92f, 0.06f);
-        drawVectorText(vc, mat, basis, label, s, mainColor, alpha, 0.0f);
+
+        // B. 3D 倾斜扩散冲击波环（GUARD 为六边形能量盾波纹，其余为流畅多段圆形冲击波）
+        int ringSegs = (imp.kind == CronusFxMsg.POPUP_GUARD) ? 6 : 28;
+        float outR = (0.28f + 1.12f * ease) * ringScale;
+        float bandW = Math.max(0.03f, (0.24f * (1.0f - t * 0.78f)) * ringScale);
+        drawTiltedAddRing(vc, mat, imp.x, imp.y, imp.z,
+            Math.max(0.04f, outR - bandW), outR, ringSegs,
+            imp.yawRad, imp.slashTiltRad * 0.65f, mainRgb, alpha * 0.88f);
+
+        if (imp.kind == CronusFxMsg.POPUP_GREAT || imp.kind == CronusFxMsg.POPUP_CRITICAL
+            || imp.kind == CronusFxMsg.POPUP_GUARD) {
+            float inOutR = (0.18f + 0.78f * ease) * ringScale;
+            float inBandW = Math.max(0.02f, 0.14f * (1.0f - t * 0.80f) * ringScale);
+            drawTiltedAddRing(vc, mat, imp.x, imp.y, imp.z,
+                Math.max(0.02f, inOutR - inBandW), inOutR, ringSegs,
+                imp.yawRad + 0.55f, -imp.slashTiltRad * 0.55f, subRgb, alpha * 0.78f);
+        }
+
+        // C. 立体月牙斩击光弧（HIT 1道，GREAT 交叉2道，CRITICAL 三重交错斩弧）
+        if (imp.kind != CronusFxMsg.POPUP_GUARD) {
+            float slashR = (0.55f + 0.92f * ease) * ringScale;
+            float slashW = (0.22f * (1.0f - t * 0.72f)) * ringScale;
+            float sweepOffset = -0.35f + ease * 0.65f;
+            drawTiltedSlashArc(vc, mat, imp.x, imp.y, imp.z, slashR, slashW,
+                imp.yawRad + sweepOffset, imp.slashTiltRad, 14, coreRgb, mainRgb, alpha * 0.95f);
+
+            if (imp.kind == CronusFxMsg.POPUP_GREAT || imp.kind == CronusFxMsg.POPUP_CRITICAL) {
+                drawTiltedSlashArc(vc, mat, imp.x, imp.y, imp.z, slashR * 0.92f, slashW * 0.88f,
+                    imp.yawRad + 1.85f - sweepOffset * 0.8f, -imp.slashTiltRad * 0.9f, 14,
+                    coreRgb, subRgb, alpha * 0.90f);
+            }
+            if (imp.kind == CronusFxMsg.POPUP_CRITICAL) {
+                drawTiltedSlashArc(vc, mat, imp.x, imp.y, imp.z, slashR * 1.12f, slashW * 0.95f,
+                    imp.yawRad + 3.65f + sweepOffset, imp.slashTiltRad * 0.25f, 14,
+                    0xFFFFFF, 0xFFE066, alpha * 0.92f);
+            }
+        }
+
+        // D. 放射穿刺光针（取代传统廉价溅射粒子，沿屏幕平面向外高速飞刺）
+        for (int i = 0; i < spikeCount; i++) {
+            float ang = imp.yawRad + (float) (Math.PI * 2.0 * i / spikeCount) + (i % 2 == 0 ? 0.14f : -0.11f);
+            float dist0 = (0.20f + 0.88f * ease) * ringScale * (i % 2 == 0 ? 1.0f : 0.76f);
+            float spikeLen = (0.34f * (1.0f - t * 0.65f)) * ringScale * (i % 2 == 0 ? 1.15f : 0.82f);
+            float halfW = (0.042f * (1.0f - t * 0.55f)) * ringScale;
+            int spRgb = (i % 2 == 0) ? coreRgb : subRgb;
+            drawBillboardNeedle(vc, mat, bb, ang, dist0, dist0 + spikeLen, halfW, spRgb, alpha * 0.88f);
+        }
     }
 
-    // ==================== 底层纯几何图元与矢量字库 ====================
+    private static void drawBillboardDiamond(VertexConsumer vc, Matrix4f mat, BillboardBasis b,
+                                             float halfLen, float halfThick, float rollRad,
+                                             int rgb, float alpha) {
+        double c = Math.cos(rollRad), s = Math.sin(rollRad);
+        double ax = b.rx * c + b.ux * s, ay = b.ry * c + b.uy * s, az = b.rz * c + b.uz * s;
+        double px = b.ux * c - b.rx * s, py = b.uy * c - b.ry * s, pz = b.uz * c - b.rz * s;
+        emitAdditiveQuad(vc, mat,
+            (float) (b.cx - ax * halfLen), (float) (b.cy - ay * halfLen), (float) (b.cz - az * halfLen),
+            (float) (b.cx + px * halfThick), (float) (b.cy + py * halfThick), (float) (b.cz + pz * halfThick),
+            (float) (b.cx + ax * halfLen), (float) (b.cy + ay * halfLen), (float) (b.cz + az * halfLen),
+            (float) (b.cx - px * halfThick), (float) (b.cy - py * halfThick), (float) (b.cz - pz * halfThick),
+            rgb, alpha);
+    }
+
+    private static void drawBillboardNeedle(VertexConsumer vc, Matrix4f mat, BillboardBasis b,
+                                            float ang, float r0, float r1, float halfW,
+                                            int rgb, float alpha) {
+        double c = Math.cos(ang), s = Math.sin(ang);
+        double dx = b.rx * c + b.ux * s, dy = b.ry * c + b.uy * s, dz = b.rz * c + b.uz * s;
+        double px = b.ux * c - b.rx * s, py = b.uy * c - b.ry * s, pz = b.uz * c - b.rz * s;
+        double rm = r0 + (r1 - r0) * 0.32;
+        emitAdditiveQuad(vc, mat,
+            (float) (b.cx + dx * r0), (float) (b.cy + dy * r0), (float) (b.cz + dz * r0),
+            (float) (b.cx + dx * rm + px * halfW), (float) (b.cy + dy * rm + py * halfW), (float) (b.cz + dz * rm + pz * halfW),
+            (float) (b.cx + dx * r1), (float) (b.cy + dy * r1), (float) (b.cz + dz * r1),
+            (float) (b.cx + dx * rm - px * halfW), (float) (b.cy + dy * rm - py * halfW), (float) (b.cz + dz * rm - pz * halfW),
+            rgb, alpha);
+    }
+
+    private static void drawTiltedAddRing(VertexConsumer vc, Matrix4f mat, double cx, double cy, double cz,
+                                          float inR, float outR, int segs, float yawRad, float tiltRad,
+                                          int rgb, float alpha) {
+        double cyaw = Math.cos(yawRad), syaw = Math.sin(yawRad);
+        double ct = Math.cos(tiltRad), st = Math.sin(tiltRad);
+        // 平面正交基 U=(cyaw, 0, syaw), V=(-syaw*ct, st, cyaw*ct)
+        double ux = cyaw, uy = 0.0, uz = syaw;
+        double vx = -syaw * ct, vy = st, vz = cyaw * ct;
+
+        for (int i = 0; i < segs; i++) {
+            double a0 = (Math.PI * 2.0 * i) / segs;
+            double a1 = (Math.PI * 2.0 * (i + 1)) / segs;
+            double c0 = Math.cos(a0), s0 = Math.sin(a0);
+            double c1 = Math.cos(a1), s1 = Math.sin(a1);
+            double d0x = ux * c0 + vx * s0, d0y = uy * c0 + vy * s0, d0z = uz * c0 + vz * s0;
+            double d1x = ux * c1 + vx * s1, d1y = uy * c1 + vy * s1, d1z = uz * c1 + vz * s1;
+
+            emitAdditiveQuad(vc, mat,
+                (float) (cx + d0x * inR), (float) (cy + d0y * inR), (float) (cz + d0z * inR),
+                (float) (cx + d0x * outR), (float) (cy + d0y * outR), (float) (cz + d0z * outR),
+                (float) (cx + d1x * outR), (float) (cy + d1y * outR), (float) (cz + d1z * outR),
+                (float) (cx + d1x * inR), (float) (cy + d1y * inR), (float) (cz + d1z * inR),
+                rgb, alpha);
+        }
+    }
+
+    /** 3D 倾斜月牙斩击弧：两头收尖、中段饱满高亮，形成锐利特摄剑气/拳压弧光。 */
+    private static void drawTiltedSlashArc(VertexConsumer vc, Matrix4f mat, double cx, double cy, double cz,
+                                           float radius, float maxBandW, float yawRad, float tiltRad,
+                                           int segs, int coreRgb, int edgeRgb, float alpha) {
+        double cyaw = Math.cos(yawRad), syaw = Math.sin(yawRad);
+        double ct = Math.cos(tiltRad), st = Math.sin(tiltRad);
+        double ux = cyaw, uy = 0.0, uz = syaw;
+        double vx = -syaw * ct, vy = st, vz = cyaw * ct;
+        double arcSpan = Math.PI * 0.92;
+        double startA = -arcSpan * 0.5;
+
+        for (int i = 0; i < segs; i++) {
+            float p0 = i / (float) segs;
+            float p1 = (i + 1) / (float) segs;
+            double a0 = startA + arcSpan * p0;
+            double a1 = startA + arcSpan * p1;
+
+            // 月牙包络：两端收尖为 0，中段厚实
+            float env0 = Mth.m_14031_(p0 * (float) Math.PI);
+            float env1 = Mth.m_14031_(p1 * (float) Math.PI);
+            float w0 = maxBandW * env0;
+            float w1 = maxBandW * env1;
+
+            double c0 = Math.cos(a0), s0 = Math.sin(a0);
+            double c1 = Math.cos(a1), s1 = Math.sin(a1);
+            double d0x = ux * c0 + vx * s0, d0y = uy * c0 + vy * s0, d0z = uz * c0 + vz * s0;
+            double d1x = ux * c1 + vx * s1, d1y = uy * c1 + vy * s1, d1z = uz * c1 + vz * s1;
+
+            // 外缘彩色剑气层
+            emitAdditiveQuad(vc, mat,
+                (float) (cx + d0x * (radius - w0)), (float) (cy + d0y * (radius - w0)), (float) (cz + d0z * (radius - w0)),
+                (float) (cx + d0x * (radius + w0 * 0.45f)), (float) (cy + d0y * (radius + w0 * 0.45f)), (float) (cz + d0z * (radius + w0 * 0.45f)),
+                (float) (cx + d1x * (radius + w1 * 0.45f)), (float) (cy + d1y * (radius + w1 * 0.45f)), (float) (cz + d1z * (radius + w1 * 0.45f)),
+                (float) (cx + d1x * (radius - w1)), (float) (cy + d1y * (radius - w1)), (float) (cz + d1z * (radius - w1)),
+                edgeRgb, alpha * 0.85f);
+
+            // 内核炽白高光脊线
+            float cw0 = w0 * 0.36f, cw1 = w1 * 0.36f;
+            emitAdditiveQuad(vc, mat,
+                (float) (cx + d0x * (radius - cw0)), (float) (cy + d0y * (radius - cw0)), (float) (cz + d0z * (radius - cw0)),
+                (float) (cx + d0x * (radius + cw0 * 0.6f)), (float) (cy + d0y * (radius + cw0 * 0.6f)), (float) (cz + d0z * (radius + cw0 * 0.6f)),
+                (float) (cx + d1x * (radius + cw1 * 0.6f)), (float) (cy + d1y * (radius + cw1 * 0.6f)), (float) (cz + d1z * (radius + cw1 * 0.6f)),
+                (float) (cx + d1x * (radius - cw1)), (float) (cy + d1y * (radius - cw1)), (float) (cz + d1z * (radius - cw1)),
+                coreRgb, alpha);
+        }
+    }
+
+    private static void emitAdditiveQuad(VertexConsumer vc, Matrix4f mat,
+                                         float ax, float ay, float az,
+                                         float bx, float by, float bz,
+                                         float cx, float cy, float cz,
+                                         float dx, float dy, float dz,
+                                         int rgb, float alpha) {
+        float rf = ((rgb >> 16) & 0xFF) / 255.0f;
+        float gf = ((rgb >> 8) & 0xFF) / 255.0f;
+        float bf = (rgb & 0xFF) / 255.0f;
+        float af = Mth.m_14036_(alpha, 0.0f, 1.0f);
+        vc.m_252986_(mat, ax, ay, az).m_85950_(rf, gf, bf, af).m_7421_(0F, 0F).m_5752_();
+        vc.m_252986_(mat, bx, by, bz).m_85950_(rf, gf, bf, af).m_7421_(1F, 0F).m_5752_();
+        vc.m_252986_(mat, cx, cy, cz).m_85950_(rf, gf, bf, af).m_7421_(1F, 1F).m_5752_();
+        vc.m_252986_(mat, dx, dy, dz).m_85950_(rf, gf, bf, af).m_7421_(0F, 1F).m_5752_();
+    }
+
+    // ==================== 底层纯几何图元 ====================
 
     private static final class BillboardBasis {
         final double cx, cy, cz;
@@ -518,64 +806,6 @@ public final class CronusClientFx {
             double uz = fx * ry - fy * rx;
             return new BillboardBasis(x, y, z, rx, ry, rz, ux, uy, uz, fx, fy, fz);
         }
-
-        BillboardBasis offset(double rightOff, double upOff, double fwdOff) {
-            return new BillboardBasis(
-                cx + rx * rightOff + ux * upOff + fx * fwdOff,
-                cy + ry * rightOff + uy * upOff + fy * fwdOff,
-                cz + rz * rightOff + uz * upOff + fz * fwdOff,
-                rx, ry, rz, ux, uy, uz, fx, fy, fz);
-        }
-    }
-
-    /** 使用 5x5 像素风硬朗街机矢量矩阵渲染无贴图 3D 字母（HIT! / GREAT! / CRITICAL! / GUARD! / ITEM GET! / OUT）。 */
-    private static void drawVectorText(VertexConsumer vc, Matrix4f mat, BillboardBasis b,
-                                       String text, float pixel, int rgb, float alpha, float pad) {
-        float charAdvance = 4.2f * pixel;
-        float totalW = text.length() * charAdvance - 1.2f * pixel;
-        float startX = -totalW * 0.5f;
-        float startY = -2.5f * pixel;
-
-        for (int idx = 0; idx < text.length(); idx++) {
-            int mask = glyphMask3x5(text.charAt(idx));
-            if (mask == 0) {
-                continue;
-            }
-            float ox = startX + idx * charAdvance;
-            for (int row = 0; row < 5; row++) {
-                for (int col = 0; col < 3; col++) {
-                    int bit = 1 << ((4 - row) * 3 + (2 - col));
-                    if ((mask & bit) != 0) {
-                        float x0 = ox + col * pixel - pad * pixel;
-                        float y0 = startY + (4 - row) * pixel - pad * pixel;
-                        float x1 = x0 + pixel + pad * 2f * pixel;
-                        float y1 = y0 + pixel + pad * 2f * pixel;
-                        quadBillboard(vc, mat, b, x0, y0, x1, y1, rgb, alpha);
-                    }
-                }
-            }
-        }
-    }
-
-    /** 3x5 紧凑高辨识街机点阵字模（15-bit 位图，高位在左上）。 */
-    private static int glyphMask3x5(char ch) {
-        return switch (Character.toUpperCase(ch)) {
-            case 'A' -> 0b010_101_111_101_101;
-            case 'C' -> 0b111_100_100_100_111;
-            case 'D' -> 0b110_101_101_101_110;
-            case 'E' -> 0b111_100_110_100_111;
-            case 'G' -> 0b111_100_101_101_111;
-            case 'H' -> 0b101_101_111_101_101;
-            case 'I' -> 0b111_010_010_010_111;
-            case 'L' -> 0b100_100_100_100_111;
-            case 'M' -> 0b101_111_111_101_101;
-            case 'O' -> 0b111_101_101_101_111;
-            case 'R' -> 0b110_101_110_101_101;
-            case 'T' -> 0b111_010_010_010_010;
-            case 'U' -> 0b101_101_101_101_111;
-            case '!' -> 0b010_010_010_000_010;
-            default -> 0;
-        };
     }
 
     private static void drawGroundRoman(VertexConsumer vc, Matrix4f mat, double cx, double y, double cz,
@@ -650,27 +880,6 @@ public final class CronusClientFx {
         float y0 = (float) y, y1 = (float) y + height;
         emitDoubleSidedQuad(vc, mat, x0, y0, (float) z, x1, y0, (float) z, x1, y1, (float) z, x0, y1, (float) z, rgb, alpha);
         emitDoubleSidedQuad(vc, mat, (float) x, y0, z0, (float) x, y0, z1, (float) x, y1, z1, (float) x, y1, z0, rgb, alpha);
-    }
-
-    private static void quadBillboard(VertexConsumer vc, Matrix4f mat, BillboardBasis b,
-                                      float u0, float v0, float u1, float v1, int rgb, float alpha) {
-        float ax = (float) (b.cx + b.rx * u0 + b.ux * v0);
-        float ay = (float) (b.cy + b.ry * u0 + b.uy * v0);
-        float az = (float) (b.cz + b.rz * u0 + b.uz * v0);
-
-        float bx = (float) (b.cx + b.rx * u1 + b.ux * v0);
-        float by = (float) (b.cy + b.ry * u1 + b.uy * v0);
-        float bz = (float) (b.cz + b.rz * u1 + b.uz * v0);
-
-        float cx = (float) (b.cx + b.rx * u1 + b.ux * v1);
-        float cy = (float) (b.cy + b.ry * u1 + b.uy * v1);
-        float cz = (float) (b.cz + b.rz * u1 + b.uz * v1);
-
-        float dx = (float) (b.cx + b.rx * u0 + b.ux * v1);
-        float dy = (float) (b.cy + b.ry * u0 + b.uy * v1);
-        float dz = (float) (b.cz + b.rz * u0 + b.uz * v1);
-
-        emitDoubleSidedQuad(vc, mat, ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, rgb, alpha);
     }
 
     private static void emitDoubleSidedQuad(VertexConsumer vc, Matrix4f mat,

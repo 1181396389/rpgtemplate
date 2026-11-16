@@ -2,6 +2,8 @@ package com.rpgtemplate.cronus;
 
 import com.rpgtemplate.core.data.PlayerSystemData;
 import com.rpgtemplate.core.stats.StatType;
+import com.rpgtemplate.forge.combat.ModDamageTypes;
+import com.rpgtemplate.forge.skill.TargetUtil;
 import com.rpgtemplate.forge.system.DrawAttunementUnlock;
 import com.rpgtemplate.forge.system.SystemDataManager;
 import java.util.ArrayDeque;
@@ -22,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
+import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -38,6 +41,11 @@ public final class CronusCombatAndPassives {
     public static final int AIR_HOVER_STOP = 2;
 
     private static final Map<UUID, Deque<RewindSnapshot>> REWIND_HISTORY = new HashMap<>();
+    private static final Map<UUID, MuscleLaunch> MUSCLE_LAUNCHED = new HashMap<>();
+    private static boolean resolvingMuscleSlam = false;
+
+    private record MuscleLaunch(UUID attackerId, float slamDamage, long expireTick) {
+    }
 
     public static final class RewindSnapshot {
         public final long tick;
@@ -201,6 +209,9 @@ public final class CronusCombatAndPassives {
             if (dirty) {
                 SystemDataManager.markDirty((Player) player);
             }
+            if (now % 100L == 0L && !MUSCLE_LAUNCHED.isEmpty()) {
+                MUSCLE_LAUNCHED.entrySet().removeIf(e -> now > e.getValue().expireTick());
+            }
         }
     }
 
@@ -226,30 +237,41 @@ public final class CronusCombatAndPassives {
                 atkData.setValue(CronusKeys.KEY_LAST_HIT_OUT, (double) now);
                 SystemDataManager.markDirty((Player) attacker);
 
-                // 应用拳套层数与肌肉强化道具乘区（仅非 Restart 结算阶段）
-                if (!CronusPauseManager.isResolvingRestart()) {
+                // 应用拳套层数与肌肉强化道具乘区（仅非 Restart / 非肌肉落地二次结算阶段）
+                boolean muscleActive = atkData.value(CronusKeys.KEY_ITEM_MUSCLE_UNTIL, 0.0) > (double) now;
+                if (!CronusPauseManager.isResolvingRestart() && !resolvingMuscleSlam) {
                     dmg *= (float) (1.0 + curStacks * 0.10);
-                    if (atkData.value(CronusKeys.KEY_ITEM_MUSCLE_UNTIL, 0.0) > (double) now) {
-                        dmg *= 1.30f;
+                    if (muscleActive) {
+                        dmg *= 1.50f;
                     }
                     if (CronusKeys.isPaused(atkData)) {
                         dmg *= 1.12f; // 编年史管理员权限：时停内追击 +12%
                     }
                     event.setAmount(dmg);
 
-                    // 若目标处于完全时停，转入悬停伤害蓄水池，留待 Restart 一并引爆（清零无敌帧避免连击被吞）
+                    int popup = dmg >= 30.0f ? CronusFxMsg.POPUP_CRITICAL
+                        : (muscleActive || nextStacks >= 3 || dmg >= 15.0f ? CronusFxMsg.POPUP_GREAT : CronusFxMsg.POPUP_HIT);
+
+                    // 若目标处于完全时停，转入悬停伤害蓄水池，留待 Restart 一并引爆（清零无敌帧避免连击被吞，并弹出打击贴图）
                     if (CronusPauseManager.interceptDeferredDamage(attacker, atkData, victim, dmg)) {
                         victim.f_19802_ = 0;
+                        CronusNet.popupOn(victim, popup);
                         event.setAmount(0.0f);
                         event.setCanceled(true);
                         return;
                     }
-                }
 
-                // 常态命中弹出原剧街机风 HIT! / GREAT! / CRITICAL!
-                if (!CronusPauseManager.isResolvingRestart()) {
-                    int popup = dmg >= 30.0f ? CronusFxMsg.POPUP_CRITICAL
-                        : (nextStacks >= 3 || dmg >= 15.0f ? CronusFxMsg.POPUP_GREAT : CronusFxMsg.POPUP_HIT);
+                    // 能量道具【肌肉化】：击飞目标并记录落地追加砸地伤害（参考效果：打击贴图升级为 GREAT!）
+                    if (muscleActive && victim.m_6084_()) {
+                        Vec3 away = victim.m_20182_().m_82546_(attacker.m_20182_());
+                        double hLen = Math.max(1e-4, Math.hypot(away.f_82479_, away.f_82481_));
+                        victim.m_20256_(new Vec3((away.f_82479_ / hLen) * 0.68, 0.48, (away.f_82481_ / hLen) * 0.68));
+                        victim.f_19864_ = true;
+                        MUSCLE_LAUNCHED.put(victim.m_20148_(),
+                            new MuscleLaunch(attacker.m_20148_(), Math.max(3.0f, dmg * 0.25f), now + 55L));
+                    }
+
+                    // 常态命中弹出原剧街机风 HIT! / GREAT! / CRITICAL!
                     CronusNet.popupOn(victim, popup);
                 }
             }
@@ -311,7 +333,37 @@ public final class CronusCombatAndPassives {
     }
 
     @SubscribeEvent
+    public static void onLivingFall(LivingFallEvent event) {
+        LivingEntity victim = event.getEntity();
+        if (victim == null || victim.m_9236_().f_46443_) {
+            return;
+        }
+        MuscleLaunch launch = MUSCLE_LAUNCHED.remove(victim.m_20148_());
+        if (launch == null || !victim.m_6084_()) {
+            return;
+        }
+        long now = victim.m_9236_().m_46467_();
+        if (now > launch.expireTick() || event.getDistance() < 0.45f) {
+            return;
+        }
+        if (victim.m_9236_() instanceof ServerLevel sl) {
+            ServerPlayer attacker = sl.m_7654_().m_6846_().m_11259_(launch.attackerId());
+            if (attacker != null && attacker.m_6084_()) {
+                resolvingMuscleSlam = true;
+                try {
+                    victim.f_19802_ = 0;
+                    TargetUtil.hurt(victim, ModDamageTypes.technique(attacker), launch.slamDamage());
+                    CronusNet.popupOn(victim, CronusFxMsg.POPUP_GREAT);
+                } finally {
+                    resolvingMuscleSlam = false;
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
+        MUSCLE_LAUNCHED.remove(event.getEntity().m_20148_());
         if (!(event.getSource().m_7639_() instanceof ServerPlayer killer)) {
             return;
         }

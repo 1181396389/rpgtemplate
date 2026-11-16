@@ -57,7 +57,7 @@ public final class BuildMod {
         "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
     private static final String FORGE_MAVEN = "https://maven.minecraftforge.net";
     private static final String CLEAN_MIXIN_CONFIGS =
-        "rpgtemplate.nothingthere.mixins.json,rpgtemplate.fx.mixins.json";
+        "rpgtemplate.nothingthere.mixins.json,rpgtemplate.mask.mixins.json";
 
     private static final Pattern LEGACY_ITEM_MODEL_OR_TEX = Pattern.compile(
         "^(body_adapter|bottle_.*|drug_.*|empty_fullbottle|evol_trigger|fabricator_.*|fullbottle_.*"
@@ -68,6 +68,8 @@ public final class BuildMod {
 
     private static final Set<String> LEGACY_EXACT_ENTRIES = Set.of(
         "rpgtemplate.build.client.mixins.json",
+        "rpgtemplate.fx.mixins.json",
+        "com/rpgtemplate/forge/fx/FxStyle.class",
         "assets/rpgtemplate/fullbottle-art-sources.json",
         "assets/rpgtemplate/blockstates/fullbottle_fabricator.json",
         "assets/rpgtemplate/blockstates/pandora_box.json",
@@ -147,6 +149,7 @@ public final class BuildMod {
         // Step 2: Compile all overlay Java sources against real Forge/MC 1.20.1 SRG classpath
         List<Path> classpath = buildCompileClasspath(forgeEnv, mcVersion, forgeVersion, mcpVersion, baseJar);
         compileSources(srcDir, classesDir, buildWorkDir, classpath);
+        verifyNoCheapParticles(classesDir);
 
         // Step 3: Assemble clean mod JAR
         Path outJar = outDir.resolve(modId + "-" + modVersion + ".jar");
@@ -496,6 +499,34 @@ public final class BuildMod {
         System.out.println("  Compiled " + classCount + " class files.");
     }
 
+    /**
+     * Enforces Iron Law #4 at build time: no mod source compiled from {@code build0414-src/} may
+     * use vanilla Minecraft particles ({@code ParticleTypes}, {@code DustParticleOptions},
+     * {@code ParticleOptions}, etc.) to construct VFX.
+     */
+    private static void verifyNoCheapParticles(Path classesDir) throws IOException {
+        List<String> violations = new ArrayList<>();
+        try (Stream<Path> walk = Files.walk(classesDir)) {
+            for (Path p : walk.filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".class")).sorted().toList()) {
+                byte[] bytes = Files.readAllBytes(p);
+                Set<String> refs = readConstantPoolClasses(bytes);
+                for (String ref : refs) {
+                    if (ref.startsWith("net/minecraft/core/particles/")) {
+                        String rel = toZipPath(classesDir.relativize(p));
+                        violations.add(rel + " references banned vanilla particle class " + ref);
+                    }
+                }
+            }
+        }
+        if (!violations.isEmpty()) {
+            StringBuilder sb = new StringBuilder("Build rejected by Iron Law (不许使用廉价粒子制作特效):\n");
+            for (String v : violations) {
+                sb.append("  - ").append(v).append('\n');
+            }
+            throw new IllegalStateException(sb.toString());
+        }
+    }
+
     private static String quoteArgFileEntry(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
@@ -632,6 +663,9 @@ public final class BuildMod {
         if (name.endsWith(".class") && name.contains("/production/")) {
             return true;
         }
+        if (name.startsWith("com/rpgtemplate/forge/fx/mixin/")) {
+            return true;
+        }
         return isLegacyResource(name);
     }
 
@@ -713,6 +747,9 @@ public final class BuildMod {
                 if (mf.contains("rpgtemplate.build.client.mixins.json")) {
                     failures.add("MANIFEST.MF still references removed rpgtemplate.build.client.mixins.json");
                 }
+                if (mf.contains("rpgtemplate.fx.mixins.json")) {
+                    failures.add("MANIFEST.MF still references removed rpgtemplate.fx.mixins.json (must not hijack vanilla particles)");
+                }
                 for (String line : mf.split("\\r?\\n")) {
                     if (line.startsWith("MixinConfigs:")) {
                         for (String cfg : line.substring("MixinConfigs:".length()).trim().split(",")) {
@@ -736,7 +773,7 @@ public final class BuildMod {
                 }
             }
 
-            // 3. Check no legacy production classes (except CraftMath), no stray root fragments
+            // 3. Check no legacy production classes (except CraftMath), no vanilla particle hijacking mixins, no stray root fragments
             for (String name : allEntries) {
                 if (name.endsWith(".class") && name.contains("/production/")
                         && !"com/rpgtemplate/core/production/CraftMath.class".equals(name)) {
@@ -745,8 +782,11 @@ public final class BuildMod {
                 if (!name.contains("/") && name.endsWith("_sounds_fragment.json")) {
                     failures.add("Unmerged sound fragment leaked into JAR root: " + name);
                 }
-                if ("rpgtemplate.build.client.mixins.json".equals(name)) {
+                if ("rpgtemplate.build.client.mixins.json".equals(name) || "rpgtemplate.fx.mixins.json".equals(name)) {
                     failures.add("Removed mixin config still present in JAR: " + name);
+                }
+                if (name.startsWith("com/rpgtemplate/forge/fx/mixin/") || "com/rpgtemplate/forge/fx/FxStyle.class".equals(name)) {
+                    failures.add("Removed vanilla-particle hijack class still present in JAR: " + name);
                 }
             }
 

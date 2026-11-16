@@ -24,6 +24,24 @@ public final class CronusFxMsg {
     public static final byte KIND_OUT_BANNER = 5;
     /** 三段跳 / 变身脚下微型时钟波纹。 */
     public static final byte KIND_CLOCK_RIPPLE = 6;
+    /** 编年史变身完整 7.8s（234 帧原速）四层同步 3D 序列演出。 */
+    public static final byte KIND_HENSHIN_SEQ = 7;
+    /** 模块化 3D 序列特效：extra=0(放射绿雷), 1(天降巨型绿雷), 2(头顶卡牌快切), 3(黄金时钟成型), 4(黄金时钟逆转)。 */
+    public static final byte KIND_SPRITE_FX = 8;
+    /** 能量道具头顶悬浮能力图标：extra=能力编号(0高速/1肌肉/2钢铁/3跳跃/4回复), param=持续 ticks。 */
+    public static final byte KIND_ENERGY_ICON = 9;
+
+    public static final int ENERGY_SPEED = 0;
+    public static final int ENERGY_MUSCLE = 1;
+    public static final int ENERGY_IRON = 2;
+    public static final int ENERGY_JUMP = 3;
+    public static final int ENERGY_RECOVERY = 4;
+
+    public static final int SPRITE_LIGHTNING_ARC = 0;
+    public static final int SPRITE_LIGHTNING_BOLT = 1;
+    public static final int SPRITE_CARD_ROULETTE = 2;
+    public static final int SPRITE_CLOCK_ASSEMBLE = 3;
+    public static final int SPRITE_CLOCK_REWIND = 4;
 
     public static final int POPUP_HIT = 0;
     public static final int POPUP_GREAT = 1;

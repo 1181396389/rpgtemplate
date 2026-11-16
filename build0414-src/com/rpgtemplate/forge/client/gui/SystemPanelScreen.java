@@ -12,10 +12,14 @@ import com.rpgtemplate.core.ui.UiLayout;
 import com.rpgtemplate.forge.ModConfigs;
 import com.rpgtemplate.forge.client.ClientKeys;
 import com.rpgtemplate.forge.client.ClientSystemData;
+import com.rpgtemplate.forge.mask.PerceptionBlockingMaskItem;
+import com.rpgtemplate.forge.mask.PerceptionMaskBootstrap;
+import com.rpgtemplate.forge.mask.PerceptionMaskManager;
 import com.rpgtemplate.forge.network.PacketDistributor;
 import com.rpgtemplate.forge.network.PanelActionPayload;
 import com.rpgtemplate.forge.skill.RctFatigue;
 import com.rpgtemplate.forge.system.PanelActions;
+import com.rpgtemplate.forge.system.TravelerVaultStorage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -29,8 +33,10 @@ import net.minecraft.client.gui.screens.controls.ControlsScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 /**
@@ -38,17 +44,16 @@ import net.minecraftforge.common.ForgeConfigSpec;
  *
  * <p>Four tabs (status, templates, codex, settings) keep the same server protocol as before:
  * {@code load}, {@code unload}, {@code advance}, {@code draw}, {@code lineage_draw} and {@code setting}.
- * Every colour goes through {@link UiTheme}. Layout is laid out by hand against the panel rect,
- * and scrolling is done by culling rows, so no scissor calls are needed.
+ * Every colour goes through {@link UiTheme}. Layout adapts responsively to small viewports / large
+ * GUI scales with CJK-aware multi-line wrapping, independent detail scrolling, and hover tooltips.
  */
 public final class SystemPanelScreen extends Screen {
     private static final int HEADER_H = 34;
     private static final int TAB_H = 18;
     private static final int PAD = 12;
     private static final int ROW_H = 22;
-    private static final int CELL_W = 118;
-    private static final int CELL_H = 30;
-    private static final int DETAIL_STRIP_H = 46;
+    private static final int MIN_CELL_W = 148;
+    private static final int CELL_H = 32;
     private static final long REVEAL_MS = 2600L;
     private static final long TAB_GLIDE = 0x7AB0000000000001L;
     private static final long STATUS_GLIDE = 0x51A7000000000000L;
@@ -59,6 +64,7 @@ public final class SystemPanelScreen extends Screen {
 
     private static Tab tab = Tab.STATUS;
     private static String selectedId;
+    private static String selectedItemId = "perception_blocking_mask";
     private static int detailTab;
     private static String revealId;
     private static long revealStartMs = -1L;
@@ -69,6 +75,7 @@ public final class SystemPanelScreen extends Screen {
     private static long tabStartNanos;
 
     private final List<Hit> hits = new ArrayList<>();
+    private List<Component> pendingTooltip;
     private int left;
     private int top;
     private int pw;
@@ -78,13 +85,20 @@ public final class SystemPanelScreen extends Screen {
     private double detailScroll;
     private int lastDetailY;
     private int lastDetailH;
+    private double itemsScroll;
+    private double itemsDetailScroll;
+    private int lastItemsDetailY;
+    private int lastItemsDetailH;
     private double codexScroll;
+    private double codexDetailScroll;
+    private int lastCodexDetailY;
+    private int lastCodexDetailH;
     private double settingsScroll;
     private EditBox search;
     private String query = "";
 
     private enum Tab {
-        STATUS, TEMPLATES, CODEX, SETTINGS
+        STATUS, TEMPLATES, ITEMS, CODEX, SETTINGS
     }
 
     private record Hit(int x, int y, int w, int h, Runnable action) {
@@ -126,13 +140,18 @@ public final class SystemPanelScreen extends Screen {
     @Override
     protected void m_7856_() {
         UiLayout.Rect rect = UiLayout.panel(this.f_96543_, this.f_96544_);
-        this.pw = rect.w();
-        this.ph = rect.h();
-        this.left = rect.x();
-        this.top = rect.y();
+        // On small/high-GUI-scale viewports, use nearly the full window width/height with minimal margin
+        int w = Math.max(rect.w(), Math.min(760, Math.max(220, this.f_96543_ - 12)));
+        int h = Math.max(rect.h(), Math.min(460, Math.max(180, this.f_96544_ - 12)));
+        w = Math.min(w, Math.max(1, this.f_96543_ - 8));
+        h = Math.min(h, Math.max(1, this.f_96544_ - 8));
+        this.pw = w;
+        this.ph = h;
+        this.left = (this.f_96543_ - w) / 2;
+        this.top = (this.f_96544_ - h) / 2;
         int sx = this.left + PAD;
         int sy = this.top + contentTop();
-        this.search = new EditBox(this.f_96547_, sx, sy, Math.max(90, this.pw / 3), 16,
+        this.search = new EditBox(this.f_96547_, sx, sy, Math.max(90, Math.min(220, this.pw / 3)), 16,
             Component.m_237115_("gui.rpgtemplate.ui.search"));
         this.search.m_94199_(64);
         this.search.m_94144_(this.query);
@@ -143,6 +162,7 @@ public final class SystemPanelScreen extends Screen {
             this.query = text;
             this.listScroll = 0.0;
             this.codexScroll = 0.0;
+            this.codexDetailScroll = 0.0;
         });
         this.search.f_93624_ = tab == Tab.CODEX;
         this.m_142416_(this.search);
@@ -193,9 +213,26 @@ public final class SystemPanelScreen extends Screen {
             this.m_7379_();
             return true;
         }
-        if (key >= 49 && key <= 52) {
+        if (key >= 49 && key <= 53) {
             switchTab(Tab.values()[key - 49]);
             return true;
+        }
+        // Up/Down/PageUp/PageDown scroll active detail panel on small screens
+        if (key == 265 || key == 264 || key == 266 || key == 267) {
+            double delta = (key == 265 ? -18.0 : key == 264 ? 18.0 : key == 266 ? -54.0 : 54.0);
+            if (tab == Tab.TEMPLATES) {
+                this.detailScroll = Math.max(0.0, this.detailScroll + delta);
+                return true;
+            } else if (tab == Tab.ITEMS) {
+                this.itemsDetailScroll = Math.max(0.0, this.itemsDetailScroll + delta);
+                return true;
+            } else if (tab == Tab.CODEX) {
+                this.codexDetailScroll = Math.max(0.0, this.codexDetailScroll + delta);
+                return true;
+            } else if (tab == Tab.SETTINGS) {
+                this.settingsScroll = Math.max(0.0, this.settingsScroll + delta);
+                return true;
+            }
         }
         return super.m_7933_(key, scan, mods);
     }
@@ -242,7 +279,20 @@ public final class SystemPanelScreen extends Screen {
                     this.listScroll = Math.max(0.0, this.listScroll + step);
                 }
             }
-            case CODEX -> this.codexScroll = Math.max(0.0, this.codexScroll + step);
+            case ITEMS -> {
+                if (this.lastItemsDetailH > 0 && inside(mx, my, area[0], this.lastItemsDetailY, area[2], this.lastItemsDetailH)) {
+                    this.itemsDetailScroll = Math.max(0.0, this.itemsDetailScroll + step);
+                } else {
+                    this.itemsScroll = Math.max(0.0, this.itemsScroll + step);
+                }
+            }
+            case CODEX -> {
+                if (this.lastCodexDetailH > 0 && inside(mx, my, area[0], this.lastCodexDetailY, area[2], this.lastCodexDetailH)) {
+                    this.codexDetailScroll = Math.max(0.0, this.codexDetailScroll + step);
+                } else {
+                    this.codexScroll = Math.max(0.0, this.codexScroll + step);
+                }
+            }
             case SETTINGS -> this.settingsScroll = Math.max(0.0, this.settingsScroll + step);
             default -> {
                 return super.m_6050_(mx, my, delta);
@@ -312,6 +362,7 @@ public final class SystemPanelScreen extends Screen {
     @Override
     public void m_88315_(GuiGraphics g, int mx, int my, float partial) {
         this.hits.clear();
+        this.pendingTooltip = null;
         UiTheme.backdrop(g, this.f_96543_, this.f_96544_);
         UiTheme.card(g, this.left, this.top, this.pw, this.ph, 1f);
         // rim light travels the card edge; the card sits on a soft contact shadow
@@ -328,27 +379,37 @@ public final class SystemPanelScreen extends Screen {
         // the body slides up and fades in whenever the tab changes
         UiTheme.enterPush(g, UiTheme.enter(tabStartNanos), 8f);
         switch (tab) {
-            case STATUS -> renderStatus(g, data);
+            case STATUS -> renderStatus(g, data, mx, my);
             case TEMPLATES -> renderTemplates(g, data, mx, my);
+            case ITEMS -> renderItems(g, data, mx, my);
             case CODEX -> renderCodex(g, data, mx, my);
             case SETTINGS -> renderSettings(g, data, mx, my);
         }
         UiTheme.enterPop(g);
-        renderFooter(g);
+        renderFooter(g, mx, my);
         super.m_88315_(g, mx, my, partial);
+        if (this.pendingTooltip != null && !this.pendingTooltip.isEmpty()) {
+            g.m_280666_(this.f_96547_, this.pendingTooltip, mx, my);
+        }
     }
 
     private void renderHeader(GuiGraphics g, PlayerSystemData data) {
         Font font = this.f_96547_;
         UiTheme.emblem(g, this.left + PAD, this.top + 10, UiTheme.E_GOLD);
         UiTheme.orbit(g, this.left + PAD + 4, this.top + 14, 7, UiTheme.E_CYAN, 1f, UiTheme.seconds() * 1.3);
-        // title at an integer 2x scale: a clear step above the 9 px body text, still crisp
+        String lvText = "Lv." + data.level();
+        int lvW = font.m_92895_(lvText);
+        String titleStr = t("title");
+        int availTitle = Math.max(40, this.pw - PAD * 2 - 22 - lvW);
+        float titleScale = font.m_92895_(titleStr) * 2 <= availTitle ? 2.0f
+            : (font.m_92895_(titleStr) * 3 / 2 <= availTitle ? 1.5f : 1.0f);
+        int ty = titleScale >= 1.9f ? this.top + 9 : (titleScale >= 1.4f ? this.top + 10 : this.top + 12);
         g.m_280168_().m_85836_();
-        g.m_280168_().m_252880_((float) (this.left + PAD + 14), (float) (this.top + 9), 0.0f);
-        g.m_280168_().m_85841_(2.0f, 2.0f, 1.0f);
-        UiTheme.text(g, font, t("title"), 0, 0, UiTheme.E_INK);
+        g.m_280168_().m_252880_((float) (this.left + PAD + 14), (float) ty, 0.0f);
+        g.m_280168_().m_85841_(titleScale, titleScale, 1.0f);
+        UiTheme.text(g, font, fitText(font, titleStr, (int) (availTitle / titleScale)), 0, 0, UiTheme.E_INK);
         g.m_280168_().m_85849_();
-        UiTheme.right(g, font, "Lv." + data.level(), this.left + this.pw - PAD, this.top + 11, UiTheme.E_VIOLET);
+        UiTheme.right(g, font, lvText, this.left + this.pw - PAD, this.top + 11, UiTheme.E_VIOLET);
         UiTheme.seam(g, this.left + PAD, this.top + HEADER_H, this.pw - PAD * 2, UiTheme.alpha(1f, UiTheme.E_VIOLET));
     }
 
@@ -369,7 +430,11 @@ public final class SystemPanelScreen extends Screen {
             int by = ly + mg[1];
             UiTheme.buttonSurface(g, bx, by, bw, TAB_H, hover, active, UiTheme.E_VIOLET);
             String label = (i + 1) + "  " + t("v4.tab." + tabs[i].name().toLowerCase(Locale.ROOT));
-            UiTheme.text(g, this.f_96547_, label, bx + 8, by + 5, active ? UiTheme.E_VIOLET : UiTheme.E_MUTED);
+            String shown = fitText(this.f_96547_, label, Math.max(16, bw - 12));
+            UiTheme.text(g, this.f_96547_, shown, bx + 6, by + 5, active ? UiTheme.E_VIOLET : UiTheme.E_MUTED);
+            if (hover && !shown.equals(label)) {
+                offerPlainTooltip(label, UiTheme.E_INK);
+            }
             final Tab target = tabs[i];
             this.hits.add(new Hit(x, y, bw, TAB_H, () -> switchTab(target)));
         }
@@ -385,17 +450,21 @@ public final class SystemPanelScreen extends Screen {
         g.m_280509_(ixs + 2, iy + 2, ixs + iw - 2, iy + 3, UiTheme.alpha(0.3f, UiTheme.E_VIOLET));
     }
 
-    private void renderFooter(GuiGraphics g) {
+    private void renderFooter(GuiGraphics g, int mx, int my) {
         int y = this.top + this.ph - 14;
         UiTheme.seam(g, this.left + PAD, y - 6, this.pw - PAD * 2, UiTheme.alpha(0.35f, UiTheme.E_CYAN));
         int avail = this.pw - PAD * 2;
-        String msg = UiTheme.fit(this.f_96547_, t("v4.footer"), avail);
+        String full = t("v4.footer");
+        String msg = UiTheme.fit(this.f_96547_, full, avail);
         UiTheme.text(g, this.f_96547_, msg, this.left + PAD, y, UiTheme.E_FAINT);
+        if (!msg.equals(full) && inside(mx, my, this.left + PAD, y - 2, avail, 13)) {
+            offerPlainTooltip(full, UiTheme.E_MUTED);
+        }
     }
 
     // ------------------------------------------------------------------ status tab
 
-    private void renderStatus(GuiGraphics g, PlayerSystemData data) {
+    private void renderStatus(GuiGraphics g, PlayerSystemData data, int mx, int my) {
         int[] a = contentArea();
         Font font = this.f_96547_;
         int lw = a[2] * 56 / 100;
@@ -437,12 +506,19 @@ public final class SystemPanelScreen extends Screen {
             String nowText = NumberFormatter.format(Math.max(0.0, shownNow));
             String maxText = " / " + NumberFormatter.format(max[i]);
             int rightEdge = a[0] + lw - 6;
-            if (nowText.equals(String.valueOf((long) Math.max(0.0, shownNow)))) {
+            int nameEnd = a[0] + 22 + font.m_92895_(names[i]);
+            int valBudget = Math.max(32, rightEdge - nameEnd);
+            String fullVal = nowText + maxText;
+            if (nowText.equals(String.valueOf((long) Math.max(0.0, shownNow))) && font.m_92895_(fullVal) <= valBudget) {
                 // plain integer: the current value rolls like an odometer
                 UiTheme.right(g, font, maxText, rightEdge, textY, UiTheme.E_INK);
                 Fx.odometer(g, font, Math.max(0.0, shownNow), rightEdge - font.m_92895_(maxText), textY, UiTheme.E_INK);
             } else {
-                UiTheme.right(g, font, UiTheme.fit(font, nowText + maxText, lw - 110), rightEdge, textY, UiTheme.E_INK);
+                String fittedVal = UiTheme.fit(font, fullVal, valBudget);
+                UiTheme.right(g, font, fittedVal, rightEdge, textY, UiTheme.E_INK);
+                if (!fittedVal.equals(fullVal) && inside(mx, my, a[0], y, lw, rowH)) {
+                    offerPlainTooltip(names[i] + ": " + fullVal, UiTheme.E_INK);
+                }
             }
             // orbit lane: hairline with ticks every 10 percent, a travelling dot at the current value
             int x0 = a[0] + 8;
@@ -484,30 +560,42 @@ public final class SystemPanelScreen extends Screen {
             int x = rx + col * (tileW + 6);
             int y = top + row * (tileH + 3);
             UiTheme.frame(g, x, y, tileW, tileH, 1f);
-            UiTheme.text(g, font, fitText(font, stats[i][0], tileW - 10), x + 6, y + 4, UiTheme.E_MUTED);
-            UiTheme.text(g, font, fitText(font, stats[i][1], tileW - 10), x + 6, y + tileH - 12, UiTheme.E_INK);
+            String kShown = fitText(font, stats[i][0], tileW - 10);
+            String vShown = fitText(font, stats[i][1], tileW - 10);
+            UiTheme.text(g, font, kShown, x + 6, y + 4, UiTheme.E_MUTED);
+            UiTheme.text(g, font, vShown, x + 6, y + tileH - 12, UiTheme.E_INK);
+            if ((!kShown.equals(stats[i][0]) || !vShown.equals(stats[i][1])) && inside(mx, my, x, y, tileW, tileH)) {
+                offerPlainTooltip(stats[i][0] + ": " + stats[i][1], UiTheme.E_INK);
+            }
         }
 
         int by = a[1] + a[3] - footH;
         UiTheme.frame(g, a[0], by, a[2], footH, 1f);
         Minecraft mc = Minecraft.m_91087_();
         long tick = mc.f_91073_ == null ? 0L : mc.f_91073_.m_46467_();
-        UiTheme.text(g, font, t("v4.status.loaded"), a[0] + 10, by + 6, UiTheme.E_MUTED);
-        String loaded = data.loadedTemplate().map(inst -> {
-            TemplateDefinition def = TemplateRegistry.client().find(inst.templateId()).orElse(null);
-            return def == null ? t("status.no_template") : def.displayName() + "  Lv." + inst.level();
-        }).orElse(t("status.no_template"));
-        UiTheme.text(g, font, fitText(font, loaded, a[2] - 130), a[0] + 10, by + 18, UiTheme.E_INK);
-        if (RctFatigue.active(data, tick)) {
-            UiTheme.right(g, font, t("status.rct_active", String.format(Locale.ROOT, "%.2f", RctFatigue.factor(data, tick))),
-                a[0] + a[2] - 10, by + 18, UiTheme.E_INDIGO);
+        UiTheme.text(g, font, t("v4.status.loaded"), a[0] + 8, by + 6, UiTheme.E_MUTED);
+        boolean rct = RctFatigue.active(data, tick);
+        String rctText = rct ? t("status.rct_active", String.format(Locale.ROOT, "%.2f", RctFatigue.factor(data, tick))) : "";
+        int rctReserve = rct ? font.m_92895_(rctText) + 16 : 16;
+        TemplateInstance loadedInst = data.loadedTemplate().orElse(null);
+        TemplateDefinition loadedDef = loadedInst == null ? null
+            : TemplateRegistry.client().find(loadedInst.templateId()).orElse(null);
+        String loaded = loadedDef == null ? t("status.no_template")
+            : loadedDef.displayName() + "  Lv." + loadedInst.level();
+        String loadedShown = fitText(font, loaded, Math.max(40, a[2] - 16 - rctReserve));
+        UiTheme.text(g, font, loadedShown, a[0] + 8, by + 18, UiTheme.E_INK);
+        if (loadedDef != null && inside(mx, my, a[0], by, a[2], footH) && !loadedShown.equals(loaded)) {
+            offerTemplateTooltip(loadedDef, loadedInst, TemplateIntrospector.inspect(loadedDef));
+        }
+        if (rct) {
+            UiTheme.right(g, font, rctText, a[0] + a[2] - 8, by + 18, UiTheme.E_INDIGO);
         }
     }
 
     // ------------------------------------------------------------------ templates tab (vertical cards)
 
-    private static final int CARD_W = 76;
-    private static final int CARD_H = 88;
+    private static final int MIN_CARD_W = 104;
+    private static final int CARD_H = 84;
     private static final int CARD_H_COMPACT = 36;
 
     /** Template that gates the next draw: newest owned, levelled template below its attunement / max level. */
@@ -517,7 +605,7 @@ public final class SystemPanelScreen extends Screen {
             TemplateDefinition def = TemplateRegistry.client().find(inst.templateId()).orElse(null);
             if (def != null && !def.levelless() && inst.level() < def.maxLevel()) {
                 int attune = Math.min(def.maxLevel(), 10);
-                return def.displayName() + " Lv." + inst.level() + "/" + attune;
+                return def.name() + " Lv." + inst.level() + "/" + attune;
             }
         }
         return t("status.draw_gate_fallback");
@@ -528,29 +616,36 @@ public final class SystemPanelScreen extends Screen {
         Font font = this.f_96547_;
         List<TemplateInstance> owned = data.templates();
 
-        // header row: caption on the left, draw button on the right
-        UiTheme.text(g, font, t("templates.owned", owned.size()), a[0], a[1] + 4, UiTheme.E_MUTED);
+        // header row: caption on the left, draw state in the middle, draw button on the right
+        String ownedLabel = t("templates.owned", owned.size());
+        UiTheme.text(g, font, ownedLabel, a[0], a[1] + 4, UiTheme.E_MUTED);
         boolean unlocked = data.isDrawUnlocked();
         int pending = data.pendingDraws();
         String drawState = !unlocked ? t("status.draw_locked_attune", pending, gateTemplateName(owned))
             : pending > 0 ? t("status.draw_ready", pending) : t("status.draw_none");
-        int drawW = 110;
+        int drawW = Math.max(72, Math.min(110, font.m_92895_(t("btn.draw")) + 18));
         int drawX = a[0] + a[2] - drawW;
-        UiTheme.text(g, font, fitText(font, drawState, a[2] - drawW - 120), a[0] + 100, a[1] + 4,
+        int stateX = a[0] + font.m_92895_(ownedLabel) + 10;
+        int stateBudget = Math.max(24, drawX - stateX - 8);
+        String stateShown = fitText(font, drawState, stateBudget);
+        UiTheme.text(g, font, stateShown, stateX, a[1] + 4,
             unlocked && pending > 0 ? UiTheme.E_GOLD_TEXT : UiTheme.E_MUTED);
+        if (!stateShown.equals(drawState) && inside(mx, my, stateX, a[1], stateBudget, 16)) {
+            offerPlainTooltip(drawState, unlocked && pending > 0 ? UiTheme.E_GOLD_TEXT : UiTheme.E_INK);
+        }
         boolean drawOn = unlocked && pending > 0;
         boolean drawHover = inside(mx, my, drawX, a[1], drawW, 16);
         UiTheme.buttonSurface(g, drawX, a[1], drawW, 16, drawHover && drawOn, false, UiTheme.E_GOLD);
         if (drawOn) {
             UiTheme.marching(g, drawX, a[1], drawW, 16, UiTheme.E_GOLD_TEXT, 1f);
         }
-        UiTheme.text(g, font, t("btn.draw"), drawX + 8, a[1] + 4, drawOn ? UiTheme.E_INK : UiTheme.E_FAINT);
+        UiTheme.text(g, font, fitText(font, t("btn.draw"), drawW - 12), drawX + 6, a[1] + 4, drawOn ? UiTheme.E_INK : UiTheme.E_FAINT);
         if (drawOn) {
             this.hits.add(new Hit(drawX, a[1], drawW, 16, () -> send("draw", "")));
         }
 
-        // detail card is sized first; the card grid gets the height that is left above it
-        int detailH = Math.max(96, Math.min(138, a[3] * 56 / 100));
+        // detail card is sized generously so wrapped skills/descriptions have comfortable room
+        int detailH = Math.max(106, Math.min(200, a[3] * 58 / 100));
         int dy = a[1] + a[3] - detailH;
         int dh = detailH;
         this.lastDetailY = dy;
@@ -559,9 +654,12 @@ public final class SystemPanelScreen extends Screen {
         int gridH = Math.max(0, dy - 6 - gridTop);
         boolean compact = gridH < 2 * CARD_H + 6;
         int cardH = compact ? CARD_H_COMPACT : CARD_H;
-        int cols = Math.max(1, (a[2] + 6) / (CARD_W + 6));
+        int gap = 6;
+        int minW = compact ? MIN_CARD_W : 92;
+        int cols = Math.max(1, (a[2] + gap) / (minW + gap));
+        int cardW = Math.max(76, (a[2] - gap * (cols - 1)) / cols);
         int rowsCount = (owned.size() + cols - 1) / cols;
-        double maxScroll = Math.max(0, rowsCount * (cardH + 6) - gridH);
+        double maxScroll = Math.max(0, rowsCount * (cardH + gap) - gridH);
         this.listScroll = Math.min(this.listScroll, maxScroll);
         // inertial scroll: cards trail the wheel target on a spring instead of snapping
         float scrollShown = Fx.spring(SCROLL_SPRING, (float) this.listScroll, 140f, 20f);
@@ -572,8 +670,8 @@ public final class SystemPanelScreen extends Screen {
             TemplateInstance inst = owned.get(i);
             int col = i % cols;
             int row = i / cols;
-            int x = a[0] + col * (CARD_W + 6);
-            int y = gridTop + row * (cardH + 6) - (int) scrollShown;
+            int x = a[0] + col * (cardW + gap);
+            int y = gridTop + row * (cardH + gap) - (int) scrollShown;
             // no scissor: a card is drawn only when it lies completely inside the grid
             if (y < gridTop || y + cardH > gridTop + gridH) {
                 continue;
@@ -581,44 +679,67 @@ public final class SystemPanelScreen extends Screen {
             TemplateDefinition def = TemplateRegistry.client().find(inst.templateId()).orElse(null);
             String id = inst.templateId();
             boolean selected = id.equals(selectedId);
-            int qc = def == null ? UiTheme.E_EDGE : UiTheme.quality(def.quality().color());
-            boolean hover = inside(mx, my, x, y, CARD_W, cardH);
-            y -= Math.round(UiTheme.hover(x, y, CARD_W, cardH, hover) * 2f);
+            int qc = def == null ? UiTheme.E_EDGE : UiTheme.templateColor(def);
+            int qText = def == null ? UiTheme.E_MUTED : UiTheme.templateTextColor(def);
+            boolean hover = inside(mx, my, x, y, cardW, cardH);
+            int drawY = y - Math.round(UiTheme.hover(x, y, cardW, cardH, hover) * 2f);
             // flip-in on tab entry: the surface opens from its centre line, staggered by index
             float flipP = Fx.flip(UiTheme.enter(tabStartNanos + i * 35_000_000L));
             if (flipP < 1f) {
-                int flipW = Math.max(4, Math.round(CARD_W * flipP));
-                UiTheme.buttonSurface(g, x + (CARD_W - flipW) / 2, y, flipW, cardH, false, selected, qc);
+                int flipW = Math.max(4, Math.round(cardW * flipP));
+                UiTheme.buttonSurface(g, x + (cardW - flipW) / 2, drawY, flipW, cardH, false, selected, qc);
                 continue;
             }
             // soft shadow under the card; a hovered card lifts its shadow
-            Fx.softShadow(g, x, y, CARD_W, cardH, UiTheme.E_SHADOW, hover ? 0.5f : 0.18f);
-            UiTheme.buttonSurface(g, x, y, CARD_W, cardH, hover, selected, qc);
+            Fx.softShadow(g, x, drawY, cardW, cardH, UiTheme.E_SHADOW, hover ? 0.5f : 0.18f);
+            UiTheme.buttonSurface(g, x, drawY, cardW, cardH, hover, selected, qc);
             if (selected) {
-                UiTheme.marching(g, x, y, CARD_W, cardH, UiTheme.E_VIOLET, 1f);
+                UiTheme.marching(g, x, drawY, cardW, cardH, UiTheme.E_VIOLET, 1f);
             }
-            UiTheme.foil(g, x, y, CARD_W, cardH, qc, (x * 0.37f + i * 0.21f) % 1.0f);
-            String name = def == null ? id : def.displayName();
-            String lv = def == null ? "" : (def.levelless() ? "" : "Lv." + inst.level());
+            UiTheme.foil(g, x, drawY, cardW, cardH, qc, (x * 0.37f + i * 0.21f) % 1.0f);
+            String primaryName = def == null ? id : def.name();
+            String period = def == null ? "" : TemplateIntrospector.inspect(def).period();
+            String lv = def == null ? "" : (def.levelless() ? def.quality().label() : "Lv." + inst.level());
+            String subLine = period.isEmpty() ? lv : (lv.isEmpty() ? period : lv + " \u00b7 " + period);
             if (compact) {
-                g.m_280509_(x + 3, y + 3, x + 6, y + cardH - 3, UiTheme.alpha(1f, qc));
-                UiTheme.text(g, font, fitText(font, name, CARD_W - 12), x + 9, y + 6, UiTheme.E_INK);
-                UiTheme.text(g, font, lv, x + 9, y + 18, UiTheme.E_MUTED);
+                g.m_280509_(x + 3, drawY + 3, x + 6, drawY + cardH - 3, UiTheme.alpha(1f, qc));
+                int qChipW = def == null ? 0 : font.m_92895_(def.quality().label()) + 6;
+                UiTheme.text(g, font, fitText(font, primaryName, Math.max(24, cardW - 14 - qChipW)), x + 9, drawY + 6, UiTheme.E_INK);
+                if (def != null) {
+                    UiTheme.rightExact(g, font, def.quality().label(), x + cardW - 5, drawY + 6, qText);
+                }
+                UiTheme.text(g, font, fitText(font, subLine, Math.max(24, cardW - 14)), x + 9, drawY + 19, UiTheme.E_MUTED);
             } else {
-                g.m_280509_(x + 3, y + 3, x + CARD_W - 3, y + 8, UiTheme.alpha(1f, qc));
-                UiTheme.cube(g, x + (CARD_W - 22) / 2, y + 16, 22, qc);
-                UiTheme.text(g, font, fitText(font, name, CARD_W - 10), x + 5, y + 58, UiTheme.E_INK);
-                UiTheme.text(g, font, lv, x + 5, y + 72, UiTheme.E_MUTED);
+                g.m_280509_(x + 3, drawY + 3, x + cardW - 3, drawY + 8, UiTheme.alpha(1f, qc));
+                UiTheme.cube(g, x + (cardW - 22) / 2, drawY + 14, 22, qc);
+                UiTheme.text(g, font, fitText(font, primaryName, cardW - 10), x + 5, drawY + 46, UiTheme.E_INK);
+                if (!period.isEmpty()) {
+                    UiTheme.text(g, font, fitText(font, period, cardW - 10), x + 5, drawY + 58, UiTheme.E_FAINT);
+                }
+                UiTheme.text(g, font, fitText(font, lv, cardW - 32), x + 5, drawY + 70, UiTheme.E_MUTED);
+                if (def != null) {
+                    UiTheme.rightExact(g, font, def.quality().label(), x + cardW - 5, drawY + 70, qText);
+                }
+            }
+            if (hover && def != null) {
+                offerTemplateTooltip(def, inst, TemplateIntrospector.inspect(def));
             }
             if (revealActive() && id.equals(revealId)) {
                 float p = (System.currentTimeMillis() - revealStartMs) / (float) REVEAL_MS;
-                UiTheme.revealHalo(g, x, y, CARD_W, cardH, 1f, p);
+                UiTheme.revealHalo(g, x, drawY, cardW, cardH, 1f, p);
             }
             final String target = id;
-            this.hits.add(new Hit(x, y, CARD_W, cardH, () -> {
+            this.hits.add(new Hit(x, y, cardW, cardH, () -> {
                 selectedId = target;
                 this.detailScroll = 0.0;
             }));
+        }
+        if (maxScroll > 0.5 && gridH > 12) {
+            int trackX = a[0] + a[2] - 2;
+            g.m_280509_(trackX, gridTop, trackX + 2, gridTop + gridH, UiTheme.alpha(0.35f, UiTheme.E_EDGE));
+            int thumbH = Math.max(8, (int) Math.round((double) gridH * gridH / (rowsCount * (cardH + gap))));
+            int thumbY = gridTop + (int) Math.round((this.listScroll / maxScroll) * (gridH - thumbH));
+            g.m_280509_(trackX, thumbY, trackX + 2, thumbY + thumbH, UiTheme.alpha(0.85f, UiTheme.E_VIOLET));
         }
 
         // detail card (bottom part)
@@ -630,34 +751,35 @@ public final class SystemPanelScreen extends Screen {
             return;
         }
         TemplateIntrospector.Meta meta = TemplateIntrospector.inspect(def);
-        int qc = UiTheme.quality(def.quality().color());
+        int qc = UiTheme.templateColor(def);
+        int qText = UiTheme.templateTextColor(def);
         int ix = a[0] + 10;
         int iw = a[2] - 20;
-        String titleLine = def.displayName();
-        if (!meta.source().isEmpty()) {
-            titleLine += "  \u00b7  \u300a" + meta.source() + "\u300b";
-            if (!meta.period().isEmpty()) {
-                titleLine += " [" + meta.period() + "]";
-            }
+        String titleLine = composeTitle(def, meta);
+        String qLabel = def.quality().label();
+        int qReserve = font.m_92895_(qLabel) + 12;
+        String titleShown = fitText(font, titleLine, Math.max(40, iw - qReserve));
+        UiTheme.text(g, font, titleShown, ix, dy + 7, UiTheme.E_INK);
+        if (!titleShown.equals(titleLine) && inside(mx, my, ix, dy + 5, iw - qReserve, 12)) {
+            offerTemplateTooltip(def, selectedInst, meta);
         }
-        UiTheme.text(g, font, fitText(font, titleLine, iw - 70), ix, dy + 7, UiTheme.E_INK);
-        UiTheme.right(g, font, def.quality().label(), a[0] + a[2] - 10, dy + 7, qc);
+        UiTheme.rightExact(g, font, qLabel, a[0] + a[2] - 10, dy + 7, qText);
         String lvText = def.levelless() ? t("templates.levelless") : "Lv." + selectedInst.level() + " / " + def.maxLevel();
         UiTheme.text(g, font, lvText, ix, dy + 19, UiTheme.E_MUTED);
         boolean capped = def.levelless() || selectedInst.level() >= def.maxLevel();
         UiTheme.bar(g, ix, dy + 29, iw, 3, capped ? 1.0 : selectedInst.xp(),
             capped ? 1.0 : ClientSystemData.templateXpToNext(selectedInst.templateId()), qc);
 
-        int by = dy + 36;
+        int by = dy + 35;
         boolean loadedHere = selectedInst.templateId().equals(data.loadedTemplateId());
         boolean cooling = pendingLoadId != null;
-        int bw = 64;
+        int bw = Math.max(46, Math.min(64, iw / 7));
         int bx = ix;
         boolean mainOn = loadedHere || !cooling;
         boolean mainHover = inside(mx, my, bx, by, bw, 15);
         UiTheme.buttonSurface(g, bx, by, bw, 15, mainHover && mainOn, loadedHere, UiTheme.E_VIOLET);
-        UiTheme.text(g, font, cooling && !loadedHere ? t("btn.load_cd") : t(loadedHere ? "btn.unload" : "btn.load"),
-            bx + 5, by + 3, mainOn ? UiTheme.E_INK : UiTheme.E_FAINT);
+        String mainLbl = cooling && !loadedHere ? t("btn.load_cd") : t(loadedHere ? "btn.unload" : "btn.load");
+        UiTheme.text(g, font, fitText(font, mainLbl, bw - 8), bx + 4, by + 3, mainOn ? UiTheme.E_INK : UiTheme.E_FAINT);
         final String id = selectedInst.templateId();
         final boolean unloadNow = loadedHere;
         this.hits.add(new Hit(bx, by, bw, 15, () -> {
@@ -677,7 +799,7 @@ public final class SystemPanelScreen extends Screen {
             boolean advOn = atMax && data.level() >= nextTier.get().advanceRequiredPlayerLevel();
             boolean advHover = inside(mx, my, bx, by, bw, 15);
             UiTheme.buttonSurface(g, bx, by, bw, 15, advHover && advOn, false, UiTheme.E_JADE);
-            UiTheme.text(g, font, t("btn.advance"), bx + 5, by + 3, advOn ? UiTheme.E_INK : UiTheme.E_FAINT);
+            UiTheme.text(g, font, fitText(font, t("btn.advance"), bw - 8), bx + 4, by + 3, advOn ? UiTheme.E_INK : UiTheme.E_FAINT);
             if (advOn) {
                 this.hits.add(new Hit(bx, by, bw, 15, () -> send("advance", id)));
             }
@@ -689,13 +811,14 @@ public final class SystemPanelScreen extends Screen {
                 && data.isDrawUnlocked() && data.pendingDraws() > 0;
             boolean linHover = inside(mx, my, bx, by, bw, 15);
             UiTheme.buttonSurface(g, bx, by, bw, 15, linHover && linOn, false, UiTheme.E_CYAN);
-            UiTheme.text(g, font, t("btn.lineage"), bx + 5, by + 3, linOn ? UiTheme.E_INK : UiTheme.E_FAINT);
+            UiTheme.text(g, font, fitText(font, t("btn.lineage"), bw - 8), bx + 4, by + 3, linOn ? UiTheme.E_INK : UiTheme.E_FAINT);
             if (linOn) {
                 this.hits.add(new Hit(bx, by, bw, 15, () -> send("lineage_draw", id)));
             }
+            bx += bw + 4;
         }
 
-        // Sub-tabs on the right side: [技能] [被动/加成] [弱点/癖好]
+        // Sub-tabs: [技能] [被动/加成] [弱点/癖好] — auto-drop to next row on narrow screens so nothing overlaps
         List<SkillEntry> skills = TemplateRegistry.client().effectiveSkills(def.id());
         String[] subLabels = {
             t("detail.skills") + "(" + skills.size() + ")",
@@ -703,26 +826,52 @@ public final class SystemPanelScreen extends Screen {
             t("detail.drawbacks_tab") + "(" + meta.drawbackCount() + ")"
         };
         int[] subColors = {UiTheme.E_VIOLET, UiTheme.E_JADE, UiTheme.E_RED};
-        int sxRight = a[0] + a[2] - 10;
-        for (int s = subLabels.length - 1; s >= 0; s--) {
-            int sw = font.m_92895_(subLabels[s]) + 10;
-            sxRight -= sw;
-            boolean activeSub = detailTab == s;
-            boolean hoverSub = inside(mx, my, sxRight, by, sw, 15);
-            UiTheme.buttonSurface(g, sxRight, by, sw, 15, hoverSub, activeSub, subColors[s]);
-            UiTheme.text(g, font, subLabels[s], sxRight + 5, by + 3, activeSub ? subColors[s] : UiTheme.E_MUTED);
-            final int targetSub = s;
-            this.hits.add(new Hit(sxRight, by, sw, 15, () -> {
-                detailTab = targetSub;
-                this.detailScroll = 0.0;
-            }));
-            sxRight -= 4;
+        int[] subWidths = new int[subLabels.length];
+        int totalSubW = 0;
+        for (int s = 0; s < subLabels.length; s++) {
+            subWidths[s] = font.m_92895_(subLabels[s]) + 10;
+            totalSubW += subWidths[s] + (s > 0 ? 4 : 0);
+        }
+        boolean wrapSubTabs = bx + 6 + totalSubW > a[0] + a[2] - 10;
+        int subY = wrapSubTabs ? by + 18 : by;
+        if (wrapSubTabs) {
+            int sxLeft = ix;
+            for (int s = 0; s < subLabels.length; s++) {
+                int sw = Math.min(subWidths[s], Math.max(36, (iw - 8) / 3));
+                boolean activeSub = detailTab == s;
+                boolean hoverSub = inside(mx, my, sxLeft, subY, sw, 15);
+                UiTheme.buttonSurface(g, sxLeft, subY, sw, 15, hoverSub, activeSub, subColors[s]);
+                UiTheme.text(g, font, fitText(font, subLabels[s], sw - 6), sxLeft + 3, subY + 3, activeSub ? subColors[s] : UiTheme.E_MUTED);
+                final int targetSub = s;
+                this.hits.add(new Hit(sxLeft, subY, sw, 15, () -> {
+                    detailTab = targetSub;
+                    this.detailScroll = 0.0;
+                }));
+                sxLeft += sw + 4;
+            }
+        } else {
+            int sxRight = a[0] + a[2] - 10;
+            for (int s = subLabels.length - 1; s >= 0; s--) {
+                int sw = subWidths[s];
+                sxRight -= sw;
+                boolean activeSub = detailTab == s;
+                boolean hoverSub = inside(mx, my, sxRight, subY, sw, 15);
+                UiTheme.buttonSurface(g, sxRight, subY, sw, 15, hoverSub, activeSub, subColors[s]);
+                UiTheme.text(g, font, subLabels[s], sxRight + 5, subY + 3, activeSub ? subColors[s] : UiTheme.E_MUTED);
+                final int targetSub = s;
+                this.hits.add(new Hit(sxRight, subY, sw, 15, () -> {
+                    detailTab = targetSub;
+                    this.detailScroll = 0.0;
+                }));
+                sxRight -= 4;
+            }
         }
 
-        List<DetailLine> lines = buildDetailLines(def, selectedInst, meta, skills);
-        int bodyTop = by + 19;
+        int bodyTop = subY + 19;
         int bodyBottom = dy + dh - 6;
         int bodyH = Math.max(12, bodyBottom - bodyTop);
+        int textBudget = Math.max(60, iw - 14);
+        List<DetailLine> lines = buildDetailLines(font, def, selectedInst, meta, skills, textBudget);
         int lineH = 11;
         double maxDetailScroll = Math.max(0.0, lines.size() * lineH - bodyH);
         this.detailScroll = Math.min(this.detailScroll, maxDetailScroll);
@@ -733,11 +882,14 @@ public final class SystemPanelScreen extends Screen {
                 continue;
             }
             DetailLine dl = lines.get(i);
-            UiTheme.block(g, ix, ry + 2, 4, 5, dl.dotColor(), 0.9f);
-            int rightReserve = dl.rightText().isEmpty() ? 0 : font.m_92895_(dl.rightText()) + 10;
-            UiTheme.text(g, font, fitText(font, dl.leftText(), iw - 10 - rightReserve), ix + 8, ry, dl.textColor());
+            if (dl.showDot()) {
+                UiTheme.block(g, ix, ry + 2, 4, 5, dl.dotColor(), 0.9f);
+            }
+            int tx = ix + (dl.showDot() ? 8 : 10);
+            int rightReserve = dl.rightText().isEmpty() ? 0 : font.m_92895_(dl.rightText()) + 8;
+            UiTheme.text(g, font, fitText(font, dl.leftText(), Math.max(24, ix + iw - 6 - tx - rightReserve)), tx, ry, dl.textColor());
             if (!dl.rightText().isEmpty()) {
-                UiTheme.right(g, font, dl.rightText(), ix + iw, ry, dl.rightColor());
+                UiTheme.right(g, font, dl.rightText(), ix + iw - 6, ry, dl.rightColor());
             }
         }
         if (maxDetailScroll > 0.5) {
@@ -749,15 +901,16 @@ public final class SystemPanelScreen extends Screen {
         }
     }
 
-    private record DetailLine(int dotColor, String leftText, int textColor, String rightText, int rightColor) {
+    private record DetailLine(boolean showDot, int dotColor, String leftText, int textColor, String rightText, int rightColor) {
     }
 
-    private List<DetailLine> buildDetailLines(TemplateDefinition def, TemplateInstance inst,
-                                              TemplateIntrospector.Meta meta, List<SkillEntry> skills) {
+    private List<DetailLine> buildDetailLines(Font font, TemplateDefinition def, TemplateInstance inst,
+                                              TemplateIntrospector.Meta meta, List<SkillEntry> skills, int maxW) {
         List<DetailLine> out = new ArrayList<>();
+        int indentW = Math.max(48, maxW - 4);
         if (detailTab == 0) {
             if (skills.isEmpty()) {
-                out.add(new DetailLine(UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
+                out.add(new DetailLine(true, UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
                 return out;
             }
             for (SkillEntry skill : skills) {
@@ -768,14 +921,25 @@ public final class SystemPanelScreen extends Screen {
                 String right = NumberFormatter.format(cost) + " " + res
                     + (cdSec > 0.0 ? String.format(Locale.ROOT, " \u00b7 %.1fs", cdSec) : "");
                 String prefix = ok ? "" : "[Lv." + skill.unlockLevel() + "] ";
-                String desc = skill.description() == null || skill.description().isEmpty()
-                    ? "" : " \u2014 " + skill.description();
-                out.add(new DetailLine(
-                    ok ? UiTheme.E_VIOLET : UiTheme.E_EDGE,
-                    prefix + skill.name() + desc,
-                    ok ? UiTheme.E_INK : UiTheme.E_FAINT,
-                    right,
-                    ok ? (skill.costType() == CostType.SP ? UiTheme.E_JADE : UiTheme.E_INDIGO) : UiTheme.E_FAINT));
+                int dotCol = ok ? UiTheme.E_VIOLET : UiTheme.E_EDGE;
+                int nameCol = ok ? UiTheme.E_INK : UiTheme.E_FAINT;
+                int rightCol = ok ? (skill.costType() == CostType.SP ? UiTheme.E_JADE : UiTheme.E_INDIGO) : UiTheme.E_FAINT;
+                String title = prefix + skill.name();
+                int rightW = font.m_92895_(right) + 10;
+                if (font.m_92895_(title) + rightW <= maxW) {
+                    out.add(new DetailLine(true, dotCol, title, nameCol, right, rightCol));
+                } else {
+                    List<String> wrappedTitle = wrapText(font, title, maxW);
+                    for (int k = 0; k < wrappedTitle.size(); k++) {
+                        out.add(new DetailLine(k == 0, dotCol, wrappedTitle.get(k), nameCol, "", rightCol));
+                    }
+                    out.add(new DetailLine(false, dotCol, right, rightCol, "", rightCol));
+                }
+                if (skill.description() != null && !skill.description().isEmpty()) {
+                    for (String line : wrapText(font, skill.description(), indentW)) {
+                        out.add(new DetailLine(false, dotCol, line, ok ? UiTheme.E_MUTED : UiTheme.E_FAINT, "", UiTheme.E_FAINT));
+                    }
+                }
             }
         } else if (detailTab == 1) {
             double mult = def.quality().bonusMultiplier();
@@ -788,36 +952,370 @@ public final class SystemPanelScreen extends Screen {
                 meta.defBonus() * mult * 100.0,
                 t("detail.rule_bonus"),
                 def.quality().ruleBonus());
-            out.add(new DetailLine(UiTheme.E_GOLD_TEXT, bonusLine, UiTheme.E_GOLD_TEXT, "", UiTheme.E_FAINT));
+            appendWrappedDetail(font, out, UiTheme.E_GOLD_TEXT, bonusLine, UiTheme.E_GOLD_TEXT, maxW);
             if (meta.passives().isEmpty()) {
-                out.add(new DetailLine(UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
+                out.add(new DetailLine(true, UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
             } else {
                 for (TemplateIntrospector.TraitView tv : meta.passives()) {
-                    String txt = tv.description().isEmpty() ? tv.name() : tv.name() + "\uff1a" + tv.description();
-                    out.add(new DetailLine(UiTheme.E_JADE, txt, UiTheme.E_INK, "", UiTheme.E_FAINT));
+                    appendTraitWrapped(font, out, "", tv, UiTheme.E_JADE, maxW);
                 }
             }
         } else {
-            appendTraitGroup(out, t("detail.weaknesses"), meta.weaknesses(), UiTheme.E_RED);
-            appendTraitGroup(out, t("detail.negatives"), meta.negatives(), UiTheme.E_GOLD_TEXT);
-            appendTraitGroup(out, t("detail.quirks"), meta.quirks(), UiTheme.E_CYAN);
+            appendTraitGroupWrapped(font, out, t("detail.weaknesses"), meta.weaknesses(), UiTheme.E_RED, maxW);
+            appendTraitGroupWrapped(font, out, t("detail.negatives"), meta.negatives(), UiTheme.E_GOLD_TEXT, maxW);
+            appendTraitGroupWrapped(font, out, t("detail.quirks"), meta.quirks(), UiTheme.E_CYAN, maxW);
             if (def.description() != null && !def.description().isEmpty()) {
-                out.add(new DetailLine(UiTheme.E_VIOLET,
+                appendWrappedDetail(font, out, UiTheme.E_VIOLET,
                     "[" + t("detail.description") + "] " + def.description(),
-                    UiTheme.E_MUTED, "", UiTheme.E_FAINT));
+                    UiTheme.E_MUTED, maxW);
             }
             if (out.isEmpty()) {
-                out.add(new DetailLine(UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
+                out.add(new DetailLine(true, UiTheme.E_EDGE, t("detail.none"), UiTheme.E_FAINT, "", UiTheme.E_FAINT));
             }
         }
         return out;
     }
 
-    private static void appendTraitGroup(List<DetailLine> out, String tag,
-                                         List<TemplateIntrospector.TraitView> traits, int color) {
+    private static void appendWrappedDetail(Font font, List<DetailLine> out, int dotColor,
+                                            String text, int textColor, int maxW) {
+        List<String> lines = wrapText(font, text, maxW);
+        for (int i = 0; i < lines.size(); i++) {
+            out.add(new DetailLine(i == 0, dotColor, lines.get(i), textColor, "", UiTheme.E_FAINT));
+        }
+    }
+
+    private static void appendTraitGroupWrapped(Font font, List<DetailLine> out, String tag,
+                                                List<TemplateIntrospector.TraitView> traits, int color, int maxW) {
         for (TemplateIntrospector.TraitView tv : traits) {
-            String body = tv.description().isEmpty() ? tv.name() : tv.name() + "\uff1a" + tv.description();
-            out.add(new DetailLine(color, "[" + tag + "] " + body, UiTheme.E_INK, "", UiTheme.E_FAINT));
+            appendTraitWrapped(font, out, "[" + tag + "] ", tv, color, maxW);
+        }
+    }
+
+    private static void appendTraitWrapped(Font font, List<DetailLine> out, String tagPrefix,
+                                           TemplateIntrospector.TraitView tv, int color, int maxW) {
+        String header = tagPrefix + tv.name();
+        if (tv.description().isEmpty()) {
+            appendWrappedDetail(font, out, color, header, UiTheme.E_INK, maxW);
+            return;
+        }
+        String combined = header + "\uff1a" + tv.description();
+        if (font.m_92895_(combined) <= maxW) {
+            out.add(new DetailLine(true, color, combined, UiTheme.E_INK, "", UiTheme.E_FAINT));
+            return;
+        }
+        List<String> hLines = wrapText(font, header, maxW);
+        for (int i = 0; i < hLines.size(); i++) {
+            out.add(new DetailLine(i == 0, color, hLines.get(i), UiTheme.E_INK, "", UiTheme.E_FAINT));
+        }
+        for (String line : wrapText(font, tv.description(), Math.max(48, maxW - 4))) {
+            out.add(new DetailLine(false, color, line, UiTheme.E_MUTED, "", UiTheme.E_FAINT));
+        }
+    }
+
+    // ------------------------------------------------------------------ items & vault tab
+
+    private record PanelItemEntry(
+        String id,
+        ItemStack icon,
+        String title,
+        String origin,
+        int accent,
+        String statusText,
+        int statusColor,
+        String quickLabel,
+        boolean quickEnabled,
+        int quickAccent,
+        Runnable quickAction,
+        String primaryLabel,
+        boolean primaryEnabled,
+        int primaryAccent,
+        Runnable primaryAction,
+        String secondaryLabel,
+        boolean secondaryEnabled,
+        int secondaryAccent,
+        Runnable secondaryAction,
+        String tooltip,
+        List<DetailSpec> details
+    ) {
+    }
+
+    private record DetailSpec(int dotColor, String tag, String body) {
+    }
+
+    private List<PanelItemEntry> buildPanelItems(PlayerSystemData data) {
+        List<PanelItemEntry> out = new ArrayList<>();
+        Minecraft mc = Minecraft.m_91087_();
+        boolean wearingMask = mc.f_91074_ != null && PerceptionBlockingMaskItem.isWearingMask(mc.f_91074_);
+        int maskState = (int) Math.round(data.value(PerceptionMaskManager.KEY_STATE, 0.0));
+        boolean held = maskState == PerceptionMaskManager.STATE_HELD;
+        boolean dropped = maskState == PerceptionMaskManager.STATE_DROPPED_NEARBY;
+        boolean lost = maskState == PerceptionMaskManager.STATE_LOST;
+
+        String statusText = wearingMask ? t("mask.state_worn")
+            : (held ? t("mask.state_held")
+                : (dropped ? t("mask.state_dropped")
+                    : (lost ? t("mask.state_lost") : t("mask.state_stored"))));
+        int statusColor = wearingMask ? UiTheme.E_CYAN
+            : (held ? UiTheme.E_JADE
+                : (dropped ? UiTheme.E_GOLD_TEXT
+                    : (lost ? UiTheme.E_RED : UiTheme.E_MUTED)));
+
+        String quickLabel = held ? t("items.quick_store")
+            : (dropped ? t("items.quick_dropped")
+                : (lost ? t("items.quick_reclaim") : t("items.quick_take")));
+        boolean quickEnabled = !dropped;
+        int quickAccent = held ? UiTheme.E_CYAN : (quickEnabled ? UiTheme.E_VIOLET : UiTheme.E_EDGE);
+        Runnable quickAct = held ? () -> send("mask_store", "") : () -> send("mask_take", "");
+
+        String primaryLabel = wearingMask ? t("mask.btn_unequip_store")
+            : (held ? t("mask.btn_store")
+                : (dropped ? t("mask.btn_dropped")
+                    : (lost ? t("mask.btn_reclaim") : t("mask.btn_take_bag"))));
+        boolean primaryEnabled = !dropped;
+        int primaryAccent = held ? UiTheme.E_CYAN : (primaryEnabled ? UiTheme.E_VIOLET : UiTheme.E_EDGE);
+        Runnable primaryAct = held ? () -> send("mask_store", "") : () -> send("mask_take", "");
+
+        String secondaryLabel = wearingMask ? "" : t("mask.btn_equip");
+        boolean secondaryEnabled = !wearingMask && !dropped;
+        int secondaryAccent = UiTheme.E_JADE;
+        Runnable secondaryAct = () -> send("mask_equip", "");
+
+        List<DetailSpec> maskDetails = List.of(
+            new DetailSpec(UiTheme.E_VIOLET, t("mask.detail_visual_tag"), t("mask.detail_visual_body")),
+            new DetailSpec(UiTheme.E_JADE, t("mask.detail_mob_tag"), t("mask.detail_mob_body")),
+            new DetailSpec(UiTheme.E_GOLD_TEXT, t("mask.detail_redstone_tag"), t("mask.detail_redstone_body")),
+            new DetailSpec(UiTheme.E_CYAN, t("mask.detail_player_tag"), t("mask.detail_player_body")),
+            new DetailSpec(UiTheme.E_INDIGO, t("mask.detail_anchor_tag"), t("mask.detail_anchor_body"))
+        );
+
+        out.add(new PanelItemEntry(
+            "perception_blocking_mask",
+            new ItemStack(PerceptionMaskBootstrap.MASK.get()),
+            t("mask.title"),
+            t("mask.origin"),
+            UiTheme.E_VIOLET,
+            statusText,
+            statusColor,
+            quickLabel,
+            quickEnabled,
+            quickAccent,
+            quickAct,
+            primaryLabel,
+            primaryEnabled,
+            primaryAccent,
+            primaryAct,
+            secondaryLabel,
+            secondaryEnabled,
+            secondaryAccent,
+            secondaryAct,
+            t("mask.tooltip"),
+            maskDetails
+        ));
+        return out;
+    }
+
+    private void renderItems(GuiGraphics g, PlayerSystemData data, int mx, int my) {
+        int[] a = contentArea();
+        Font font = this.f_96547_;
+        List<PanelItemEntry> items = buildPanelItems(data);
+
+        // 顶部栏：左侧专属道具数 · 中间随身仓库已用格数 · 右侧一键打开 27 格随身仓库
+        String artLabel = t("items.artifacts_count", items.size());
+        UiTheme.text(g, font, artLabel, a[0], a[1] + 4, UiTheme.E_MUTED);
+
+        int vaultUsed = Math.max(0, Math.min(TravelerVaultStorage.SLOTS,
+            (int) Math.round(data.value(TravelerVaultStorage.KEY_VAULT_USED, 0.0))));
+        String vaultBtnTxt = t("items.btn_open_vault");
+        int vaultBtnW = Math.max(78, Math.min(126, font.m_92895_(vaultBtnTxt) + 18));
+        int vaultBtnX = a[0] + a[2] - vaultBtnW;
+        String vaultState = t("items.vault_status", vaultUsed, TravelerVaultStorage.SLOTS);
+        int stateX = a[0] + font.m_92895_(artLabel) + 10;
+        int stateBudget = Math.max(24, vaultBtnX - stateX - 8);
+        String stateShown = fitText(font, vaultState, stateBudget);
+        UiTheme.text(g, font, stateShown, stateX, a[1] + 4, vaultUsed > 0 ? UiTheme.E_CYAN : UiTheme.E_MUTED);
+        if (inside(mx, my, stateX, a[1], stateBudget, 16)) {
+            offerPlainTooltip(t("items.vault_tooltip", vaultUsed, TravelerVaultStorage.SLOTS), UiTheme.E_INK);
+        }
+
+        boolean vaultHover = inside(mx, my, vaultBtnX, a[1], vaultBtnW, 16);
+        UiTheme.buttonSurface(g, vaultBtnX, a[1], vaultBtnW, 16, vaultHover, false, UiTheme.E_CYAN);
+        UiTheme.text(g, font, fitText(font, vaultBtnTxt, vaultBtnW - 10), vaultBtnX + 5, a[1] + 4, UiTheme.E_INK);
+        if (vaultHover) {
+            offerPlainTooltip(t("items.vault_tooltip", vaultUsed, TravelerVaultStorage.SLOTS), UiTheme.E_INK);
+        }
+        this.hits.add(new Hit(vaultBtnX, a[1], vaultBtnW, 16, () -> send("vault_open", "")));
+
+        // 底部详情区高度自适应；中间网格自动扩展，便于未来收纳更多专属道具
+        int detailH = Math.max(106, Math.min(188, a[3] * 54 / 100));
+        int dy = a[1] + a[3] - detailH;
+        this.lastItemsDetailY = dy;
+        this.lastItemsDetailH = detailH;
+        int gridTop = a[1] + 22;
+        int gridH = Math.max(46, dy - 6 - gridTop);
+
+        int cardH = 44;
+        int gap = 6;
+        int cols = a[2] >= 420 ? 2 : 1;
+        int cardW = Math.max(140, (a[2] - gap * (cols - 1)) / cols);
+        int rowsCount = Math.max(1, (items.size() + cols - 1) / cols);
+        double maxScroll = Math.max(0.0, rowsCount * (cardH + gap) - gridH);
+        this.itemsScroll = Math.min(this.itemsScroll, maxScroll);
+
+        PanelItemEntry selected = items.isEmpty() ? null : items.get(0);
+        for (PanelItemEntry entry : items) {
+            if (entry.id().equals(selectedItemId)) {
+                selected = entry;
+                break;
+            }
+        }
+        if (selected != null) {
+            selectedItemId = selected.id();
+        }
+
+        for (int i = 0; i < items.size(); i++) {
+            PanelItemEntry entry = items.get(i);
+            int col = i % cols;
+            int row = i / cols;
+            int x = a[0] + col * (cardW + gap);
+            int y = gridTop + row * (cardH + gap) - (int) Math.round(this.itemsScroll);
+            if (y < gridTop || y + cardH > gridTop + gridH) {
+                continue;
+            }
+            boolean isSel = selected != null && entry.id().equals(selected.id());
+            boolean hover = inside(mx, my, x, y, cardW, cardH);
+            int drawY = y - Math.round(UiTheme.hover(x, y, cardW, cardH, hover) * 1.5f);
+            Fx.softShadow(g, x, drawY, cardW, cardH, UiTheme.E_SHADOW, hover ? 0.42f : 0.16f);
+            UiTheme.buttonSurface(g, x, drawY, cardW, cardH, hover, isSel, entry.accent());
+            if (isSel) {
+                UiTheme.marching(g, x, drawY, cardW, cardH, UiTheme.E_VIOLET, 1f);
+            }
+            g.m_280509_(x + 3, drawY + 4, x + 6, drawY + cardH - 4, UiTheme.alpha(1f, entry.accent()));
+
+            int slotX = x + 11;
+            int slotY = drawY + (cardH - 24) / 2;
+            UiTheme.inset(g, slotX, slotY, 24, 24);
+            g.m_280480_(entry.icon(), slotX + 4, slotY + 4);
+
+            int qBtnW = Math.max(44, Math.min(64, font.m_92895_(entry.quickLabel()) + 12));
+            int qBtnX = x + cardW - qBtnW - 7;
+            int qBtnY = drawY + (cardH - 18) / 2;
+            boolean qHover = inside(mx, my, qBtnX, qBtnY, qBtnW, 18);
+            UiTheme.buttonSurface(g, qBtnX, qBtnY, qBtnW, 18, qHover && entry.quickEnabled(), false, entry.quickAccent());
+            UiTheme.text(g, font, fitText(font, entry.quickLabel(), qBtnW - 8), qBtnX + 4, qBtnY + 5,
+                entry.quickEnabled() ? UiTheme.E_INK : UiTheme.E_FAINT);
+
+            int textX = slotX + 30;
+            int textBudget = Math.max(32, qBtnX - textX - 6);
+            UiTheme.text(g, font, fitText(font, entry.title(), textBudget), textX, drawY + 7, UiTheme.E_INK);
+            UiTheme.text(g, font, fitText(font, entry.origin(), textBudget), textX, drawY + 18, UiTheme.E_FAINT);
+            UiTheme.text(g, font, fitText(font, entry.statusText(), textBudget), textX, drawY + 29, entry.statusColor());
+
+            if (hover && !qHover) {
+                offerPlainTooltip(entry.tooltip(), UiTheme.E_INK);
+            }
+            final String targetItemId = entry.id();
+            this.hits.add(new Hit(x, y, cardW, cardH, () -> {
+                selectedItemId = targetItemId;
+                this.itemsDetailScroll = 0.0;
+            }));
+            if (entry.quickEnabled()) {
+                this.hits.add(new Hit(qBtnX, qBtnY, qBtnW, 18, entry.quickAction()));
+            }
+        }
+
+        // 若网格下方还有空白，展示可点击的随身仓库快捷入口条，方便随时存取任意物品
+        int belowCardsY = gridTop + rowsCount * (cardH + gap) + 2;
+        if (belowCardsY + 24 <= gridTop + gridH && maxScroll <= 0.5) {
+            int stripH = Math.min(34, gridTop + gridH - belowCardsY);
+            boolean stripHover = inside(mx, my, a[0], belowCardsY, a[2], stripH);
+            UiTheme.buttonSurface(g, a[0], belowCardsY, a[2], stripH, stripHover, false, UiTheme.E_CYAN);
+            String tip = t("items.vault_banner", vaultUsed, TravelerVaultStorage.SLOTS);
+            UiTheme.text(g, font, fitText(font, tip, a[2] - 16), a[0] + 8, belowCardsY + (stripH - 8) / 2,
+                stripHover ? UiTheme.E_INK : UiTheme.E_MUTED);
+            if (stripHover) {
+                offerPlainTooltip(t("items.vault_tooltip", vaultUsed, TravelerVaultStorage.SLOTS), UiTheme.E_INK);
+            }
+            this.hits.add(new Hit(a[0], belowCardsY, a[2], stripH, () -> send("vault_open", "")));
+        }
+
+        if (maxScroll > 0.5 && gridH > 12) {
+            int trackX = a[0] + a[2] - 2;
+            g.m_280509_(trackX, gridTop, trackX + 2, gridTop + gridH, UiTheme.alpha(0.35f, UiTheme.E_EDGE));
+            int thumbH = Math.max(8, (int) Math.round((double) gridH * gridH / (rowsCount * (cardH + gap))));
+            int thumbY = gridTop + (int) Math.round((this.itemsScroll / maxScroll) * (gridH - thumbH));
+            g.m_280509_(trackX, thumbY, trackX + 2, thumbY + thumbH, UiTheme.alpha(0.85f, UiTheme.E_VIOLET));
+        }
+
+        // 底部详情与操作面板
+        UiTheme.frame(g, a[0], dy, a[2], detailH, 1f);
+        if (selected == null) {
+            UiTheme.text(g, font, t("items.empty"), a[0] + 10, dy + 10, UiTheme.E_FAINT);
+            return;
+        }
+        int ix = a[0] + 10;
+        int iw = a[2] - 20;
+        g.m_280480_(selected.icon(), ix, dy + 6);
+        int statusW = font.m_92895_(selected.statusText()) + 10;
+        String headLine = selected.title() + "  \u00b7  " + selected.origin();
+        UiTheme.text(g, font, fitText(font, headLine, Math.max(40, iw - 22 - statusW)), ix + 22, dy + 10, UiTheme.E_INK);
+        UiTheme.right(g, font, selected.statusText(), a[0] + a[2] - 10, dy + 10, selected.statusColor());
+
+        // 操作按钮行：主操作（拿取 / 存回 / 补领）+ 次操作（一键佩戴）
+        int by = dy + 27;
+        int bx = ix;
+        int pW = Math.max(66, Math.min(110, font.m_92895_(selected.primaryLabel()) + 16));
+        boolean pHover = inside(mx, my, bx, by, pW, 17);
+        UiTheme.buttonSurface(g, bx, by, pW, 17, pHover && selected.primaryEnabled(), false, selected.primaryAccent());
+        UiTheme.text(g, font, fitText(font, selected.primaryLabel(), pW - 10), bx + 5, by + 4,
+            selected.primaryEnabled() ? UiTheme.E_INK : UiTheme.E_FAINT);
+        if (selected.primaryEnabled()) {
+            this.hits.add(new Hit(bx, by, pW, 17, selected.primaryAction()));
+        }
+        bx += pW + 6;
+
+        if (!selected.secondaryLabel().isEmpty()) {
+            int sW = Math.max(62, Math.min(104, font.m_92895_(selected.secondaryLabel()) + 16));
+            boolean sHover = inside(mx, my, bx, by, sW, 17);
+            UiTheme.buttonSurface(g, bx, by, sW, 17, sHover && selected.secondaryEnabled(), false, selected.secondaryAccent());
+            UiTheme.text(g, font, fitText(font, selected.secondaryLabel(), sW - 10), bx + 5, by + 4,
+                selected.secondaryEnabled() ? UiTheme.E_INK : UiTheme.E_FAINT);
+            if (selected.secondaryEnabled()) {
+                this.hits.add(new Hit(bx, by, sW, 17, selected.secondaryAction()));
+            }
+        }
+
+        // 详情特性可滚动列表
+        int bodyTop = by + 22;
+        int bodyBottom = dy + detailH - 6;
+        int bodyH = Math.max(12, bodyBottom - bodyTop);
+        int textBudget = Math.max(60, iw - 14);
+        List<DetailLine> dLines = new ArrayList<>();
+        for (DetailSpec spec : selected.details()) {
+            String full = "[" + spec.tag() + "] " + spec.body();
+            appendWrappedDetail(font, dLines, spec.dotColor(), full, UiTheme.E_MUTED, textBudget);
+        }
+        int lineH = 11;
+        double maxDScroll = Math.max(0.0, dLines.size() * lineH - bodyH);
+        this.itemsDetailScroll = Math.min(this.itemsDetailScroll, maxDScroll);
+        int scrollPx = (int) Math.round(this.itemsDetailScroll);
+        for (int i = 0; i < dLines.size(); i++) {
+            int ry = bodyTop + i * lineH - scrollPx;
+            if (ry < bodyTop || ry + 9 > bodyBottom) {
+                continue;
+            }
+            DetailLine dl = dLines.get(i);
+            if (dl.showDot()) {
+                UiTheme.block(g, ix, ry + 2, 4, 5, dl.dotColor(), 0.9f);
+            }
+            int tx = ix + (dl.showDot() ? 8 : 10);
+            UiTheme.text(g, font, fitText(font, dl.leftText(), Math.max(24, ix + iw - 6 - tx)), tx, ry, dl.textColor());
+        }
+        if (maxDScroll > 0.5) {
+            int trackX = a[0] + a[2] - 4;
+            g.m_280509_(trackX, bodyTop, trackX + 2, bodyBottom, UiTheme.alpha(0.35f, UiTheme.E_EDGE));
+            int thumbH = Math.max(8, (int) Math.round((double) bodyH * bodyH / (dLines.size() * lineH)));
+            int thumbY = bodyTop + (int) Math.round((this.itemsDetailScroll / maxDScroll) * (bodyH - thumbH));
+            g.m_280509_(trackX, thumbY, trackX + 2, thumbY + thumbH, UiTheme.alpha(0.9f, selected.accent()));
         }
     }
 
@@ -828,9 +1326,15 @@ public final class SystemPanelScreen extends Screen {
         Font font = this.f_96547_;
         this.search.f_93624_ = true;
         this.search.m_88315_(g, mx, my, 0f);
+        int stripH = Math.max(76, Math.min(134, a[3] * 38 / 100));
+        int sy = a[1] + a[3] - stripH;
+        this.lastCodexDetailY = sy;
+        this.lastCodexDetailH = stripH;
         int gridTop = a[1] + 22;
-        int gridH = a[3] - 22 - DETAIL_STRIP_H - 6;
-        int cols = Math.max(1, (a[2] + 6) / (CELL_W + 6));
+        int gridH = Math.max(24, sy - 6 - gridTop);
+        int gap = 6;
+        int cols = Math.max(1, (a[2] + gap) / (MIN_CELL_W + gap));
+        int cellW = Math.max(118, (a[2] - gap * (cols - 1)) / cols);
 
         String needle = this.query == null ? "" : this.query.trim().toLowerCase(Locale.ROOT);
         List<TemplateDefinition> defs = new ArrayList<>();
@@ -841,6 +1345,7 @@ public final class SystemPanelScreen extends Screen {
                 ownedCount++;
             }
             if (!needle.isEmpty() && !(def.displayName().toLowerCase(Locale.ROOT).contains(needle)
+                || def.name().toLowerCase(Locale.ROOT).contains(needle)
                 || def.id().toLowerCase(Locale.ROOT).contains(needle))) {
                 continue;
             }
@@ -850,7 +1355,7 @@ public final class SystemPanelScreen extends Screen {
         UiTheme.right(g, font, t("v4.codex_count", ownedCount, total), a[0] + a[2], a[1] + 4, UiTheme.E_MUTED);
 
         int rowsCount = (defs.size() + cols - 1) / cols;
-        double maxScroll = Math.max(0, rowsCount * (CELL_H + 6) - gridH);
+        double maxScroll = Math.max(0, rowsCount * (CELL_H + gap) - gridH);
         this.codexScroll = Math.min(this.codexScroll, maxScroll);
         if (defs.isEmpty()) {
             UiTheme.text(g, font, t("codex.unknown"), a[0] + 4, gridTop + 4, UiTheme.E_FAINT);
@@ -859,61 +1364,144 @@ public final class SystemPanelScreen extends Screen {
             TemplateDefinition def = defs.get(i);
             int col = i % cols;
             int row = i / cols;
-            int x = a[0] + col * (CELL_W + 6);
-            int y = gridTop + row * (CELL_H + 6) - (int) this.codexScroll;
-            if (y < gridTop - CELL_H || y > gridTop + gridH) {
+            int x = a[0] + col * (cellW + gap);
+            int y = gridTop + row * (CELL_H + gap) - (int) this.codexScroll;
+            if (y < gridTop || y + CELL_H > gridTop + gridH) {
                 continue;
             }
             boolean owned = data.findTemplate(def.id()).isPresent();
-            int qc = UiTheme.quality(def.quality().color());
+            int qc = UiTheme.templateColor(def);
+            int qText = UiTheme.templateTextColor(def);
             boolean selected = def.id().equals(selectedId);
-            boolean hover = inside(mx, my, x, y, CELL_W, CELL_H);
-            int ly = y - Math.round(UiTheme.hover(x, y, CELL_W, CELL_H, hover && owned) * 2f);
+            boolean hover = inside(mx, my, x, y, cellW, CELL_H);
+            int ly = y - Math.round(UiTheme.hover(x, y, cellW, CELL_H, hover && owned) * 2f);
             if (owned) {
-                UiTheme.buttonSurface(g, x, ly, CELL_W, CELL_H, hover, selected, qc);
+                UiTheme.buttonSurface(g, x, ly, cellW, CELL_H, hover, selected, qc);
                 if (selected) {
-                    UiTheme.marching(g, x, ly, CELL_W, CELL_H, UiTheme.E_VIOLET, 1f);
+                    UiTheme.marching(g, x, ly, cellW, CELL_H, UiTheme.E_VIOLET, 1f);
                 }
                 g.m_280509_(x + 2, ly + 2, x + 5, ly + CELL_H - 2, UiTheme.alpha(1f, qc));
-                UiTheme.cube(g, x + CELL_W - 18, ly + 9, 12, qc);
+                UiTheme.cube(g, x + cellW - 18, ly + 10, 12, qc);
             } else {
                 // undiscovered: inset well with diagonal hatching
-                UiTheme.inset(g, x, ly, CELL_W, CELL_H);
+                UiTheme.inset(g, x, ly, cellW, CELL_H);
                 int hatch = UiTheme.mix(UiTheme.E_INSET, UiTheme.E_EDGE, 0.35f);
-                for (int d = 18; d < CELL_W + CELL_H; d += 22) {
+                for (int d = 18; d < cellW + CELL_H; d += 22) {
                     UiTheme.line(g, x + d, ly + 2, x + d - (CELL_H - 4), ly + CELL_H - 2, hatch);
                 }
             }
-            String label = owned ? def.displayName() : t("codex.locked");
-            UiTheme.text(g, font, UiTheme.fit(font, label, CELL_W - 26), x + 9, ly + 5,
+            int textW = Math.max(36, cellW - 28);
+            TemplateIntrospector.Meta cellMeta = owned ? TemplateIntrospector.inspect(def) : null;
+            String label = owned ? def.name() : t("codex.locked");
+            UiTheme.text(g, font, UiTheme.fit(font, label, textW), x + 9, ly + 5,
                 owned ? UiTheme.E_INK : UiTheme.E_FAINT);
-            UiTheme.text(g, font, UiTheme.fit(font, def.quality().label(), CELL_W - 26), x + 9, ly + 17,
-                owned ? qc : UiTheme.E_FAINT);
+            String qLabel = def.quality().label();
+            if (owned) {
+                UiTheme.textExact(g, font, qLabel, x + 9, ly + 18, qText);
+                String period = cellMeta.period();
+                if (!period.isEmpty()) {
+                    int px = x + 9 + font.m_92895_(qLabel) + 5;
+                    int pBudget = (x + cellW - 22) - px;
+                    if (pBudget > 16) {
+                        UiTheme.text(g, font, UiTheme.fit(font, "\u00b7 " + period, pBudget), px, ly + 18, UiTheme.E_MUTED);
+                    }
+                }
+                if (hover) {
+                    offerTemplateTooltip(def, data.findTemplate(def.id()).orElse(null), cellMeta);
+                }
+            } else {
+                UiTheme.text(g, font, UiTheme.fit(font, qLabel, textW), x + 9, ly + 18, UiTheme.E_FAINT);
+            }
             final String id = def.id();
-            this.hits.add(new Hit(x, y, CELL_W, CELL_H, () -> selectedId = id));
+            this.hits.add(new Hit(x, y, cellW, CELL_H, () -> {
+                selectedId = id;
+                this.codexDetailScroll = 0.0;
+            }));
+        }
+        if (maxScroll > 0.5 && gridH > 12) {
+            int trackX = a[0] + a[2] - 2;
+            g.m_280509_(trackX, gridTop, trackX + 2, gridTop + gridH, UiTheme.alpha(0.35f, UiTheme.E_EDGE));
+            int thumbH = Math.max(8, (int) Math.round((double) gridH * gridH / (rowsCount * (CELL_H + gap))));
+            int thumbY = gridTop + (int) Math.round((this.codexScroll / maxScroll) * (gridH - thumbH));
+            g.m_280509_(trackX, thumbY, trackX + 2, thumbY + thumbH, UiTheme.alpha(0.85f, UiTheme.E_VIOLET));
         }
 
-        int sy = a[1] + a[3] - DETAIL_STRIP_H;
-        UiTheme.frame(g, a[0], sy, a[2], DETAIL_STRIP_H, 1f);
+        // Scrollable wrapped detail card at the bottom of Codex
+        UiTheme.frame(g, a[0], sy, a[2], stripH, 1f);
         TemplateDefinition sel = selectedId == null ? null : TemplateRegistry.client().find(selectedId).orElse(null);
         if (sel != null && data.findTemplate(sel.id()).isPresent()) {
             TemplateIntrospector.Meta meta = TemplateIntrospector.inspect(sel);
-            String head = sel.displayName()
-                + (meta.source().isEmpty() ? "" : " \u00b7 \u300a" + meta.source() + "\u300b")
-                + (meta.period().isEmpty() ? "" : " [" + meta.period() + "]");
+            int qc = UiTheme.templateColor(sel);
+            int qText = UiTheme.templateTextColor(sel);
+            int innerX = a[0] + 8;
+            int innerW = a[2] - 20;
+            String head = composeTitle(sel, meta);
             String qInfo = t("codex.quality_info",
                 sel.maxLevel(),
                 String.format(Locale.ROOT, "\u00d7%.1f", sel.quality().bonusMultiplier()),
                 String.format(Locale.ROOT, "\u00d7%.0f", sel.quality().costMultiplier()),
                 "+" + sel.quality().ruleBonus());
-            UiTheme.text(g, font, UiTheme.fit(font, head, a[2] - font.m_92895_(qInfo) - 24),
-                a[0] + 8, sy + 6, UiTheme.E_INK);
-            UiTheme.right(g, font, qInfo, a[0] + a[2] - 8, sy + 6, UiTheme.quality(sel.quality().color()));
-            UiTheme.text(g, font, UiTheme.fit(font, sel.description(), a[2] - 16),
-                a[0] + 8, sy + 19, UiTheme.E_MUTED);
+
+            List<DetailLine> cLines = new ArrayList<>();
+            int qInfoW = font.m_92895_(qInfo) + 10;
+            if (font.m_92895_(head) + qInfoW <= innerW) {
+                cLines.add(new DetailLine(true, qc, head, UiTheme.E_INK, qInfo, qText));
+            } else {
+                List<String> headLines = wrapText(font, head, innerW);
+                for (int k = 0; k < headLines.size(); k++) {
+                    cLines.add(new DetailLine(k == 0, qc, headLines.get(k), UiTheme.E_INK, "", qText));
+                }
+                for (String ql : wrapText(font, qInfo, Math.max(48, innerW - 4))) {
+                    cLines.add(new DetailLine(false, qc, ql, qText, "", qText));
+                }
+            }
+            if (sel.description() != null && !sel.description().isEmpty()) {
+                for (String dl : wrapText(font, sel.description(), Math.max(48, innerW - 4))) {
+                    cLines.add(new DetailLine(false, qc, dl, UiTheme.E_MUTED, "", UiTheme.E_FAINT));
+                }
+            }
             String drawbacks = summarizeDrawbacks(meta);
-            UiTheme.text(g, font, UiTheme.fit(font, drawbacks, a[2] - 16),
-                a[0] + 8, sy + 32, UiTheme.E_GOLD_TEXT);
+            if (!drawbacks.isEmpty() && !drawbacks.equals(t("detail.none"))) {
+                for (String wl : wrapText(font, drawbacks, Math.max(48, innerW - 4))) {
+                    cLines.add(new DetailLine(false, UiTheme.E_GOLD_TEXT, wl, UiTheme.E_GOLD_TEXT, "", UiTheme.E_FAINT));
+                }
+            }
+
+            int bodyTop = sy + 6;
+            int bodyBottom = sy + stripH - 5;
+            int bodyH = Math.max(12, bodyBottom - bodyTop);
+            int lineH = 11;
+            double maxCScroll = Math.max(0.0, cLines.size() * lineH - bodyH);
+            this.codexDetailScroll = Math.min(this.codexDetailScroll, maxCScroll);
+            int cScrollPx = (int) Math.round(this.codexDetailScroll);
+            for (int i = 0; i < cLines.size(); i++) {
+                int ry = bodyTop + i * lineH - cScrollPx;
+                if (ry < bodyTop || ry + 9 > bodyBottom) {
+                    continue;
+                }
+                DetailLine dl = cLines.get(i);
+                if (dl.showDot()) {
+                    UiTheme.block(g, innerX, ry + 2, 4, 5, dl.dotColor(), 0.9f);
+                }
+                int tx = innerX + (dl.showDot() ? 8 : 0);
+                int rReserve = dl.rightText().isEmpty() ? 0 : font.m_92895_(dl.rightText()) + 8;
+                String lShown = fitText(font, dl.leftText(), Math.max(24, innerX + innerW - tx - rReserve));
+                if (dl.textColor() == qText) {
+                    UiTheme.textExact(g, font, lShown, tx, ry, qText);
+                } else {
+                    UiTheme.text(g, font, lShown, tx, ry, dl.textColor());
+                }
+                if (!dl.rightText().isEmpty()) {
+                    UiTheme.rightExact(g, font, dl.rightText(), innerX + innerW, ry, dl.rightColor());
+                }
+            }
+            if (maxCScroll > 0.5) {
+                int trackX = a[0] + a[2] - 4;
+                g.m_280509_(trackX, bodyTop, trackX + 2, bodyBottom, UiTheme.alpha(0.35f, UiTheme.E_EDGE));
+                int thumbH = Math.max(8, (int) Math.round((double) bodyH * bodyH / (cLines.size() * lineH)));
+                int thumbY = bodyTop + (int) Math.round((this.codexDetailScroll / maxCScroll) * (bodyH - thumbH));
+                g.m_280509_(trackX, thumbY, trackX + 2, thumbY + thumbH, UiTheme.alpha(0.9f, qc));
+            }
         } else {
             UiTheme.text(g, font, t("codex.locked"), a[0] + 8, sy + 18, UiTheme.E_FAINT);
         }
@@ -941,15 +1529,19 @@ public final class SystemPanelScreen extends Screen {
         boolean terrainAllowed = ClientSystemData.derivedBool("terrainAllowed", true);
         boolean terrainOn = PanelActions.setting(data, "terrain_destruction");
 
-        // group navigation column
-        int nw = 96;
+        // group navigation column (adapts cleanly on narrow screens)
+        int nw = Math.min(96, Math.max(66, a[2] / 4));
         String[] groups = {t("v4.group.hud"), t("v4.group.play"), t("v4.group.display")};
         for (int i = 0; i < groups.length; i++) {
             int y = a[1] + i * 24;
             boolean active = settingsGroup == i;
             boolean hover = inside(mx, my, a[0], y, nw, 20);
             UiTheme.buttonSurface(g, a[0], y, nw, 20, hover, active, UiTheme.E_VIOLET);
-            UiTheme.text(g, font, groups[i], a[0] + 8, y + 6, active ? UiTheme.E_VIOLET : UiTheme.E_MUTED);
+            String gShown = fitText(font, groups[i], nw - 12);
+            UiTheme.text(g, font, gShown, a[0] + 8, y + 6, active ? UiTheme.E_VIOLET : UiTheme.E_MUTED);
+            if (hover && !gShown.equals(groups[i])) {
+                offerPlainTooltip(groups[i], UiTheme.E_INK);
+            }
             final int target = i;
             this.hits.add(new Hit(a[0], y, nw, 20, () -> {
                 settingsGroup = target;
@@ -963,7 +1555,12 @@ public final class SystemPanelScreen extends Screen {
         int tools = a[1] + groups.length * 24 + 10;
         boolean hover1 = inside(mx, my, a[0], tools, nw, 20);
         UiTheme.buttonSurface(g, a[0], tools, nw, 20, hover1, false, UiTheme.E_CYAN);
-        UiTheme.text(g, font, t("v4.set.controls"), a[0] + 8, tools + 6, UiTheme.E_INK);
+        String ctrlLbl = t("v4.set.controls");
+        String ctrlShown = fitText(font, ctrlLbl, nw - 12);
+        UiTheme.text(g, font, ctrlShown, a[0] + 8, tools + 6, UiTheme.E_INK);
+        if (hover1 && !ctrlShown.equals(ctrlLbl)) {
+            offerPlainTooltip(ctrlLbl, UiTheme.E_INK);
+        }
         this.hits.add(new Hit(a[0], tools, nw, 20, () -> {
             Minecraft mc = Minecraft.m_91087_();
             mc.m_91152_(new ControlsScreen(this, mc.f_91066_));
@@ -971,7 +1568,12 @@ public final class SystemPanelScreen extends Screen {
         int tools2 = tools + 24;
         boolean hover2 = inside(mx, my, a[0], tools2, nw, 20);
         UiTheme.buttonSurface(g, a[0], tools2, nw, 20, hover2, false, UiTheme.E_CYAN);
-        UiTheme.text(g, font, t("v4.set.hud_editor"), a[0] + 8, tools2 + 6, UiTheme.E_INK);
+        String hudEdLbl = t("v4.set.hud_editor");
+        String hudEdShown = fitText(font, hudEdLbl, nw - 12);
+        UiTheme.text(g, font, hudEdShown, a[0] + 8, tools2 + 6, UiTheme.E_INK);
+        if (hover2 && !hudEdShown.equals(hudEdLbl)) {
+            offerPlainTooltip(hudEdLbl, UiTheme.E_INK);
+        }
         this.hits.add(new Hit(a[0], tools2, nw, 20, () -> Minecraft.m_91087_().m_91152_(new HudEditorScreen(this))));
 
         // rows of the selected group
@@ -1006,25 +1608,48 @@ public final class SystemPanelScreen extends Screen {
         int rowH = 24;
         UiTheme.frame(g, rx, a[1], rw, a[3], 1f);
         int rowTop = a[1] + 8;
+        int rowBottom = a[1] + a[3] - 6;
+        int availRowsH = Math.max(rowH, rowBottom - rowTop);
+        double maxSetScroll = Math.max(0.0, rows.size() * (rowH + 4) - availRowsH);
+        this.settingsScroll = Math.min(this.settingsScroll, maxSetScroll);
+        int setScrollPx = (int) Math.round(this.settingsScroll);
         for (int i = 0; i < rows.size(); i++) {
             SettingRow row = rows.get(i);
-            int y = rowTop + i * (rowH + 4);
+            int y = rowTop + i * (rowH + 4) - setScrollPx;
+            if (y < rowTop || y + rowH > rowBottom) {
+                continue;
+            }
             boolean hover = inside(mx, my, rx + 6, y, rw - 12, rowH) && row.enabled;
             UiTheme.buttonSurface(g, rx + 6, y, rw - 12, rowH, hover, false, UiTheme.E_VIOLET);
-            UiTheme.text(g, font, t(row.labelKey), rx + 16, y + 7, row.enabled ? UiTheme.E_INK : UiTheme.E_FAINT);
             int trackW = 26;
             int trackH = 12;
             int trackX = rx + rw - 16 - trackW;
             int trackY = y + (rowH - trackH) / 2;
+            String lockedTxt = row.enabled ? "" : t("v4.set.terrain_locked");
+            int lockedReserve = row.enabled ? 0 : font.m_92895_(lockedTxt) + 12;
+            String fullLabel = t(row.labelKey);
+            int labelBudget = Math.max(32, trackX - (rx + 16) - 8 - lockedReserve);
+            String shownLabel = fitText(font, fullLabel, labelBudget);
+            UiTheme.text(g, font, shownLabel, rx + 16, y + 7, row.enabled ? UiTheme.E_INK : UiTheme.E_FAINT);
+            if (!shownLabel.equals(fullLabel) && inside(mx, my, rx + 6, y, rw - 12, rowH)) {
+                offerPlainTooltip(fullLabel, UiTheme.E_INK);
+            }
             // the knob glides between off and on; the key is per label so it survives group switches
             float knob = UiTheme.approach(SETTING_GLIDE + (row.labelKey().hashCode() & 0xFFFF), row.on ? 1f : 0f);
             drawSwitch(g, trackX, trackY, trackW, trackH, knob, row.enabled);
             if (!row.enabled) {
-                UiTheme.right(g, font, t("v4.set.terrain_locked"), trackX - 8, y + 7, UiTheme.E_FAINT);
+                UiTheme.right(g, font, lockedTxt, trackX - 8, y + 7, UiTheme.E_FAINT);
             }
             if (row.enabled) {
                 this.hits.add(new Hit(rx + 6, y, rw - 12, rowH, row.action));
             }
+        }
+        if (maxSetScroll > 0.5) {
+            int trackX = rx + rw - 4;
+            g.m_280509_(trackX, rowTop, trackX + 2, rowBottom, UiTheme.alpha(0.35f, UiTheme.E_EDGE));
+            int thumbH = Math.max(8, (int) Math.round((double) availRowsH * availRowsH / (rows.size() * (rowH + 4))));
+            int thumbY = rowTop + (int) Math.round((this.settingsScroll / maxSetScroll) * (availRowsH - thumbH));
+            g.m_280509_(trackX, thumbY, trackX + 2, thumbY + thumbH, UiTheme.alpha(0.9f, UiTheme.E_VIOLET));
         }
     }
 
@@ -1053,9 +1678,140 @@ public final class SystemPanelScreen extends Screen {
     private record SettingRow(String labelKey, boolean on, boolean enabled, Runnable action) {
     }
 
-    // ------------------------------------------------------------------ small helper
+    // ------------------------------------------------------------------ text wrapping & tooltips
 
     private static String fitText(Font font, String s, int maxWidth) {
         return UiTheme.fit(font, s, maxWidth);
+    }
+
+    /** Clean title combining template name, source and period without duplicating {@code [period]}. */
+    private static String composeTitle(TemplateDefinition def, TemplateIntrospector.Meta meta) {
+        StringBuilder sb = new StringBuilder(def.name());
+        if (meta != null && !meta.source().isEmpty()) {
+            sb.append("  \u00b7  \u300a").append(meta.source()).append("\u300b");
+        }
+        String period = meta != null && !meta.period().isEmpty() ? meta.period() : def.period();
+        if (period != null && !period.isEmpty()) {
+            sb.append(" [").append(period).append("]");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * CJK- and Latin-aware word wrapper against a pixel width budget. Splits explicit newlines,
+     * wraps at spaces for Latin runs when possible, and breaks cleanly between CJK characters.
+     */
+    private static List<String> wrapText(Font font, String text, int maxWidth) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isEmpty()) {
+            return out;
+        }
+        int budget = Math.max(24, maxWidth);
+        for (String paragraph : text.split("\n", -1)) {
+            if (paragraph.isEmpty()) {
+                out.add("");
+                continue;
+            }
+            if (font.m_92895_(paragraph) <= budget) {
+                out.add(paragraph);
+                continue;
+            }
+            int len = paragraph.length();
+            int start = 0;
+            while (start < len) {
+                int end = start;
+                int lastBreak = -1;
+                while (end < len) {
+                    String slice = paragraph.substring(start, end + 1);
+                    if (font.m_92895_(slice) > budget) {
+                        break;
+                    }
+                    char ch = paragraph.charAt(end);
+                    if (ch == ' ' || ch == '\u3000' || ch == '\uff0c' || ch == '\u3002'
+                        || ch == '\uff1b' || ch == '\u3001' || ch == '\u00b7' || ch == '/') {
+                        lastBreak = end + 1;
+                    }
+                    end++;
+                }
+                if (end == start) {
+                    // Single glyph wider than budget: still advance by 1 to guarantee progress
+                    end = start + 1;
+                } else if (end < len && lastBreak > start && isLatinWordChar(paragraph.charAt(end - 1))
+                    && isLatinWordChar(paragraph.charAt(end))) {
+                    end = lastBreak;
+                }
+                String line = paragraph.substring(start, end).stripTrailing();
+                if (!line.isEmpty()) {
+                    out.add(line);
+                }
+                start = end;
+                while (start < len && paragraph.charAt(start) == ' ') {
+                    start++;
+                }
+            }
+        }
+        return out;
+    }
+
+    private static boolean isLatinWordChar(char ch) {
+        return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-';
+    }
+
+    private static Component colored(String text, int rgb) {
+        return Component.m_237113_(text).m_130948_(Style.f_131099_.m_178520_(rgb & 0xFFFFFF));
+    }
+
+    private int tooltipMaxWidth() {
+        return Math.max(140, Math.min(260, this.f_96543_ - 28));
+    }
+
+    private void offerPlainTooltip(String text, int color) {
+        if (text == null || text.isEmpty()) {
+            return;
+        }
+        List<Component> lines = new ArrayList<>();
+        for (String s : wrapText(this.f_96547_, text, tooltipMaxWidth())) {
+            lines.add(colored(s, color));
+        }
+        this.pendingTooltip = lines;
+    }
+
+    private void offerTemplateTooltip(TemplateDefinition def, TemplateInstance inst, TemplateIntrospector.Meta meta) {
+        if (def == null) {
+            return;
+        }
+        int maxW = tooltipMaxWidth();
+        int qText = UiTheme.templateTextColor(def);
+        List<Component> lines = new ArrayList<>();
+        String title = def.name() + "  [" + def.quality().label() + "]";
+        for (String s : wrapText(this.f_96547_, title, maxW)) {
+            lines.add(colored(s, qText));
+        }
+        StringBuilder sub = new StringBuilder();
+        if (meta != null && !meta.source().isEmpty()) {
+            sub.append("\u300a").append(meta.source()).append("\u300b");
+        }
+        String period = meta != null && !meta.period().isEmpty() ? meta.period() : def.period();
+        if (period != null && !period.isEmpty()) {
+            if (sub.length() > 0) {
+                sub.append(" \u00b7 ");
+            }
+            sub.append(period);
+        }
+        if (sub.length() > 0) {
+            for (String s : wrapText(this.f_96547_, sub.toString(), maxW)) {
+                lines.add(colored(s, UiTheme.E_INK));
+            }
+        }
+        if (inst != null) {
+            String lv = def.levelless() ? t("templates.levelless") : "Lv." + inst.level() + " / " + def.maxLevel();
+            lines.add(colored(lv, UiTheme.E_CYAN));
+        }
+        if (def.description() != null && !def.description().isEmpty()) {
+            for (String s : wrapText(this.f_96547_, def.description(), maxW)) {
+                lines.add(colored(s, UiTheme.E_MUTED));
+            }
+        }
+        this.pendingTooltip = lines;
     }
 }

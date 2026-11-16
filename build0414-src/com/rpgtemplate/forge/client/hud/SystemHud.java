@@ -374,13 +374,16 @@ public final class SystemHud {
             return;
         }
 
-        int qc = UiTheme.quality(def.quality().color());
+        int qc = UiTheme.templateColor(def);
+        int qText = UiTheme.templateTextColor(def);
         String qLabel = def.quality().label();
         int chipW = font.m_92895_(qLabel) + 8;
         g.m_280509_(DOCK_W - 10 - chipW, 8, DOCK_W - 10, 20, UiTheme.alpha(1f, UiTheme.E_CARD));
         g.m_280509_(DOCK_W - 10 - chipW, 8, DOCK_W - 10, 9, UiTheme.alpha(1f, qc));
-        UiTheme.right(g, font, qLabel, DOCK_W - 14, 11, qc);
-        UiTheme.text(g, font, UiTheme.fit(font, def.displayName(), DOCK_W - 28 - chipW), 14, 11, UiTheme.E_INK);
+        UiTheme.rightExact(g, font, qLabel, DOCK_W - 14, 11, qText);
+        int nameBudget = DOCK_W - 28 - chipW;
+        String dockTitle = font.m_92895_(def.displayName()) <= nameBudget ? def.displayName() : def.name();
+        UiTheme.text(g, font, UiTheme.fit(font, dockTitle, nameBudget), 14, 11, UiTheme.E_INK);
 
         boolean capped = def.levelless() || inst.level() >= def.maxLevel();
         String level = def.levelless() ? tr("ui.base") : "Lv." + inst.level() + " / " + def.maxLevel();

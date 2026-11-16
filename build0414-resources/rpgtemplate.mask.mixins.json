@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.rpgtemplate.forge.mask.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "MaskEntityMixin",
+    "MaskLivingEntityMixin",
+    "MaskWardenMixin",
+    "MaskSculkSensorMixin",
+    "MaskSculkShriekerMixin",
+    "MaskRedstoneOreMixin",
+    "MaskDetectorRailMixin",
+    "MaskTargetBlockMixin",
+    "MaskTrappedChestMixin"
+  ],
+  "client": [
+    "MaskEntityRenderDispatcherMixin",
+    "MaskCustomHeadLayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

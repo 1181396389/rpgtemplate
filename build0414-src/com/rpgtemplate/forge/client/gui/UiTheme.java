@@ -1,6 +1,7 @@
 package com.rpgtemplate.forge.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.rpgtemplate.core.template.TemplateDefinition;
 import com.rpgtemplate.core.ui.UiLayout;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -891,7 +892,7 @@ public final class UiTheme {
 
     /**
      * Per-tab watermark drawn on the card face under the content. Tinted, never full strength,
-     * so text stays readable. kind: 0 orrery, 1 rift, 2 star chart, 3 circuit.
+     * so text stays readable. kind: 0 orrery, 1 rift, 2 vault grid, 3 star chart, 4 circuit.
      */
     public static void motif(GuiGraphics g, int kind, int x, int y, int w, int h) {
         if (w < 24 || h < 24) {
@@ -901,8 +902,29 @@ public final class UiTheme {
         switch (kind) {
             case 0 -> orrery(g, x, y, w, h, t);
             case 1 -> rift(g, x, y, w, h, t);
-            case 2 -> starChart(g, x, y, w, h, t);
+            case 2 -> vaultGrid(g, x, y, w, h, t);
+            case 3 -> starChart(g, x, y, w, h, t);
             default -> circuit(g, x, y, w, h, t);
+        }
+    }
+
+    private static void vaultGrid(GuiGraphics g, int x, int y, int w, int h, double t) {
+        int step = 28;
+        int gridCol = mix(E_CARD, E_CYAN, 0.09f);
+        int accentCol = mix(E_CARD, E_VIOLET, 0.16f);
+        int ox = (int) ((t * 6.0) % step);
+        for (int gx = x + ox; gx < x + w; gx += step) {
+            g.m_280509_(gx, y, gx + 1, y + h, gridCol);
+        }
+        for (int gy = y + 14; gy < y + h; gy += step) {
+            g.m_280509_(x, gy, x + w, gy + 1, gridCol);
+        }
+        int cx = x + w / 2;
+        int cy = y + h / 2;
+        int box = Math.min(w, h) / 3;
+        if (box >= 16) {
+            border(g, cx - box, cy - box / 2, box * 2, box, accentCol);
+            cube(g, cx - 4, cy - 4, 8, mix(E_CARD, E_CYAN, 0.28f));
         }
     }
 
@@ -995,6 +1017,60 @@ public final class UiTheme {
     /** Quality colour, normalised for the v4 palette. */
     public static int quality(int color) {
         return palette(color);
+    }
+
+    /**
+     * Accent colour for a specific template. Uses the template's custom signature colour when
+     * defined (e.g. blood red for Nothing There, chronicle emerald green for Cronus), otherwise
+     * falls back to its quality colour.
+     */
+    public static int templateColor(TemplateDefinition def) {
+        if (def == null) {
+            return E_EDGE;
+        }
+        int custom = TemplateIntrospector.accentColor(def);
+        return custom >= 0 ? custom : quality(def.quality().color());
+    }
+
+    /**
+     * Text-safe variant of a template's accent colour. Preserves hue saturation (so blood red
+     * stays vivid crimson instead of turning pastel pink) while ensuring readability on glass.
+     */
+    public static int templateTextColor(TemplateDefinition def) {
+        int c = templateColor(def);
+        if (contrast(c, E_CARD) >= 4.5f) {
+            return c;
+        }
+        int r = (c >> 16) & 255;
+        int g = (c >> 8) & 255;
+        int b = c & 255;
+        for (int i = 1; i <= 12; i++) {
+            float boost = 1f + i * 0.12f;
+            int nr = Math.min(255, Math.round(r * boost + i * 2));
+            int ng = Math.min(255, Math.round(g * boost + i * 2));
+            int nb = Math.min(255, Math.round(b * boost + i * 2));
+            int cand = (nr << 16) | (ng << 8) | nb;
+            if (contrast(cand, E_CARD) >= 4.8f) {
+                return cand;
+            }
+        }
+        return readable(c);
+    }
+
+    /** Draws text with an explicit RGB colour without further palette remapping or desaturation. */
+    public static void textExact(GuiGraphics g, Font font, String s, int x, int y, int rgb) {
+        if (s == null || s.isEmpty()) {
+            return;
+        }
+        g.m_280056_(font, s, x, y, 0xFF000000 | (rgb & 0xFFFFFF), false);
+    }
+
+    /** Right-aligned variant of {@link #textExact}. */
+    public static void rightExact(GuiGraphics g, Font font, String s, int rightX, int y, int rgb) {
+        if (s == null || s.isEmpty()) {
+            return;
+        }
+        textExact(g, font, s, rightX - font.m_92895_(s), y, rgb);
     }
 
     static float clamp01(float v) {

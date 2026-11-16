@@ -53,11 +53,11 @@ dist/rpgtemplate-0.4.14.jar
 1. **拉取官方 Forge 1.20.1 SRG 编译环境**：使用官方 Forge Installer 生成真实 `forge-client.jar` / `forge-universal.jar` / `client-srg.jar`，并拉取 Minecraft `1.20.1` 依赖库。
 2. **全量编译覆盖源码**：使用 JDK 17 (`--release 17 -encoding UTF-8`) 编译 `build0414-src/` 下全部 Java 源码。
 3. **自动清理与打包**：
-   - 自动剔除基础包中已废弃的 `production/`（职业/Build 系统）旧类、旧配方、旧战利品表、旧贴图/模型与 `rpgtemplate.build.client.mixins.json`（保留兼容桩 `CraftMath`）。
+   - 自动剔除基础包中已废弃的 `production/`（职业/Build 系统）旧类、旧配方、旧战利品表、旧贴图/模型、`rpgtemplate.build.client.mixins.json` 以及曾劫持原版粒子的 `rpgtemplate.fx.mixins.json` / `ServerLevelParticleMixin` / `ClientLevelParticleMixin`（保留兼容桩 `CraftMath`）。
    - 自动剔除被覆盖外部类对应的旧匿名/内部类（`Outer$*.class`），防止残留字节码冲突。
    - 自动将 `build0414-resources/*_sounds_fragment.json` 合并写入 `assets/rpgtemplate/sounds.json`，且不会泄露碎片文件到 JAR 根目录。
-   - 自动重写 `META-INF/MANIFEST.MF`（仅保留有效 Mixin 配置 `rpgtemplate.nothingthere.mixins.json,rpgtemplate.fx.mixins.json`）与 `META-INF/mods.toml` 版本号。
-4. **内置打包后自检**：校验 `MANIFEST.MF`、`mods.toml`、`RpgTemplateMod -> NtBootstrap`、合并后的 `sounds.json`、双语 `lang/*.json`、全部模板 JSON 以及全 JAR 内部类字节码链接完整性。
+   - 自动重写 `META-INF/MANIFEST.MF`（仅保留有效 Mixin 配置 `rpgtemplate.nothingthere.mixins.json`）与 `META-INF/mods.toml` 版本号。
+4. **内置打包后自检**：校验 `MANIFEST.MF`、`mods.toml`、`RpgTemplateMod -> NtBootstrap`、合并后的 `sounds.json`、双语 `lang/*.json`、全部模板 JSON、全 JAR 内部类字节码链接完整性，并强制校验 `build0414-src/` 不引用原版廉价粒子且不劫持原版粒子系统。
 
 ## 目录结构
 

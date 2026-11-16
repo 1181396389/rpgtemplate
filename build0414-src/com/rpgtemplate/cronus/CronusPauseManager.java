@@ -169,6 +169,12 @@ public final class CronusPauseManager {
             CronusNet.sendNear(sl, domain.cx, domain.cy, domain.cz,
                 new CronusFxMsg(CronusFxMsg.KIND_DOMAIN_PAUSE, player.m_19879_(),
                     domain.cx, domain.cy + 0.05, domain.cz, (float) radius, 200));
+            CronusNet.sendNear(sl, domain.cx, domain.cy, domain.cz,
+                new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, player.m_19879_(),
+                    domain.cx, domain.cy, domain.cz, 1.15f, CronusFxMsg.SPRITE_CLOCK_ASSEMBLE));
+            CronusNet.sendNear(sl, domain.cx, domain.cy, domain.cz,
+                new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, player.m_19879_(),
+                    domain.cx, domain.cy, domain.cz, 1.25f, CronusFxMsg.SPRITE_LIGHTNING_ARC));
         }
         Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.pause_on")
             .m_130940_(ChatFormatting.GREEN));
@@ -233,6 +239,14 @@ public final class CronusPauseManager {
             CronusNet.sendNear(sl, d.cx, d.cy, d.cz,
                 new CronusFxMsg(CronusFxMsg.KIND_DOMAIN_RESTART, player.m_19879_(),
                     d.cx, d.cy + 0.05, d.cz, (float) d.radius, 0));
+            CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, player.m_19879_(),
+                    player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                    1.20f, CronusFxMsg.SPRITE_LIGHTNING_ARC));
+            CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
+                    player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                    1.15f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
         }
 
         if (player != null && player.m_6084_()) {
@@ -244,6 +258,7 @@ public final class CronusPauseManager {
                         d.deferredDamage.merge(trap.target, trap.damage, Float::sum);
                     }
                 }
+                int bolts = 0;
                 for (Map.Entry<LivingEntity, Float> entry : d.deferredDamage.entrySet()) {
                     LivingEntity victim = entry.getKey();
                     Float raw = entry.getValue();
@@ -252,6 +267,12 @@ public final class CronusPauseManager {
                         victim.f_19802_ = 0; // 清零末击无敌帧，防止悬停伤害爆发被原版 hurt 冷却吞噬
                         TargetUtil.hurt(victim, ModDamageTypes.technique(player), finalBurst);
                         CronusNet.popupOn(victim, CronusFxMsg.POPUP_CRITICAL);
+                        if (bolts++ < 6 && player.m_9236_() instanceof ServerLevel sl) {
+                            CronusNet.sendNear(sl, victim.m_20185_(), victim.m_20186_(), victim.m_20189_(),
+                                new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
+                                    victim.m_20185_(), victim.m_20186_(), victim.m_20189_(),
+                                    1.0f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
+                        }
                     }
                 }
             } finally {

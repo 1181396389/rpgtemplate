@@ -73,6 +73,9 @@ public final class CronusSkills {
                 CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
                     new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, ctx.player.m_19879_(),
                         ctx.player.m_20185_(), ctx.player.m_20186_() + 0.05, ctx.player.m_20189_(), 3.6f, 1));
+                CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                    new CronusFxMsg(CronusFxMsg.KIND_HENSHIN_SEQ, ctx.player.m_19879_(),
+                        ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(), 1.0f, 0));
             }
             Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.henshin_on")
                 .m_130940_(ChatFormatting.GREEN));
@@ -182,31 +185,43 @@ public final class CronusSkills {
                 : ctx.player.m_217043_().m_188503_(5);
 
             String msgKey;
+            int iconTicks;
             switch (roll) {
                 case 0 -> {
-                    ctx.data.setValue(CronusKeys.KEY_ITEM_SPEED_UNTIL, (double) (ctx.now + 240L));
+                    ctx.data.setValue(CronusKeys.KEY_ITEM_SPEED_UNTIL, (double) (ctx.now + 250L));
                     msgKey = "message.rpgtemplate.cronus.item_speed";
+                    iconTicks = 250;
                 }
                 case 1 -> {
-                    ctx.data.setValue(CronusKeys.KEY_ITEM_MUSCLE_UNTIL, (double) (ctx.now + 240L));
+                    ctx.data.setValue(CronusKeys.KEY_ITEM_MUSCLE_UNTIL, (double) (ctx.now + 250L));
                     msgKey = "message.rpgtemplate.cronus.item_muscle";
+                    iconTicks = 250;
                 }
                 case 2 -> {
-                    ctx.data.setValue(CronusKeys.KEY_ITEM_IRON_UNTIL, (double) (ctx.now + 240L));
+                    ctx.data.setValue(CronusKeys.KEY_ITEM_IRON_UNTIL, (double) (ctx.now + 250L));
                     msgKey = "message.rpgtemplate.cronus.item_iron";
+                    iconTicks = 250;
                 }
                 case 3 -> {
-                    ctx.data.setValue(CronusKeys.KEY_ITEM_JUMP_UNTIL, (double) (ctx.now + 240L));
+                    ctx.data.setValue(CronusKeys.KEY_ITEM_JUMP_UNTIL, (double) (ctx.now + 250L));
                     msgKey = "message.rpgtemplate.cronus.item_jump";
+                    iconTicks = 250;
                 }
                 default -> {
                     TemplateHelper.healRatio(ctx.player, ctx.data, 0.22);
                     CronusKeys.addViralStrain(ctx.player, ctx.data, -12.0, ctx.now);
                     msgKey = "message.rpgtemplate.cronus.item_recovery";
+                    iconTicks = 55;
                 }
             }
             CronusSounds.playItemGet(ctx.player);
             CronusNet.popupOn(ctx.player, CronusFxMsg.POPUP_ITEM_GET);
+            if (ctx.player.m_9236_() instanceof ServerLevel sl) {
+                CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                    new CronusFxMsg(CronusFxMsg.KIND_ENERGY_ICON, ctx.player.m_19879_(),
+                        ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                        (float) iconTicks, roll));
+            }
             Msg.actionBar(ctx.player, Component.m_237115_(msgKey).m_130940_(ChatFormatting.YELLOW));
             SystemDataManager.markDirty((Player) ctx.player);
         }
@@ -290,6 +305,10 @@ public final class CronusSkills {
                     CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
                         new CronusFxMsg(CronusFxMsg.KIND_RIDER_KICK, ctx.player.m_19879_(),
                             ctx.player.m_20185_(), ctx.player.m_20186_() + 0.1, ctx.player.m_20189_(), 3.2f, 0));
+                    CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                        new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, ctx.player.m_19879_(),
+                            ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                            0.95f, CronusFxMsg.SPRITE_LIGHTNING_ARC));
                 }
                 return;
             }
@@ -322,6 +341,10 @@ public final class CronusSkills {
                 CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
                     new CronusFxMsg(CronusFxMsg.KIND_RIDER_KICK, ctx.player.m_19879_(),
                         ctx.player.m_20185_(), ctx.player.m_20186_() + 0.1, ctx.player.m_20189_(), 4.8f, 1));
+                CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                    new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, ctx.player.m_19879_(),
+                        ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                        1.15f, CronusFxMsg.SPRITE_LIGHTNING_ARC));
             }
 
             // 若在时停中释放旋转踢，强制触发 1.35x 倍率【Restart】爆发，并对 OUT 目标降下「绝版！」处决
@@ -340,6 +363,12 @@ public final class CronusSkills {
                             exec.f_19802_ = 0; // 清零 Restart 刚赋予的无敌帧，保证绝版处决全额生效
                             TargetUtil.hurt(exec, ModDamageTypes.technique(ctx.player), lethal);
                             CronusNet.popupOn(exec, CronusFxMsg.POPUP_CRITICAL);
+                            if (ctx.player.m_9236_() instanceof ServerLevel sl) {
+                                CronusNet.sendNear(sl, exec.m_20185_(), exec.m_20186_(), exec.m_20189_(),
+                                    new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
+                                        exec.m_20185_(), exec.m_20186_(), exec.m_20189_(),
+                                        1.35f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
+                            }
                         }
                     }
                     DrawAttunementUnlock.grantQuirkXp(ctx.player, ctx.data,
@@ -374,6 +403,12 @@ public final class CronusSkills {
             }
             ctx.cooldown(200);
             CronusSounds.playKimewaza(ctx.player);
+            if (ctx.player.m_9236_() instanceof ServerLevel sl) {
+                CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                    new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, ctx.player.m_19879_(),
+                        ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                        1.15f, CronusFxMsg.SPRITE_LIGHTNING_ARC));
+            }
 
             int mode = CronusKeys.weaponMode(ctx.data);
             boolean paused = CronusKeys.isPaused(ctx.data);
@@ -381,8 +416,15 @@ public final class CronusSkills {
             if (mode == CronusKeys.MODE_CHAINSAW && !paused) {
                 TemplateHelper.dashForward(ctx.player, 1.35, 0.15);
                 float dmg = ctx.damage(1.0);
+                int bolts = 0;
                 for (LivingEntity t : coneTargets(ctx.player, 6.2, 0.15)) {
                     TargetUtil.hurt(t, ModDamageTypes.technique(ctx.player), dmg);
+                    if (bolts++ < 3 && ctx.player.m_9236_() instanceof ServerLevel sl) {
+                        CronusNet.sendNear(sl, t.m_20185_(), t.m_20186_(), t.m_20189_(),
+                            new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
+                                t.m_20185_(), t.m_20186_(), t.m_20189_(),
+                                1.0f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
+                    }
                 }
                 Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime_sacrifice")
                     .m_130940_(ChatFormatting.GREEN));
@@ -401,8 +443,15 @@ public final class CronusSkills {
             } else if (!paused) {
                 float dmg = ctx.damage(1.05);
                 List<TargetUtil.Hit> hits = TargetUtil.ray(ctx.player, 28.0, 4, 0.9);
+                int bolts = 0;
                 for (TargetUtil.Hit h : hits) {
                     TargetUtil.hurt(h.entity(), ModDamageTypes.technique(ctx.player), dmg);
+                    if (bolts++ < 3 && ctx.player.m_9236_() instanceof ServerLevel sl) {
+                        CronusNet.sendNear(sl, h.entity().m_20185_(), h.entity().m_20186_(), h.entity().m_20189_(),
+                            new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
+                                h.entity().m_20185_(), h.entity().m_20186_(), h.entity().m_20189_(),
+                                1.05f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
+                    }
                 }
                 Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime_judgement")
                     .m_130940_(ChatFormatting.AQUA));
@@ -473,6 +522,12 @@ public final class CronusSkills {
                 CronusNet.sendNear(sl, snap.x, snap.y, snap.z,
                     new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, ctx.player.m_19879_(),
                         snap.x, snap.y + 0.05, snap.z, 4.5f, 2));
+                CronusNet.sendNear(sl, snap.x, snap.y, snap.z,
+                    new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, ctx.player.m_19879_(),
+                        snap.x, snap.y, snap.z, 1.15f, CronusFxMsg.SPRITE_CLOCK_REWIND));
+                CronusNet.sendNear(sl, snap.x, snap.y, snap.z,
+                    new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
+                        snap.x, snap.y, snap.z, 1.1f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
             }
             Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.reset_done")
                 .m_130940_(ChatFormatting.GOLD));

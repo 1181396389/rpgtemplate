@@ -23,6 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class TemplateIntrospector {
     private static final Map<String, Meta> CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> COLOR_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> DEFAULT_TEMPLATE_COLORS = Map.of(
+        "rpgtemplate:nothing_there", 0xC81420,
+        "rpgtemplate:cronus_1", 0x18F29A
+    );
 
     private TemplateIntrospector() {
     }
@@ -56,6 +61,50 @@ public final class TemplateIntrospector {
 
     public static void clearCache() {
         CACHE.clear();
+        COLOR_CACHE.clear();
+    }
+
+    /**
+     * Returns a template-specific 24-bit RGB accent colour (from JSON {@code "color"} or built-in
+     * signature palette), or {@code -1} when the template uses its default quality colour.
+     */
+    public static int accentColor(TemplateDefinition def) {
+        if (def == null || def.id() == null) {
+            return -1;
+        }
+        return COLOR_CACHE.computeIfAbsent(def.id(), TemplateIntrospector::loadColor);
+    }
+
+    private static int loadColor(String id) {
+        JsonObject json = readClasspathJson(id);
+        int parsed = parseColor(json, "color");
+        if (parsed >= 0) {
+            return parsed;
+        }
+        Integer fallback = DEFAULT_TEMPLATE_COLORS.get(id);
+        return fallback == null ? -1 : (fallback & 0xFFFFFF);
+    }
+
+    private static int parseColor(JsonObject obj, String key) {
+        if (obj == null || !obj.has(key) || !obj.get(key).isJsonPrimitive()) {
+            return -1;
+        }
+        try {
+            JsonElement el = obj.get(key);
+            if (el.getAsJsonPrimitive().isNumber()) {
+                return el.getAsInt() & 0xFFFFFF;
+            }
+            String s = el.getAsString().trim();
+            if (s.startsWith("#")) {
+                return Integer.parseInt(s.substring(1), 16) & 0xFFFFFF;
+            }
+            if (s.startsWith("0x") || s.startsWith("0X")) {
+                return Integer.parseInt(s.substring(2), 16) & 0xFFFFFF;
+            }
+            return Integer.parseInt(s, 16) & 0xFFFFFF;
+        } catch (RuntimeException ignored) {
+            return -1;
+        }
     }
 
     private static Meta empty() {

@@ -3,6 +3,7 @@
   "source": "假面骑士 Ex-Aid",
   "period": "假面骑士编年史 · 幻梦集团社长（檀正宗）",
   "quality": "EX",
+  "color": "#18F29A",
   "type": "BALANCED",
   "max_level": 60,
   "drawable": true,
@@ -48,7 +49,7 @@
       "base_cost": 4.5,
       "coefficient": 0.0,
       "cooldown_ticks": 140,
-      "description": "仅变身态可用。调取《假面骑士编年史》规则特权，弹出「ITEM GET!」并获取一枚随机能量道具（低生命时优先触发【回复】，其余包含【高速化】【肌肉化 +30% 伤害】【钢铁化 -35% 承伤】【跳跃强化】）。"
+      "description": "仅变身态可用。调取《假面骑士编年史》规则特权，于头顶浮现对应能力的像素能量道具硬币图标并生效 12.5 秒（低生命时优先触发【回复】，其余包含【高速化】【肌肉化 +50% 伤害/强力击飞砸地/打击升格 GREAT!】【钢铁化 -35% 承伤】【跳跃强化】）。"
     },
     {
       "id": "rpgtemplate:cronus_crews_aid",

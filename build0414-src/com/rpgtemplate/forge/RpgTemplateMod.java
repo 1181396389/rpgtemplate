@@ -3,6 +3,7 @@ package com.rpgtemplate.forge;
 import com.mojang.logging.LogUtils;
 import com.rpgtemplate.forge.king.KingConfig;
 import com.rpgtemplate.forge.king.KingNetwork;
+import com.rpgtemplate.forge.mask.PerceptionMaskBootstrap;
 import com.rpgtemplate.forge.network.ModNetwork;
 import com.rpgtemplate.forge.possession.PossessionNet;
 import com.rpgtemplate.forge.registry.ModCapabilities;
@@ -44,6 +45,7 @@ public final class RpgTemplateMod {
         KingConfig.register();
         KingNetwork.register();
         NtBootstrap.init();
+        PerceptionMaskBootstrap.init();
     }
 
     public static ResourceLocation id(String path) {

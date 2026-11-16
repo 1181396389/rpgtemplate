@@ -111,7 +111,7 @@ public final class CronusKeys {
             ? data.value(KEY_GAUNTLET_STACKS, 0.0) : 0.0;
         double mult = 1.0 + stacks * 0.10;
         if (data.value(KEY_ITEM_MUSCLE_UNTIL, 0.0) > (double) now) {
-            mult *= 1.30;
+            mult *= 1.50;
         }
         return mult;
     }

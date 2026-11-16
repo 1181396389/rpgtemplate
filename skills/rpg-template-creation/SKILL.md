@@ -1,19 +1,20 @@
 ---
 name: rpg-template-creation
-description: 设计与开发 rpgtemplate（RPG转生模板）角色模板、进阶/同源分支的标准参考技能规范。任何新建或修改角色模板的任务必须加载并严格遵循本规范中的【限制与弱点】三大铁律。
+description: 设计与开发 rpgtemplate（RPG转生模板）角色模板、进阶/同源分支的标准参考技能规范。任何新建或修改角色模板的任务必须加载并严格遵循本规范中的【限制与弱点 + 特效禁令】四大铁律。
 ---
 
 # RPG转生模板 · 角色模板制作参考技能（`rpg-template-creation`）
 
-在 `rpgtemplate`（Minecraft Forge 1.20.1）中设计、编码或调整任何角色模板（`data/rpgtemplate/rpg_templates/*.json` 及服务端/客户端逻辑）时，**必须强制遵循以下核心规则**（注：非模板玩家专用的外部独立武器如 `nt_mimic_blade` 不受模板规则约束）。完整规范详见仓库 `docs/template-creation-reference.md`。
+在 `rpgtemplate`（Minecraft Forge 1.20.1）中设计、编码或调整任何角色模板（`data/rpgtemplate/rpg_templates/*.json` 及服务端/客户端逻辑）时，**必须强制遵循以下核心规则**（注：非模板玩家专用的外部独立武器如 `nt_mimic_blade` 不受前三条模板数值规则约束，但**第四条特效禁令对全模组无例外强制生效**）。完整规范详见仓库 `docs/template-creation-reference.md`。
 
 ---
 
-## 一、 限制与弱点（全模板强制核心规则）
+## 一、 核心铁律：限制、弱点与特效规范（全模板强制核心规则）
 
 - **使用限制**：威力强制锚定。无论模板原主强度如何，其实际效果（伤害、防御力、道具威力）完全取决于使用者当前的面板等级与属性。若使用者等级极低，使用高阶模板的大招可能会因能量不足无法发动或是威力不足。
 - **反噬/副作用**：完美继承角色负面效果和弱点以及癖好。如抽取“身患重症的绝世天才”，使用者在载入该模板后会同步获得对应模板时期的相应的身体体质与病症以及才华。
 - **克制关系**：机制级技能（如：必死、绝对催眠等）需经过等级/属性判定。判定结果由强至弱分为：1.完全生效；2.显著干扰；3.微弱牵制；4.判定失败。
+- **特效禁令（严禁廉价粒子）**：**不许使用廉价粒子制作特效**。严禁使用 Minecraft 原版粒子（`ParticleTypes`、`DustParticleOptions`、`ServerLevel.sendParticles`、`ClientLevel.addParticle` 等）制作任何模组技能、被动、道具或实体特效；必须使用自定义 3D 几何/模型/着色器渲染（如 `RenderLevelStageEvent`、自定义实体渲染器、Shader 或 `com.rpgtemplate.forge.fx.Fx` 独立几何通道），且**严禁**用 Mixin 劫持原版粒子系统影响原版 Minecraft 特效。
 
 ---
 
@@ -34,3 +35,8 @@ description: 设计与开发 rpgtemplate（RPG转生模板）角色模板、进�
   2. **显著干扰**（`rule.major`）
   3. **微弱牵制**（`rule.minor`）
   4. **判定失败**（`rule.fail`）
+
+### 4. 特效制作禁令（不许使用廉价粒子）
+- **严禁调用原版粒子 API**：`build0414-src/` 中任何类都禁止引用 `net.minecraft.core.particles.*`（构建工具 `tools/BuildMod.java` 会在编译后自动扫描字节码并拒绝违规构建）。
+- **使用独立自定义渲染通道**：复杂大招与领域/变身/血肉效果通过独立网络包 + 客户端 `RenderLevelStageEvent` / 自定义实体渲染器 / Shader 渲染（参考 `CronusClientFx`、`NtGoreFx`、`NtMistFx`、`NtEgoSky`、`NtEgoCape`、`HolleSpikeRenderer`）；轻量几何闪光/雾团/脉冲环通过 `com.rpgtemplate.forge.fx.Fx` 发送到 `FxRenderer`。
+- **严禁污染原版特效**：绝对禁止使用 Mixin 拦截 `ServerLevel.sendParticles` 或 `ClientLevel.addParticle`，确保原版 Minecraft 的火焰、烟雾、雨水、水泡、爆炸、附魔等特效原汁原味保留。
