@@ -1,0 +1,230 @@
+{
+  "jjc.sword_sweep": {
+    "subtitle": "subtitles.rpgtemplate.slash",
+    "sounds": [
+      {
+        "name": "rpgtemplate:jjc/sword_sweep",
+        "stream": false
+      }
+    ]
+  },
+  "jjc.crush": {
+    "subtitle": "subtitles.rpgtemplate.crush",
+    "sounds": [
+      {
+        "name": "rpgtemplate:jjc/crush",
+        "stream": false
+      }
+    ]
+  },
+  "jjc.critical": {
+    "subtitle": "subtitles.rpgtemplate.critical",
+    "sounds": [
+      {
+        "name": "rpgtemplate:jjc/critical",
+        "stream": false
+      }
+    ]
+  },
+  "jjc.wind_chime": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:jjc/wind_chime",
+        "stream": false
+      }
+    ]
+  },
+  "jjc.slow_motion_end": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:jjc/slow_motion_end",
+        "stream": false
+      }
+    ]
+  },
+  "jjc.piano_horror": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:jjc/piano_horror",
+        "stream": false
+      }
+    ]
+  },
+  "nt_goodbye_windup": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_goodbye_windup",
+        "stream": false
+      }
+    ]
+  },
+  "nt_goodbye_hit": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_goodbye_hit",
+        "stream": false
+      }
+    ]
+  },
+  "nt_holle": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_holle",
+        "stream": false
+      }
+    ]
+  },
+  "nt_ego_bgm": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:nt_ego_bgm",
+        "stream": true
+      }
+    ]
+  },
+  "cronus_henshin": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_henshin",
+        "stream": true
+      }
+    ]
+  },
+  "cronus_henshin_fast": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_henshin_fast",
+        "stream": true
+      }
+    ]
+  },
+  "cronus_pause": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_pause",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_restart": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_restart",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_reset": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_reset",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_blink": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_blink",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_mode_switch": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_mode_switch",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kimewaza": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cj_beam",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cj_beam": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cj_beam",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cj_pause": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cj_pause",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cj_orbs": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cj_orbs",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_orb_explode": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_orb_explode",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cs_wave": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cs_wave",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cs_charge": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cs_charge",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cs_slash": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cs_slash",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_crews_aid": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_crews_aid",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_out_execute": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_out_execute",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_item_get": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_mode_switch",
+        "pitch": 1.32,
+        "stream": false
+      }
+    ]
+  }
+}

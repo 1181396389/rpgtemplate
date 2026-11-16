@@ -1,0 +1,497 @@
+{
+  "name": "两面宿傩",
+  "source": "咒术回战",
+  "period": "十根手指",
+  "quality": "SR",
+  "type": "BALANCED",
+  "parent": "rpgtemplate:sukuna_3_fingers",
+  "advance_condition": {
+    "player_level": 30
+  },
+  "lineage": {
+    "chance": 0.35,
+    "pity": 3,
+    "weight": 1.0,
+    "player_level": 0,
+    "carry_level": 1.0,
+    "consolation": [
+      {
+        "type": "xp",
+        "weight": 3,
+        "ratio": 0.3,
+        "name": "咒力残响"
+      },
+      {
+        "type": "draw",
+        "weight": 1,
+        "count": 1,
+        "name": "手指的回应"
+      },
+      {
+        "type": "shard",
+        "weight": 2,
+        "count": 1,
+        "name": "指骨碎片"
+      },
+      {
+        "type": "stat_bonus",
+        "weight": 2,
+        "stat": "mp",
+        "value": 0.02,
+        "max": 0.1,
+        "name": "咒力器量"
+      },
+      {
+        "type": "trait",
+        "weight": 1,
+        "scope": "lineage",
+        "trait": {
+          "type": "rpgtemplate:finger_resonance",
+          "name": "指骨共鸣",
+          "description": "失败的传承在体内留下了残响：载入宿傩血脉的模板时，术式威力 +5%。",
+          "params": {
+            "technique_damage_bonus": 0.05
+          }
+        }
+      }
+    ]
+  },
+  "bonus": {
+    "hp": 0.6,
+    "mp": 1.2,
+    "sp": 0.6,
+    "def": 0.6
+  },
+  "skills": [
+    {
+      "id": "rpgtemplate:dismantle",
+      "name": "解",
+      "cost_type": "MP",
+      "base_cost": 3,
+      "coefficient": 1.7,
+      "cooldown_ticks": 8,
+      "description": "【操作】点按释放一道飞行斩；按住吟唱，松手释放。起手即潜行并按住，进入连续斩击。\n【效果】基础射程 36 格；蓄力提升威力、长度和破坏规模。\n【连斩】至少 7 道、最多 20 道，间隔 0.1秒，逐刀付费；松手会补足最低刀数后停止。每第 3 刀为十字斩，威力 ×1.5。\n【蜘蛛之丝 · 模板Lv.24】吟唱至少 1 段，向下俯视至少 50° 后松手：在落点制造蛛网斩，伤害与伤害衍生范围随蓄力成长；释放消耗 ×3，分支冷却 3秒。\n【吟唱】龙鳞 → 反发 → 成对的流星。本阶段每段 21 tick（1.05秒）；另有起手判定 5 tick。每完成一段额外支付基础 2 MP，受品质修正。咒词仅显示在聊天栏。\n【基础费用】3 MP；基础冷却 0.4秒。实际费用以品质修正后的面板为准，分支倍率与百分比费用另计。",
+      "params": {
+        "range": 36,
+        "length": 3.5,
+        "length_per_stage": 0.9,
+        "roll_jitter": 8,
+        "fire_delay_ticks": 0,
+        "patterns": [
+          "random",
+          "random",
+          "random",
+          "random"
+        ],
+        "flight": {
+          "speed": 2.0,
+          "speed_per_stage": 0.3,
+          "range_per_stage": 0.15,
+          "pierce": 5,
+          "terrain_budget_scale": 1.0
+        },
+        "barrage": {
+          "trigger": "sneak",
+          "hits": 7,
+          "max_hits": 20,
+          "interval_ticks": 2,
+          "windup_ticks": 2,
+          "length": 2.2,
+          "coefficient_per_hit": 0.55,
+          "cost_multiplier": 2.5,
+          "terrain_budget_scale": 0.25,
+          "slowness": 5,
+          "cross_every": 3,
+          "cross_damage_scale": 1.5,
+          "cross_length_scale": 1.6,
+          "cross_cost_multiplier": 1.5
+        },
+        "charge": {
+          "trigger": "hold",
+          "ticks_per_stage": 21,
+          "chant": [
+            "龙鳞",
+            "反发",
+            "成对的流星"
+          ],
+          "stage_multipliers": [
+            1.0,
+            1.7,
+            2.6,
+            4.5
+          ],
+          "cost_per_stage": 2,
+          "chant_audible_radius": 16,
+          "chant_in_chat": true,
+          "slowness": 3,
+          "world_cut": true,
+          "cut_lines_per_stage": 1.0,
+          "terrain_per_stage": 1.0
+        },
+        "spider": {
+          "unlock_level": 24,
+          "name": "蜘蛛之丝",
+          "min_pitch": 50,
+          "min_stage": 1,
+          "reach": 10,
+          "radius": 6.0,
+          "radius_per_stage": 0.5,
+          "rays": 8,
+          "rings": 2,
+          "coefficient_scale": 1.2,
+          "cost_multiplier": 3.0,
+          "cooldown_ticks": 60,
+          "slow_ticks": 60,
+          "slow_amplifier": 2,
+          "launch": 0.35,
+          "terrain_budget_scale": 2.0,
+          "depth": 1,
+          "damage_radius_ref": 20,
+          "damage_radius_k": 0.35,
+          "damage_radius_max": 2.5,
+          "damage_depth_scale": 0.5
+        }
+      }
+    },
+    {
+      "id": "rpgtemplate:cleave",
+      "name": "捌",
+      "cost_type": "MP",
+      "base_cost": 8,
+      "coefficient": 3.0,
+      "cooldown_ticks": 60,
+      "description": "【操作】点按近身施放，基础距离 5 格；按住持续接触斩击。\n【规则】根据双方规则等级判定效果：完全生效可处决非玩家，部分生效按该阶段参数增伤；对玩家不处决、不追加目标最大生命比例伤害。\n【持续捌】起手 0.4秒 后，间隔 0.2秒 攻击，最多 40 次；每击伤害 ×0.4、消耗 ×0.5，不处决。\n【捌·连环 · 模板Lv.26】首次命中后，可连锁至附近最多 2 个目标；连锁威力 ×0.6。\n【基础费用】8 MP；基础冷却 3秒。实际费用以品质修正后的面板为准，分支倍率与百分比费用另计。",
+      "params": {
+        "range": 5,
+        "target_max_health_ratio": 0.1,
+        "target_armor_toughness_ratio": 0.1,
+        "rule_check": {
+          "FULL": {
+            "effect": "execute"
+          },
+          "MAJOR": {
+            "effect": "max_health_ratio",
+            "value": 0.6
+          },
+          "MINOR": {
+            "effect": "multiplier",
+            "value": 2.0
+          },
+          "FAIL": {
+            "effect": "multiplier",
+            "value": 1.0
+          }
+        },
+        "chain": {
+          "unlock_level": 26,
+          "name": "捌·连环",
+          "radius": 4.0,
+          "max_targets": 2,
+          "damage_ratio": 0.6,
+          "delay_ticks": 3,
+          "allow_execute": true,
+          "min_result": "MAJOR"
+        },
+        "hold": {
+          "windup_ticks": 8,
+          "interval_ticks": 4,
+          "range": 10,
+          "targets": 1,
+          "damage_ratio": 0.4,
+          "allow_execute": false,
+          "knockback": 0.75,
+          "knockback_up": 0.12,
+          "hit_delay_ticks": 2,
+          "cost_multiplier": 0.5,
+          "max_hits": 40,
+          "slowness": -1,
+          "_doc": "按住 捌：首击与轻按相同，之后每 interval_ticks 对准星前 range 格内的目标斩一次（威力 damage_ratio，不处决）并击退 knockback；每次消耗 基础消耗×cost_multiplier；最多 max_hits 次"
+        }
+      }
+    },
+    {
+      "id": "rpgtemplate:reverse_cursed_technique",
+      "name": "反转术式",
+      "cost_type": "MP",
+      "base_cost": 1,
+      "coefficient": 1.0,
+      "cooldown_ticks": 0,
+      "description": "【操作】按住持续自疗，每 0.25秒 结算一次；松手停止。可恢复系统生命，并按原有转换规则恢复原版生命。\n【对外输出】潜行起手，治疗接触范围内的目标；治疗效率为自疗的 80%，可对亡灵造成正能量伤害。\n【净化】每次有效脉冲缩短可净化的有限时长负面效果 40 tick；不会清除任意模组的永久状态。\n【魂之修复 · 模板Lv.28】每脉冲最多修复原始最大系统HP的 1% 所对应的魂伤上限损失。\n【疲劳】持续运转会积累疲劳，治疗量、净化视觉密度和对应咒力消耗随疲劳下降；停止后逐渐恢复效率。\n【限制】不受领域结束后的术式烧毁限制；满血、无魂伤且无可净化状态时不白白消耗。\n【基础费用】1 MP / 脉冲；基础冷却 0秒。实际费用以品质修正后的面板为准，分支倍率与百分比费用另计。",
+      "params": {
+        "mode": "channel",
+        "pulse_ticks": 5,
+        "heal_vanilla_health": true,
+        "output": {
+          "trigger": "sneak",
+          "heal_ratio": 0.8,
+          "damage_undead": true,
+          "reach": 1.4,
+          "radius": 1.6,
+          "undead_max_health_ratio": 0.05
+        },
+        "cleanse_ticks_per_pulse": 40,
+        "fatigue_per_tick": 4,
+        "soul_repair": {
+          "unlock_level": 28,
+          "name": "魂之修复",
+          "ratio_per_pulse": 0.01
+        }
+      }
+    },
+    {
+      "id": "rpgtemplate:grid_slash",
+      "name": "网格斩",
+      "cost_type": "MP",
+      "base_cost": 12,
+      "coefficient": 1.4,
+      "cooldown_ticks": 100,
+      "params": {
+        "range": 32,
+        "flight": {
+          "speed": 1.8,
+          "speed_per_stage": 0.3,
+          "range_per_stage": 0.2
+        },
+        "grid": {
+          "size": 10.0,
+          "size_per_stage": 0.7,
+          "lines": 8,
+          "lines_per_stage": 3,
+          "pierce": 64,
+          "forward_offset": 1.5,
+          "cut_lines_per_stage": 0.5,
+          "terrain_budget_scale": 0.5,
+          "terrain_per_stage": 0.8,
+          "_doc": "网格宽高 = size × (1 + 段数 × size_per_stage)；每个方向 lines + 段数 × lines_per_stage 条线；整张网共用命中表（同一目标被同一张网切一次）"
+        },
+        "charge": {
+          "trigger": "hold",
+          "ticks_per_stage": 18,
+          "chant": [
+            "纵",
+            "横",
+            "天网恢恢"
+          ],
+          "stage_multipliers": [
+            1.0,
+            1.6,
+            2.4,
+            3.6
+          ],
+          "cost_per_stage": 4,
+          "chant_audible_radius": 16,
+          "chant_in_chat": true,
+          "slowness": 3
+        },
+        "storm": {
+          "unlock_level": 0,
+          "name": "十字・千刃",
+          "target_range": 40,
+          "radius": 20.0,
+          "count": 240,
+          "duration_ticks": 60,
+          "distance": 8.0,
+          "distance_random": 5.0,
+          "length": 10.0,
+          "speed": 3.0,
+          "pierce": 8,
+          "coefficient_scale": 0.3,
+          "terrain_budget_scale": 0.5,
+          "empty_spread": 6.0,
+          "cost_multiplier": 8.0,
+          "cooldown_ticks": 240,
+          "_doc": "念完全部咒词后，在松开技能键时保持潜行，释放十字・千刃。冷却12秒。",
+          "max_hits_per_target": 6
+        },
+        "giant": {
+          "unlock_level": 0,
+          "size": 192,
+          "range": 192,
+          "lines": 33,
+          "speed": 4,
+          "pierce": 256,
+          "cost_multiplier": 4,
+          "cooldown_ticks": 60,
+          "terrain_checks_per_tick": 65536,
+          "terrain_blocks_per_tick": 8192,
+          "terrain_max_blocks": 524288,
+          "_doc": "连续体素遍历，预算不足保留游标续接；不跳样，不加载新区块。全服共享每 tick 65536 次检查、8192 个破坏上限。"
+        }
+      },
+      "description": "【操作】点按或部分吟唱后松手，发出纵横交错的飞行网格。\n【网格】基础边长 10 格，每方向 8 条斩线；同一层共用命中记录，不按交叉线数量重复伤害。\n【giant】完整吟唱、非潜行释放：形成 192 格巨型网格，前进 192 格；释放消耗 ×4，分支冷却 3秒。\n【十字・千刃】完整吟唱、潜行释放：围绕目标区域制造交错飞行斩，持续 3秒；每目标原有命中上限 6 次，释放消耗 ×8，分支冷却 12秒。\n【地形】巨型网格沿途破坏按共享预算逐刻完成；新巨型网格会替换自己的上一轮未完成地形处理。\n【吟唱】龙鳞 → 反发 → 成对的流星。本阶段每段 18 tick（0.9秒）；另有起手判定 5 tick。每完成一段额外支付基础 4 MP，受品质修正。咒词仅显示在聊天栏。\n【基础费用】12 MP；基础冷却 5秒。实际费用以品质修正后的面板为准，分支倍率与百分比费用另计。"
+    },
+    {
+      "id": "rpgtemplate:domain_expansion",
+      "name": "領域展開「伏魔御厨子」",
+      "description": "【操作】按住结印 40 tick（2秒）展开领域；未完成结印松手会取消。领域内再次按下本技能可主动收束。\n【持续】最长 20秒；按正常20 TPS计时，服务器卡顿会延长现实耗时。基础半径 20 格。\n【维持】每秒消耗 1.5 MP（基础参数，受半径倍率影响）；咒力不足、系统HP低于维持门槛（15%）、死亡或原有中断条件满足时提前结束。\n【范围】可在 6～200 格之间调节；缩小范围提高伤害，扩大范围提高维持费用，不刷新剩余时间。\n【必中】领域内周期性发动解与捌；玩家仍不适用非玩家处决。\n【烧毁】结束后进入 10秒 术式烧毁；反转术式以及标记为烧毁豁免的技能仍可使用。\n【地形】破坏按全服共享预算逐刻结算，不保证同一刻完成；应先在测试存档验证领地保护兼容。\n【基础费用】25 MP；基础冷却 30秒。实际费用以品质修正后的面板为准，分支倍率与百分比费用另计。",
+      "cost_type": "MP",
+      "base_cost": 25,
+      "coefficient": 1.0,
+      "cooldown_ticks": 600,
+      "unlock_level": 0,
+      "params": {
+        "chant": [
+          "領域展開",
+          "伏魔御厨子"
+        ],
+        "cast_ticks": 40,
+        "audible_radius": 48,
+        "radius": 20.0,
+        "duration_ticks": 400,
+        "tick_interval": 8,
+        "dismantle_coefficient_scale": 0.65,
+        "cleave_threshold_hp_ratio": 0.5,
+        "cleave_coefficient_scale": 1.1,
+        "cleave_interval_ticks": 40,
+        "hp_cost_ratio_per_second": 0.0,
+        "mp_cost_per_second": 1.5,
+        "terrain": {
+          "enabled": true,
+          "respect_settings": true,
+          "budget_scale": 4.0,
+          "exclude_tag": "rpgtemplate:slash_immune",
+          "depth": 15,
+          "checks_per_tick": 12000,
+          "blocks_per_tick": 2400,
+          "max_blocks_at_100": 640000
+        },
+        "burnout": {
+          "duration_ticks": 200,
+          "blocks": [
+            "rpgtemplate:dismantle",
+            "rpgtemplate:cleave",
+            "rpgtemplate:kamino",
+            "rpgtemplate:domain_expansion"
+          ],
+          "value_key": "burnout_until"
+        },
+        "rct_exempt": true,
+        "resize": {
+          "min_radius": 6.0,
+          "max_radius": 200.0,
+          "step": 5.0,
+          "step_big": 20.0,
+          "damage_scale_at_min": 2.0,
+          "cost_scale_at_max": 1.75,
+          "_doc": "[ / ] 键调节半径（潜行 step_big）；半径越小伤害越高（最高 damage_scale_at_min），越大消耗越高（max_radius 时 cost_scale_at_max）"
+        },
+        "_doc": "cast_ticks 结印时间；radius/duration_ticks 领域；tick_interval 必中解间隔；cleave_interval_ticks 追加捌间隔；hp_cost_ratio_per_second/mp_cost_per_second 维持消耗；terrain 地形破坏；burnout 术式烧毁；rct_exempt 反転术式豁免",
+        "shrine": {
+          "enabled": true,
+          "offset": 10.0,
+          "scale": 1.1,
+          "_doc": "伏魔御厨子模型：offset 在施术者身后的距离，scale 缩放"
+        },
+        "tier_damage_scale": 1.15,
+        "level_damage_per_level": 0.025
+      }
+    }
+  ],
+  "passives": [
+    {
+      "type": "rpgtemplate:cursed_energy_reinforcement",
+      "name": "咒力强化",
+      "description": "以咒力强化肉体。攻击随 SP 基础成长，不再额外叠乘模板等级；防御由独立 DEF 面板固定抵扣。",
+      "params": {
+        "movement_speed": 0.18,
+        "attack_damage_sp_ratio": 0.02,
+        "knockback_resistance": 0.4,
+        "per_template_level": 0.1
+      }
+    },
+    {
+      "type": "rpgtemplate:black_flash",
+      "name": "黑闪",
+      "description": "蓄满近战命中可触发黑闪：基础伤害×2，连闪小幅增强，最高×2.5；短暂锁定防止高频刷取。进入黑闪状态后，保留术式冷却缩短与 MP 回复增强。",
+      "params": {
+        "unlock_level": 22,
+        "chance": 0.08,
+        "zone_chance": 0.25,
+        "zone_ticks": 300,
+        "multiplier": 2.0,
+        "streak_bonus": 0.1,
+        "max_streak": 4,
+        "zone_cooldown_scale": 0.7,
+        "zone_mp_regen_multiplier": 2.0,
+        "chant": "黒閃",
+        "audible_radius": 16
+      }
+    },
+    {
+      "type": "rpgtemplate:king_presence",
+      "name": "王之威压",
+      "description": "十根手指的咒力足以让低阶的咒灵本能地畏惧：周围 10 格内规则等级远低于你的敌对生物会被威压压制（虚弱 + 缓慢）。",
+      "params": {
+        "radius": 10,
+        "rule_level_gap": 6,
+        "weakness_amplifier": 0,
+        "slowness_amplifier": 0,
+        "duration_ticks": 45
+      }
+    },
+    {
+      "type": "rpgtemplate:multi_jump",
+      "name": "咒力踏空",
+      "description": "以咒力踩踏空气实现多段跳：空中再按跳跃即可再次起跳。可连续跳跃次数（含起跳）= 5 + 模板等级 / 6，最多 10 次；空中跳跃会清空摔落距离。",
+      "params": {
+        "unlock_level": 0,
+        "base_jumps": 5,
+        "levels_per_jump": 6,
+        "max_jumps": 10,
+        "jump_power": 0.6,
+        "_doc": "base_jumps 基础总跳跃次数（含地面起跳）；每 levels_per_jump 级 +1；max_jumps 上限；jump_power 空中起跳初速度（原版 0.42）"
+      }
+    },
+    {
+      "type": "rpgtemplate:cursed_sense",
+      "name": "咒力感知",
+      "description": "感知周围的恶意：每 2 秒让 24 格内的敌对生物发光（透视可见），持续 3 秒。",
+      "params": {
+        "unlock_level": 0,
+        "radius": 24,
+        "interval_ticks": 40
+      }
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "rpgtemplate:cursed_object_aura",
+      "remove": true
+    },
+    {
+      "type": "rpgtemplate:smite_vulnerable",
+      "name": "亡灵杀手克制（减弱）",
+      "description": "受肉之身仍会被\"亡灵杀手\"克制，但十指的咒力已能抵消大半：被附有亡灵杀手的武器攻击时，按附魔等级受到额外伤害（×1.5）。",
+      "params": {
+        "damage_per_level": 2.5,
+        "multiplier": 1.5
+      }
+    },
+    {
+      "type": "rpgtemplate:vessel_suppression",
+      "name": "容器压制（微弱）",
+      "description": "十根手指的力量已足以压制容器，只在系统 HP 低于 10% 时有 2% 概率被夺回主导权 2 秒。",
+      "params": {
+        "hp_threshold": 0.1,
+        "chance": 0.02,
+        "seal_ticks": 40
+      }
+    }
+  ],
+  "negative_states": [
+    {
+      "type": "rpgtemplate:soul_incomplete",
+      "name": "灵魂残缺（半数）",
+      "description": "灵魂回来了一半。受到灵魂类伤害（凋零、监守者音波等）×1.25，并留下\"魂伤\"：按伤害的 35% 降低系统 HP 上限（最多 35%）。睡觉可完全恢复，平时缓慢恢复；Lv.28 后反转术式可以修复魂伤。",
+      "params": {
+        "soul_damage_tag": "rpgtemplate:soul_damage",
+        "soul_damage_multiplier": 1.25,
+        "wound_ratio": 0.35,
+        "max_wound_ratio": 0.35,
+        "recover_on_sleep": true,
+        "recover_per_second_ratio": 0.004
+      }
+    }
+  ],
+  "description": "诅咒之王，取回了十根手指的力量。咒物的气息不再引来咒灵，反而令它们畏惧。三指的全部技能得到强化，习得新术式「网格斩」，并随模板等级逐步解锁新规：黑闪（Lv.22）、蜘蛛之丝（Lv.24）、捌·连环（Lv.26）、魂之修复（Lv.28）。 领域展开从本阶段起即可使用，威力随模板等级与指阶段提高。"
+}
