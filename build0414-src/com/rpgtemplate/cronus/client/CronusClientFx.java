@@ -48,6 +48,7 @@ public final class CronusClientFx {
     private static final List<DomainFx> DOMAINS = new ArrayList<>();
     private static final List<PopupFx> POPUPS = new ArrayList<>();
     private static final List<HitImpactFx> IMPACTS = new ArrayList<>();
+    private static final List<BeamLineFx> BEAMS = new ArrayList<>();
     private static final List<RippleFx> RIPPLES = new ArrayList<>();
     private static final List<TrapFx> TRAPS = new ArrayList<>();
     private static long clientTick = 0L;
@@ -110,6 +111,22 @@ public final class CronusClientFx {
             this.yawRad = (float) (Math.random() * Math.PI * 2.0);
             this.slashTiltRad = (float) (Math.toRadians(24.0 + Math.random() * 38.0) * (Math.random() < 0.5 ? 1.0 : -1.0));
             this.maxAge = (kind == CronusFxMsg.POPUP_CRITICAL) ? 13 : (kind == CronusFxMsg.POPUP_GREAT ? 11 : 9);
+        }
+    }
+
+    /** 3D 加色光束与瞬移时空轨线（缺陷护罩Ⅱ 双管翡翠光束 / 时序瞬移金绿残影轨，零廉价粒子）。 */
+    private static final class BeamLineFx {
+        final double x0, y0, z0;
+        final double x1, y1, z1;
+        final int style; // 0=BEAM_GUN, 1=BEAM_BLINK
+        int age;
+        final int maxAge;
+
+        BeamLineFx(double x0, double y0, double z0, double x1, double y1, double z1, int style) {
+            this.x0 = x0; this.y0 = y0; this.z0 = z0;
+            this.x1 = x1; this.y1 = y1; this.z1 = z1;
+            this.style = style;
+            this.maxAge = (style == CronusFxMsg.BEAM_BLINK) ? 12 : 8;
         }
     }
 
@@ -201,6 +218,11 @@ public final class CronusClientFx {
                 CronusSpriteFx.spawnBurst(msg.extra, msg.entityId, msg.x, msg.y, msg.z, msg.param);
             case CronusFxMsg.KIND_ENERGY_ICON ->
                 CronusSpriteFx.spawnEnergyIcon(msg.entityId, msg.extra, msg.x, msg.y, msg.z, (int) Math.max(20.0f, msg.param));
+            case CronusFxMsg.KIND_BEAM_LINE -> {
+                if (BEAMS.size() < 40) {
+                    BEAMS.add(new BeamLineFx(msg.x, msg.y, msg.z, msg.tx, msg.ty, msg.tz, msg.extra));
+                }
+            }
             default -> {
             }
         }
@@ -216,6 +238,7 @@ public final class CronusClientFx {
             DOMAINS.clear();
             POPUPS.clear();
             IMPACTS.clear();
+            BEAMS.clear();
             RIPPLES.clear();
             TRAPS.clear();
             CronusSpriteFx.clear();
@@ -246,6 +269,13 @@ public final class CronusClientFx {
             HitImpactFx imp = iit.next();
             if (++imp.age >= imp.maxAge) {
                 iit.remove();
+            }
+        }
+        Iterator<BeamLineFx> bit = BEAMS.iterator();
+        while (bit.hasNext()) {
+            BeamLineFx b = bit.next();
+            if (++b.age >= b.maxAge) {
+                bit.remove();
             }
         }
         Iterator<RippleFx> rit = RIPPLES.iterator();
@@ -285,7 +315,7 @@ public final class CronusClientFx {
         boolean selfIsCronus = selfData != null && selfData.isActivated()
             && CronusKeys.TEMPLATE_ID.equals(selfData.loadedTemplateId());
         if (!selfIsCronus && DOMAINS.isEmpty() && POPUPS.isEmpty() && IMPACTS.isEmpty()
-            && RIPPLES.isEmpty() && TRAPS.isEmpty() && !CronusSpriteFx.hasActive()) {
+            && BEAMS.isEmpty() && RIPPLES.isEmpty() && TRAPS.isEmpty() && !CronusSpriteFx.hasActive()) {
             return;
         }
 
@@ -327,12 +357,15 @@ public final class CronusClientFx {
 
         src.m_109912_(type);
 
-        // 5. 打击瞬间 3D 加色辉光冲击波、斩击光弧与穿刺星芒（纯几何动态特效，零廉价粒子）
-        if (!IMPACTS.isEmpty()) {
+        // 5. 打击瞬间 3D 加色辉光冲击波、斩击光弧、双管翡翠光束与瞬移时空轨线（纯几何动态特效，零廉价粒子）
+        if (!IMPACTS.isEmpty() || !BEAMS.isEmpty()) {
             RenderType impactRt = CronusRenderTypes.additive(WHITE);
             VertexConsumer ivc = src.m_6299_(impactRt);
             for (HitImpactFx imp : IMPACTS) {
                 renderHitImpact(ivc, mat, cam, imp, pt);
+            }
+            for (BeamLineFx beam : BEAMS) {
+                renderBeamLine(ivc, mat, cam, beam, pt);
             }
             src.m_109912_(impactRt);
         }
@@ -754,6 +787,109 @@ public final class CronusClientFx {
                 (float) (cx + d1x * (radius - cw1)), (float) (cy + d1y * (radius - cw1)), (float) (cz + d1z * (radius - cw1)),
                 coreRgb, alpha);
         }
+    }
+
+    // ==================== 6b. 3D 立体双管翡翠光束与时序瞬移轨线 ====================
+
+    private static void renderBeamLine(VertexConsumer vc, Matrix4f mat, Vec3 cam, BeamLineFx b, float pt) {
+        float t = Mth.m_14036_((b.age + pt) / (float) b.maxAge, 0.0f, 1.0f);
+        float alpha = (1.0f - t) * (1.0f - t * 0.25f);
+        if (alpha <= 0.02f) {
+            return;
+        }
+        double dx = b.x1 - b.x0, dy = b.y1 - b.y0, dz = b.z1 - b.z0;
+        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (len < 0.05) {
+            return;
+        }
+        double dirX = dx / len, dirY = dy / len, dirZ = dz / len;
+        // 构造与光束方向正交的二维基底 (u, v)
+        double refX = Math.abs(dirY) > 0.9 ? 1.0 : 0.0;
+        double refY = Math.abs(dirY) > 0.9 ? 0.0 : 1.0;
+        double refZ = 0.0;
+        double ux = dirY * refZ - dirZ * refY;
+        double uy = dirZ * refX - dirX * refZ;
+        double uz = dirX * refY - dirY * refX;
+        double uLen = Math.max(1e-4, Math.sqrt(ux * ux + uy * uy + uz * uz));
+        ux /= uLen; uy /= uLen; uz /= uLen;
+        double vx = dirY * uz - dirZ * uy;
+        double vy = dirZ * ux - dirX * uz;
+        double vz = dirX * uy - dirY * ux;
+
+        if (b.style == CronusFxMsg.BEAM_GUN) {
+            // Gashacon 缺陷护罩Ⅱ 双管翡翠光束：上下并行两道翠青高能激光 + 白炽内芯 + 枪口/落点闪光
+            float outerW = 0.058f * (1.0f - t * 0.65f);
+            float coreW = 0.024f * (1.0f - t * 0.72f);
+            double sep = 0.075;
+            for (int k = -1; k <= 1; k += 2) {
+                double ox = vx * sep * k, oy = vy * sep * k, oz = vz * sep * k;
+                drawCrossBeamRibbon(vc, mat,
+                    b.x0 + ox, b.y0 + oy, b.z0 + oz,
+                    b.x1 + ox * 0.25, b.y1 + oy * 0.25, b.z1 + oz * 0.25,
+                    ux, uy, uz, vx, vy, vz, outerW, 0x18F29A, alpha * 0.85f);
+                drawCrossBeamRibbon(vc, mat,
+                    b.x0 + ox, b.y0 + oy, b.z0 + oz,
+                    b.x1 + ox * 0.25, b.y1 + oy * 0.25, b.z1 + oz * 0.25,
+                    ux, uy, uz, vx, vy, vz, coreW, 0xE6FFFF, alpha);
+            }
+            // 枪口与命中终点高能十字闪光
+            BillboardBasis muzzleBb = BillboardBasis.towardsCamera(cam, b.x0, b.y0, b.z0);
+            drawBillboardDiamond(vc, mat, muzzleBb, 0.28f * (1.0f - t * 0.5f), 0.055f * (1.0f - t), 0.35f, 0x35F2FF, alpha * 0.9f);
+            BillboardBasis endBb = BillboardBasis.towardsCamera(cam, b.x1, b.y1, b.z1);
+            drawBillboardDiamond(vc, mat, endBb, 0.42f * (0.6f + t * 0.6f), 0.07f * (1.0f - t), -0.4f, 0x18F29A, alpha);
+            drawBillboardDiamond(vc, mat, endBb, 0.34f * (0.6f + t * 0.6f), 0.055f * (1.0f - t), 1.15f, 0xFFFFFF, alpha);
+        } else {
+            // 时序瞬移金绿时空残影轨：宽幅翡翠外鞘 + 金色核心丝带 + 沿轨 3 道扩张时空光环
+            float outerW = 0.16f * (1.0f - t * 0.78f);
+            float coreW = 0.055f * (1.0f - t * 0.82f);
+            drawCrossBeamRibbon(vc, mat, b.x0, b.y0, b.z0, b.x1, b.y1, b.z1,
+                ux, uy, uz, vx, vy, vz, outerW, 0x18F29A, alpha * 0.72f);
+            drawCrossBeamRibbon(vc, mat, b.x0, b.y0, b.z0, b.x1, b.y1, b.z1,
+                ux, uy, uz, vx, vy, vz, coreW, 0xFFE066, alpha * 0.95f);
+
+            int ringSegs = 18;
+            for (int rIdx = 1; rIdx <= 3; rIdx++) {
+                double frac = rIdx * 0.25;
+                double rx = b.x0 + dx * frac, ry = b.y0 + dy * frac, rz = b.z0 + dz * frac;
+                float rOut = 0.28f + t * 0.45f;
+                float rIn = Math.max(0.05f, rOut - 0.07f * (1.0f - t * 0.6f));
+                int rgb = (rIdx == 2) ? 0xFFE066 : 0x18F29A;
+                for (int s = 0; s < ringSegs; s++) {
+                    double a0 = (Math.PI * 2.0 * s) / ringSegs;
+                    double a1 = (Math.PI * 2.0 * (s + 1)) / ringSegs;
+                    double c0 = Math.cos(a0), s0 = Math.sin(a0);
+                    double c1 = Math.cos(a1), s1 = Math.sin(a1);
+                    double p0x = ux * c0 + vx * s0, p0y = uy * c0 + vy * s0, p0z = uz * c0 + vz * s0;
+                    double p1x = ux * c1 + vx * s1, p1y = uy * c1 + vy * s1, p1z = uz * c1 + vz * s1;
+                    emitAdditiveQuad(vc, mat,
+                        (float) (rx + p0x * rIn), (float) (ry + p0y * rIn), (float) (rz + p0z * rIn),
+                        (float) (rx + p0x * rOut), (float) (ry + p0y * rOut), (float) (rz + p0z * rOut),
+                        (float) (rx + p1x * rOut), (float) (ry + p1y * rOut), (float) (rz + p1z * rOut),
+                        (float) (rx + p1x * rIn), (float) (ry + p1y * rIn), (float) (rz + p1z * rIn),
+                        rgb, alpha * 0.85f);
+                }
+            }
+        }
+    }
+
+    private static void drawCrossBeamRibbon(VertexConsumer vc, Matrix4f mat,
+                                            double x0, double y0, double z0,
+                                            double x1, double y1, double z1,
+                                            double ux, double uy, double uz,
+                                            double vx, double vy, double vz,
+                                            float halfW, int rgb, float alpha) {
+        emitAdditiveQuad(vc, mat,
+            (float) (x0 - ux * halfW), (float) (y0 - uy * halfW), (float) (z0 - uz * halfW),
+            (float) (x0 + ux * halfW), (float) (y0 + uy * halfW), (float) (z0 + uz * halfW),
+            (float) (x1 + ux * halfW), (float) (y1 + uy * halfW), (float) (z1 + uz * halfW),
+            (float) (x1 - ux * halfW), (float) (y1 - uy * halfW), (float) (z1 - uz * halfW),
+            rgb, alpha);
+        emitAdditiveQuad(vc, mat,
+            (float) (x0 - vx * halfW), (float) (y0 - vy * halfW), (float) (z0 - vz * halfW),
+            (float) (x0 + vx * halfW), (float) (y0 + vy * halfW), (float) (z0 + vz * halfW),
+            (float) (x1 + vx * halfW), (float) (y1 + vy * halfW), (float) (z1 + vz * halfW),
+            (float) (x1 - vx * halfW), (float) (y1 - vy * halfW), (float) (z1 - vz * halfW),
+            rgb, alpha);
     }
 
     private static void emitAdditiveQuad(VertexConsumer vc, Matrix4f mat,

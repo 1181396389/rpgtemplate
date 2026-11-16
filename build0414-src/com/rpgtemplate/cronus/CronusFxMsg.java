@@ -30,6 +30,11 @@ public final class CronusFxMsg {
     public static final byte KIND_SPRITE_FX = 8;
     /** 能量道具头顶悬浮能力图标：extra=能力编号(0高速/1肌肉/2钢铁/3跳跃/4回复), param=持续 ticks。 */
     public static final byte KIND_ENERGY_ICON = 9;
+    /** 3D 能量光束/瞬移时空轨线：extra=0(缺陷护罩Ⅱ 双管翡翠激光), 1(时序瞬移金绿时空残影轨)。 */
+    public static final byte KIND_BEAM_LINE = 10;
+
+    public static final int BEAM_GUN = 0;
+    public static final int BEAM_BLINK = 1;
 
     public static final int ENERGY_SPEED = 0;
     public static final int ENERGY_MUSCLE = 1;
@@ -54,15 +59,26 @@ public final class CronusFxMsg {
     public final double x;
     public final double y;
     public final double z;
+    public final double tx;
+    public final double ty;
+    public final double tz;
     public final float param;
     public final int extra;
 
     public CronusFxMsg(byte kind, int entityId, double x, double y, double z, float param, int extra) {
+        this(kind, entityId, x, y, z, x, y, z, param, extra);
+    }
+
+    public CronusFxMsg(byte kind, int entityId, double x, double y, double z,
+                       double tx, double ty, double tz, float param, int extra) {
         this.kind = kind;
         this.entityId = entityId;
         this.x = x;
         this.y = y;
         this.z = z;
+        this.tx = tx;
+        this.ty = ty;
+        this.tz = tz;
         this.param = param;
         this.extra = extra;
     }
@@ -75,17 +91,28 @@ public final class CronusFxMsg {
         buf.writeDouble(m.z);
         buf.writeFloat(m.param);
         buf.m_130130_(m.extra);
+        if (m.kind == KIND_BEAM_LINE) {
+            buf.writeDouble(m.tx);
+            buf.writeDouble(m.ty);
+            buf.writeDouble(m.tz);
+        }
     }
 
     public static CronusFxMsg decode(FriendlyByteBuf buf) {
-        return new CronusFxMsg(
-            buf.readByte(),
-            buf.m_130242_(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readFloat(),
-            buf.m_130242_());
+        byte kind = buf.readByte();
+        int entityId = buf.m_130242_();
+        double x = buf.readDouble();
+        double y = buf.readDouble();
+        double z = buf.readDouble();
+        float param = buf.readFloat();
+        int extra = buf.m_130242_();
+        if (kind == KIND_BEAM_LINE) {
+            double tx = buf.readDouble();
+            double ty = buf.readDouble();
+            double tz = buf.readDouble();
+            return new CronusFxMsg(kind, entityId, x, y, z, tx, ty, tz, param, extra);
+        }
+        return new CronusFxMsg(kind, entityId, x, y, z, param, extra);
     }
 
     public static void handle(CronusFxMsg msg, Supplier<NetworkEvent.Context> ctxSupplier) {

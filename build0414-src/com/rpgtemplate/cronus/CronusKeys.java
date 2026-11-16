@@ -2,11 +2,15 @@ package com.rpgtemplate.cronus;
 
 import com.rpgtemplate.core.config.CoreConfig;
 import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.core.data.TemplateInstance;
+import com.rpgtemplate.core.skill.SkillFormula;
 import com.rpgtemplate.core.stats.StatCalculator;
 import com.rpgtemplate.core.stats.StatType;
 import com.rpgtemplate.core.template.TemplateRegistry;
+import com.rpgtemplate.forge.ModConfigs;
 import com.rpgtemplate.forge.system.Msg;
 import com.rpgtemplate.forge.system.SystemDataManager;
+import com.rpgtemplate.forge.system.TraitLookup;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,8 +28,19 @@ public final class CronusKeys {
     public static final String KEY_TRANSFORMED = "cr.transformed";
     /** 变身开始或上次叠加时间防御的 tick。 */
     public static final String KEY_TRANSFORM_SINCE = "cr.transform_since";
-    /** 故障驱动器 II 武装形态：0.0 = 链锯模式（Zwei Chainsaw），1.0 = 光束枪模式（Zwei Gun）。 */
+    /** Gashacon 缺陷护罩Ⅱ 武装形态：0.0 = 电锯模式（Chainsaw），1.0 = 光线枪模式（Gun）。 */
     public static final String KEY_WEAPON_MODE = "cr.weapon_mode";
+    /** 1.0 = 已由 Cronus 变身施加常驻夜视/水下呼吸增益（解除变身时自动回收）。 */
+    public static final String KEY_BUFFS_APPLIED = "cr.buffs_applied";
+
+    /** 面板「物品」界面专属装备收录与唯一令牌状态（获得 Cronus 模板后自动解锁）。 */
+    public static final String KEY_GEAR_UNLOCKED = "cr.gear_unlocked";
+    public static final String KEY_DRIVER_SEQ = "cr.driver_seq";
+    public static final String KEY_DRIVER_TOKEN = "cr.driver_token";
+    public static final String KEY_DRIVER_STATE = "cr.driver_state";
+    public static final String KEY_GASHAT_SEQ = "cr.gashat_seq";
+    public static final String KEY_GASHAT_TOKEN = "cr.gashat_token";
+    public static final String KEY_GASHAT_STATE = "cr.gashat_state";
 
     /** 1.0 = 当前正在维持【Pause】时间暂停领域。 */
     public static final String KEY_PAUSED = "cr.paused";
@@ -76,6 +91,27 @@ public final class CronusKeys {
         return data.isActivated() && TEMPLATE_ID.equals(data.loadedTemplateId()) ? data : null;
     }
 
+    /** 玩家是否已激活系统并拥有假面骑士 Cronus 模板（无论当前是否加载）。 */
+    public static boolean ownsCronusTemplate(PlayerSystemData data) {
+        return data != null && data.isActivated() && data.findTemplate(TEMPLATE_ID).isPresent();
+    }
+
+    /**
+     * 计算 Gashacon 缺陷护罩Ⅱ 的动态攻击加成：取 Cronus 技能基础攻击力（系数 3.2，等同 Critical Crews-Aid 基础技能倍率）的精确三分之一。
+     * 会随玩家等级、模板等级与技能伤害换算配置实时成长。
+     */
+    public static float bugvisorAttackBonus(PlayerSystemData data) {
+        if (data == null || !data.isActivated()) {
+            return 0.0f;
+        }
+        int tplLevel = data.findTemplate(TEMPLATE_ID).map(TemplateInstance::level).orElse(1);
+        double mpMax = maxStat(data, StatType.MP);
+        double techMult = 1.0 + TraitLookup.techniqueDamageBonus(data);
+        double conv = ModConfigs.SERVER.skillDamageConversion.get();
+        double skillDmg = SkillFormula.attackPower(3.2, mpMax, Math.max(1, tplLevel), techMult, conv);
+        return (float) Math.max(2.0, skillDmg / 3.0);
+    }
+
     public static boolean isTransformed(PlayerSystemData data) {
         return data != null && data.value(KEY_TRANSFORMED, 0.0) > 0.5;
     }
@@ -116,6 +152,22 @@ public final class CronusKeys {
         return mult;
     }
 
+    /** 玩家解除变身时：清理病毒过载之外由 Cronus 施加的常驻增益与召唤武装。 */
+    public static void clearTransformedState(ServerPlayer player, PlayerSystemData data) {
+        if (data != null) {
+            data.setValue(KEY_TRANSFORMED, 0.0);
+            data.setValue(KEY_TIME_DEF, 0.0);
+        }
+        if (player != null && data != null && data.value(KEY_BUFFS_APPLIED, 0.0) > 0.5) {
+            player.m_21195_(MobEffects.f_19611_); // NIGHT_VISION
+            player.m_21195_(MobEffects.f_19608_); // WATER_BREATHING
+            data.setValue(KEY_BUFFS_APPLIED, 0.0);
+        }
+        if (player != null) {
+            CronusGearManager.retractSummonedBugvisor(player);
+        }
+    }
+
     /** 增加或平复 Bugster 病毒抗体负荷；满 100% 时触发驱动器过热反噬并强制解除时停/变身。 */
     public static void addViralStrain(ServerPlayer player, PlayerSystemData data, double delta, long now) {
         if (player == null || data == null) {
@@ -129,8 +181,7 @@ public final class CronusKeys {
             if (isPaused(data)) {
                 CronusPauseManager.restart(player, data, 1.0, false);
             }
-            data.setValue(KEY_TRANSFORMED, 0.0);
-            data.setValue(KEY_TIME_DEF, 0.0);
+            clearTransformedState(player, data);
             double curHp = data.hp();
             if (curHp > 2.0) {
                 data.setHp(Math.max(1.0, curHp * 0.92));

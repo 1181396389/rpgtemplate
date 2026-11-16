@@ -22,7 +22,7 @@
       "base_cost": 4.0,
       "coefficient": 0.0,
       "cooldown_ticks": 40,
-      "description": "切换【檀正宗人形态 ⇄ 假面骑士 Cronus 变身态】。变身后激活时计光轮、小伤害免疫与随时间递增的【时间防御系统】；解除变身时将自动终止时停并加速平复病毒负荷。"
+      "description": "切换【檀正宗人形态 ⇄ 假面骑士 Cronus 变身态】（支持技能一键变身，亦可在「物品」界面取出【故障驱动器Ⅱ】与【假面骑士编年史转玩卡带】手动插卡变身）。变身后自动获得【Gashacon 缺陷护罩Ⅱ】双形态武装、长时夜视、水下呼吸与中毒免疫，并激活【时间防御系统】与小伤害免疫。"
     },
     {
       "id": "rpgtemplate:cronus_pause",
@@ -34,13 +34,13 @@
       "description": "【首次按下·Pause】展开半径 12~20m 的罗马数字时钟领域并持续消耗能量：经四档机制判定，①完全生效时定格生物与飞行投射物，时停中造成的伤害全部悬停蓄积；②显著干扰/③微弱牵制依次降级为迟缓；④判定失败目标免疫并引发悖论反噬。【再次按下·Restart】重开时间流动，将蓄积的全部悬停伤害以 1.20x 倍率瞬间引爆！"
     },
     {
-      "id": "rpgtemplate:cronus_zwei",
-      "name": "故障驱动器 II · 武装",
-      "cost_type": "SP",
-      "base_cost": 2.8,
-      "coefficient": 1.6,
-      "cooldown_ticks": 30,
-      "description": "【潜行 + 点按】零消耗切换「链锯模式（Zwei Chainsaw）」与「光束枪模式（Zwei Gun）」。【常态点按】链锯模式发动突进弧形重斩；光束枪模式发射三连发高精度翡翠光束（时停中自动叠入悬停伤害池）。"
+      "id": "rpgtemplate:cronus_blink",
+      "name": "时序瞬移",
+      "cost_type": "MP",
+      "base_cost": 3.0,
+      "coefficient": 0.0,
+      "cooldown_ticks": 28,
+      "description": "【常态点按·锁敌背刺/空间跃迁】瞄准 18m 内目标时瞬间闪现至其背后并自动转身锁定后背；瞄准空地或高台时向前跃迁至多 16m 并免除坠落伤害。【潜行 + 点按】向后瞬移 8m 时序回避。【Pause 期间】冷却减半且能耗降低 40%，可自由穿梭于静止世界。"
     },
     {
       "id": "rpgtemplate:cronus_energy_item",
@@ -67,7 +67,7 @@
       "base_cost": 10.5,
       "coefficient": 3.8,
       "cooldown_ticks": 200,
-      "description": "按当前武装与时停状态自动派生四式必杀：①链锯常态【Critical Sacrifice】突进十字重斩；②链锯时停【断罪十字刻】在冻结目标四周悬停四柄光锯，Restart 时同步绞杀；③光束枪常态【Critical Judgement】扇形七重审判光束；④光束枪时停【全方位死角包围网】环绕目标悬停 12 枚光弹，Restart 时无死角轰击。"
+      "description": "按【Gashacon 缺陷护罩Ⅱ】当前形态（蹲下右键切换）与时停状态自动派生四式必杀：①电锯常态【Critical Sacrifice】突进十字重斩；②电锯时停【断罪十字刻】在冻结目标四周悬停四柄光锯，Restart 时同步绞杀；③光线枪常态【Critical Judgement】扇形七重审判光束；④光线枪时停【全方位死角包围网】环绕目标悬停 12 枚光弹，Restart 时无死角轰击。"
     },
     {
       "id": "rpgtemplate:cronus_reset",
@@ -133,6 +133,14 @@
       "description": "在自身展开的【Pause】时间暂停领域内完全免疫迟缓效果、获得迅捷步伐，且对时停领域内目标造成的伤害提升 12%。",
       "params": {
         "pause_damage_bonus": 0.12
+      }
+    },
+    {
+      "type": "rpgtemplate:cronus_armor_vitals",
+      "name": "编年史装甲与专属武装",
+      "description": "获得本模板即于「物品」界面收录【故障驱动器Ⅱ】与【假面骑士编年史转玩卡带】用于手动变身；变身期间自动装备【Gashacon 缺陷护罩Ⅱ】（蹲下右键切换光线枪/电锯模式，攻击加成为技能基础伤害的 1/3），并常驻长时夜视（无闪烁）、水下呼吸与中毒免疫。",
+      "params": {
+        "bugvisor_attack_ratio": 0.3333
       }
     }
   ],

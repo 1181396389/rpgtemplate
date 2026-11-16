@@ -1,6 +1,7 @@
 package com.rpgtemplate.forge;
 
 import com.mojang.logging.LogUtils;
+import com.rpgtemplate.cronus.CronusItems;
 import com.rpgtemplate.forge.king.KingConfig;
 import com.rpgtemplate.forge.king.KingNetwork;
 import com.rpgtemplate.forge.mask.PerceptionMaskBootstrap;
@@ -46,6 +47,7 @@ public final class RpgTemplateMod {
         KingNetwork.register();
         NtBootstrap.init();
         PerceptionMaskBootstrap.init();
+        CronusItems.init();
     }
 
     public static ResourceLocation id(String path) {

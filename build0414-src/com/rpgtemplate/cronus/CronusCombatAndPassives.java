@@ -26,7 +26,9 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -134,6 +136,9 @@ public final class CronusCombatAndPassives {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) {
             return;
         }
+        // 无论当前是否加载 Cronus，均检测模板解锁、物品界面状态同步以及变身武装/常驻增益回收
+        CronusGearManager.tickPlayer(player);
+
         PlayerSystemData data = CronusKeys.activeData(player);
         if (data == null) {
             CronusPauseManager.forceClearFor(player.m_20148_());
@@ -172,12 +177,32 @@ public final class CronusCombatAndPassives {
             player.f_19789_ = Math.max(0.0f, player.f_19789_ - 0.35f);
         }
 
-        // 5. 每秒更新【时间防御系统】与平复非时停态的【Bugster 病毒负荷】
+        // 5. 每秒更新【时间防御系统】、变身常驻增益（长时夜视 / 水下呼吸 / 免疫中毒）与病毒负荷平复
         if (now % 20L == 0L) {
             boolean dirty = false;
             if (CronusKeys.isTransformed(data)) {
-                // 变身态常驻微弱编年史机动性，每 5 秒叠加 2% 时间防御，上限随等级 15% ~ 45%
+                // 变身态常驻微弱编年史机动性；长时夜视（5分钟，剩余低于2分钟才静默续满，绝不闪屏）+ 水下呼吸 + 免疫中毒
                 player.m_7292_(new MobEffectInstance(MobEffects.f_19596_, 30, 0, true, false, false));
+
+                MobEffectInstance nv = player.m_21124_(MobEffects.f_19611_);
+                if (nv == null || nv.m_19557_() < 2400) {
+                    player.m_7292_(new MobEffectInstance(MobEffects.f_19611_, CronusSkills.LONG_BUFF_DURATION, 0, true, false, true));
+                }
+                MobEffectInstance wb = player.m_21124_(MobEffects.f_19608_);
+                if (wb == null || wb.m_19557_() < 2400) {
+                    player.m_7292_(new MobEffectInstance(MobEffects.f_19608_, CronusSkills.LONG_BUFF_DURATION, 0, true, false, true));
+                }
+                if (player.m_20146_() < player.m_6062_()) {
+                    player.m_20301_(player.m_6062_());
+                }
+                if (player.m_21023_(MobEffects.f_19614_)) {
+                    player.m_21195_(MobEffects.f_19614_);
+                }
+                if (data.value(CronusKeys.KEY_BUFFS_APPLIED, 0.0) < 0.5) {
+                    data.setValue(CronusKeys.KEY_BUFFS_APPLIED, 1.0);
+                    dirty = true;
+                }
+
                 if (now % 100L == 0L) {
                     double cap = Math.min(0.45, 0.15 + data.level() * 0.005);
                     double cur = data.value(CronusKeys.KEY_TIME_DEF, 0.0);
@@ -237,9 +262,12 @@ public final class CronusCombatAndPassives {
                 atkData.setValue(CronusKeys.KEY_LAST_HIT_OUT, (double) now);
                 SystemDataManager.markDirty((Player) attacker);
 
-                // 应用拳套层数与肌肉强化道具乘区（仅非 Restart / 非肌肉落地二次结算阶段）
+                // 应用缺陷护罩Ⅱ近战 1/3 技能攻击加成、拳套层数与肌肉强化道具乘区（仅非 Restart / 非肌肉落地二次结算阶段）
                 boolean muscleActive = atkData.value(CronusKeys.KEY_ITEM_MUSCLE_UNTIL, 0.0) > (double) now;
                 if (!CronusPauseManager.isResolvingRestart() && !resolvingMuscleSlam) {
+                    if ("player".equals(source.m_19385_()) && CronusItems.isBugvisor(attacker.m_21205_())) {
+                        dmg += CronusKeys.bugvisorAttackBonus(atkData);
+                    }
                     dmg *= (float) (1.0 + curStacks * 0.10);
                     if (muscleActive) {
                         dmg *= 1.50f;
@@ -277,11 +305,19 @@ public final class CronusCombatAndPassives {
             }
         }
 
-        // B. 受击方为 Cronus：处理【光速/雷电/魔法弱点】【时间防御】【交锋减伤】与【小伤害免疫】
+        // B. 受击方为 Cronus：处理【中毒免疫】【光速/雷电/魔法弱点】【时间防御】【交锋减伤】与【小伤害免疫】
         if (victim instanceof ServerPlayer defender) {
             PlayerSystemData defData = CronusKeys.activeData(defender);
             if (defData == null) {
                 return;
+            }
+            if (CronusKeys.isTransformed(defData)) {
+                String srcId = source.m_19385_();
+                if (srcId != null && srcId.toLowerCase().contains("poison")) {
+                    event.setAmount(0.0f);
+                    event.setCanceled(true);
+                    return;
+                }
             }
             long now = defender.m_9236_().m_46467_();
             float dmg = event.getAmount();
@@ -329,6 +365,19 @@ public final class CronusCombatAndPassives {
             }
 
             event.setAmount(dmg);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onMobEffectApplicable(MobEffectEvent.Applicable event) {
+        if (!(event.getEntity() instanceof ServerPlayer sp)) {
+            return;
+        }
+        if (event.getEffectInstance() == null || event.getEffectInstance().m_19544_() != MobEffects.f_19614_) {
+            return;
+        }
+        if (CronusKeys.isTransformed(CronusKeys.activeData(sp))) {
+            event.setResult(Event.Result.DENY);
         }
     }
 

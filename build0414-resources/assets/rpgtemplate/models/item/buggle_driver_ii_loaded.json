@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rpgtemplate:item/buggle_driver_ii_loaded"
+  }
+}

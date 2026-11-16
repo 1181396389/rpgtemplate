@@ -14,21 +14,31 @@ import com.rpgtemplate.templates.TemplateHelper;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
  * 假面骑士 Cronus（{@code rpgtemplate:cronus_1}）全部 7 个主动技能实现。
  */
 public final class CronusSkills {
+    /** 变身后赋予的长时夜视/水下呼吸基准时长（5 分钟，低于 2 分钟时静默续满，彻底杜绝原版夜视低时长闪屏）。 */
+    public static final int LONG_BUFF_DURATION = 6000;
+
     private CronusSkills() {
     }
 
@@ -41,7 +51,69 @@ public final class CronusSkills {
         return true;
     }
 
-    /** 技能 1：编年史变身（檀正宗人形态 ⇄ 假面骑士 Cronus 切换）。 */
+    /** 统一变身执行（供技能 1 与【故障驱动器Ⅱ】手动变身共用）。 */
+    public static void performHenshinOn(ServerPlayer player, PlayerSystemData data, long now) {
+        data.setValue(CronusKeys.KEY_TRANSFORMED, 1.0);
+        data.setValue(CronusKeys.KEY_TRANSFORM_SINCE, (double) now);
+        data.setValue(CronusKeys.KEY_TIME_DEF, 0.05);
+
+        // 变身即赋予长时夜视（5分钟，不闪烁）、长时水下呼吸并立即净化既有中毒
+        player.m_21195_(MobEffects.f_19614_); // POISON
+        player.m_7292_(new MobEffectInstance(MobEffects.f_19611_, LONG_BUFF_DURATION, 0, true, false, true));
+        player.m_7292_(new MobEffectInstance(MobEffects.f_19608_, LONG_BUFF_DURATION, 0, true, false, true));
+        player.m_20301_(player.m_6062_());
+        data.setValue(CronusKeys.KEY_BUFFS_APPLIED, 1.0);
+
+        // 变身自动装备【Gashacon 缺陷护罩Ⅱ】
+        CronusGearManager.grantSummonedBugvisor(player, data);
+
+        CronusSounds.playHenshin(player);
+        if (player.m_9236_() instanceof ServerLevel sl) {
+            CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, player.m_19879_(),
+                    player.m_20185_(), player.m_20186_() + 0.05, player.m_20189_(), 3.6f, 1));
+            CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                new CronusFxMsg(CronusFxMsg.KIND_HENSHIN_SEQ, player.m_19879_(),
+                    player.m_20185_(), player.m_20186_(), player.m_20189_(), 1.0f, 0));
+        }
+        Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.henshin_on")
+            .m_130940_(ChatFormatting.GREEN));
+        SystemDataManager.markDirty((Player) player);
+        SystemDataManager.sync(player);
+    }
+
+    /** 统一解除变身执行（终止时停、收回缺陷护罩Ⅱ、撤除常驻夜视/水下呼吸）。 */
+    public static void performHenshinOff(ServerPlayer player, PlayerSystemData data) {
+        if (CronusKeys.isPaused(data)) {
+            CronusPauseManager.restart(player, data, 1.20, false);
+        }
+        CronusKeys.clearTransformedState(player, data);
+        Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.henshin_off")
+            .m_130940_(ChatFormatting.GRAY));
+        SystemDataManager.markDirty((Player) player);
+        SystemDataManager.sync(player);
+    }
+
+    /** 供【故障驱动器Ⅱ】手动右键触发变身 / 解除变身（同样遵循驱动器过热锁与少量 MP 消耗）。 */
+    public static void toggleHenshinManual(ServerPlayer player, PlayerSystemData data, long now) {
+        if (!checkDriverReady(player, data, now)) {
+            return;
+        }
+        if (CronusKeys.isTransformed(data)) {
+            performHenshinOff(player, data);
+            return;
+        }
+        double cost = 4.0;
+        if (data.mp() < cost) {
+            Msg.actionBar(player, Component.m_237115_("message.rpgtemplate.cronus.driver_low_mp")
+                .m_130940_(ChatFormatting.RED));
+            return;
+        }
+        data.setMp(Math.max(0.0, data.mp() - cost));
+        performHenshinOn(player, data, now);
+    }
+
+    /** 技能 1：编年史变身（檀正宗人形态 ⇄ 假面骑士 Cronus 切换；与手动驱动器变身完全互通）。 */
     public static final class HenshinSkill implements Skill {
         @Override
         public void onPress(SkillContext ctx, HeldState held) {
@@ -49,37 +121,15 @@ public final class CronusSkills {
                 return;
             }
             if (CronusKeys.isTransformed(ctx.data)) {
-                if (CronusKeys.isPaused(ctx.data)) {
-                    CronusPauseManager.restart(ctx.player, ctx.data, 1.20, false);
-                }
-                ctx.data.setValue(CronusKeys.KEY_TRANSFORMED, 0.0);
-                ctx.data.setValue(CronusKeys.KEY_TIME_DEF, 0.0);
                 ctx.cooldown(30);
-                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.henshin_off")
-                    .m_130940_(ChatFormatting.GRAY));
-                SystemDataManager.markDirty((Player) ctx.player);
+                performHenshinOff(ctx.player, ctx.data);
                 return;
             }
-
             if (!ctx.consume(ctx.cost(4.0))) {
                 return;
             }
             ctx.cooldown(40);
-            ctx.data.setValue(CronusKeys.KEY_TRANSFORMED, 1.0);
-            ctx.data.setValue(CronusKeys.KEY_TRANSFORM_SINCE, (double) ctx.now);
-            ctx.data.setValue(CronusKeys.KEY_TIME_DEF, 0.05);
-            CronusSounds.playHenshin(ctx.player);
-            if (ctx.player.m_9236_() instanceof ServerLevel sl) {
-                CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                    new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, ctx.player.m_19879_(),
-                        ctx.player.m_20185_(), ctx.player.m_20186_() + 0.05, ctx.player.m_20189_(), 3.6f, 1));
-                CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                    new CronusFxMsg(CronusFxMsg.KIND_HENSHIN_SEQ, ctx.player.m_19879_(),
-                        ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(), 1.0f, 0));
-            }
-            Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.henshin_on")
-                .m_130940_(ChatFormatting.GREEN));
-            SystemDataManager.markDirty((Player) ctx.player);
+            performHenshinOn(ctx.player, ctx.data, ctx.now);
         }
     }
 
@@ -112,59 +162,169 @@ public final class CronusSkills {
         }
     }
 
-    /** 技能 3：故障驱动器 II · 武装斩射（潜行点按零消耗切换「链锯 / 光束枪」模式；常态释放对应斩击或三连光束）。 */
-    public static final class ZweiWeaponSkill implements Skill {
+    /**
+     * 技能 3：时序瞬移（Chrono Blink，取代原模式切换槽位；武装模式已交由 Gashacon 缺陷护罩Ⅱ 蹲下右键瞬切）。
+     * <ul>
+     *   <li>常态点按瞄准敌对目标（≤18m）：瞬间绕后闪现至目标背后 2m 并自动转身锁定其后背，便于无缝衔接链锯/飞踢连段。</li>
+     *   <li>常态点按指向空地/高台（≤16m）：自由时空间跃迁并重置坠落高度。</li>
+     *   <li>潜行 + 点按：向后瞬移 8m 拉开身位进行时序闪避。</li>
+     *   <li>【Pause】时停期间：冷却减半、能耗降低 40%，还原剧场级全向鬼魅瞬移。</li>
+     * </ul>
+     */
+    public static final class ChronoBlinkSkill implements Skill {
         @Override
         public void onPress(SkillContext ctx, HeldState held) {
             if (!CronusKeys.requireTransformed(ctx.player, ctx.data)) {
                 return;
             }
-            int curMode = CronusKeys.weaponMode(ctx.data);
-            if (ctx.player.m_6144_()) {
-                int next = (curMode == CronusKeys.MODE_CHAINSAW) ? CronusKeys.MODE_GUN : CronusKeys.MODE_CHAINSAW;
-                ctx.data.setValue(CronusKeys.KEY_WEAPON_MODE, (double) next);
-                ctx.cooldown(8);
-                ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                    SoundEvents.f_11736_, SoundSource.PLAYERS, 0.8f, next == CronusKeys.MODE_GUN ? 1.45f : 0.85f);
-                Msg.actionBar(ctx.player, Component.m_237115_(next == CronusKeys.MODE_GUN
-                        ? "message.rpgtemplate.cronus.mode_gun"
-                        : "message.rpgtemplate.cronus.mode_chainsaw")
-                    .m_130940_(ChatFormatting.AQUA));
-                SystemDataManager.markDirty((Player) ctx.player);
+            boolean paused = CronusKeys.isPaused(ctx.data);
+            double cost = ctx.cost(paused ? 1.8 : 3.0);
+            if (!ctx.consume(cost)) {
                 return;
+            }
+            ctx.cooldown(paused ? 14 : 28);
+
+            ServerPlayer sp = ctx.player;
+            Level level = sp.m_9236_();
+            Vec3 fromPos = sp.m_20182_();
+            Vec3 fromMid = fromPos.m_82520_(0.0, sp.m_20206_() * 0.55, 0.0);
+            Vec3 destPos;
+            float newYaw = sp.m_146908_();
+            float newPitch = sp.m_146909_();
+            boolean backstab = false;
+
+            if (sp.m_6144_()) {
+                // 潜行点按：向后 8m 时序回避瞬移
+                Vec3 lookH = new Vec3(-Math.sin(Math.toRadians(sp.m_146908_())), 0.0, Math.cos(Math.toRadians(sp.m_146908_())));
+                destPos = findSafeBlinkPos(level, sp, fromPos, lookH.m_82490_(-1.0), 8.0);
+            } else {
+                // 优先检测准星前方 18m 内的锁定目标 → 闪现至目标身后！
+                LivingEntity target = findBlinkTarget(sp, 18.0);
+                if (target != null) {
+                    Vec3 tPos = target.m_20182_();
+                    double tYawRad = Math.toRadians(target.m_146908_());
+                    Vec3 tFwd = new Vec3(-Math.sin(tYawRad), 0.0, Math.cos(tYawRad));
+                    // 优先落点：目标背后 2.0 格；若被墙阻挡则尝试侧后或前方安全位
+                    Vec3 behind = tPos.m_82546_(tFwd.m_82490_(2.0));
+                    Vec3 candidate = resolveStandable(level, behind);
+                    if (candidate == null) {
+                        Vec3 toSelf = fromPos.m_82546_(tPos);
+                        double hLen = Math.max(1e-4, Math.hypot(toSelf.f_82479_, toSelf.f_82481_));
+                        candidate = resolveStandable(level, tPos.m_82520_(toSelf.f_82479_ / hLen * 1.8, 0.0, toSelf.f_82481_ / hLen * 1.8));
+                    }
+                    if (candidate != null) {
+                        destPos = candidate;
+                        backstab = true;
+                        Vec3 faceDir = target.m_146892_().m_82546_(destPos.m_82520_(0.0, sp.m_20192_(), 0.0));
+                        double flat = Math.max(1e-4, Math.hypot(faceDir.f_82479_, faceDir.f_82481_));
+                        newYaw = (float) (Mth.m_14136_(faceDir.f_82481_, faceDir.f_82479_) * (180.0 / Math.PI)) - 90.0f;
+                        newPitch = (float) (-(Mth.m_14136_(faceDir.f_82480_, flat) * (180.0 / Math.PI)));
+                    } else {
+                        destPos = findSafeBlinkPos(level, sp, fromPos, sp.m_20154_().m_82541_(), 16.0);
+                    }
+                } else {
+                    destPos = findSafeBlinkPos(level, sp, fromPos, sp.m_20154_().m_82541_(), 16.0);
+                }
             }
 
-            if (!ctx.consume(ctx.cost(2.8))) {
-                return;
-            }
-            if (curMode == CronusKeys.MODE_CHAINSAW) {
-                ctx.cooldown(32);
-                TemplateHelper.dashForward(ctx.player, 0.55, 0.08);
-                float dmg = ctx.damage(1.15);
-                List<LivingEntity> targets = coneTargets(ctx.player, 4.6, 0.35);
-                for (LivingEntity t : targets) {
-                    TargetUtil.hurt(t, ModDamageTypes.technique(ctx.player), dmg);
-                }
-                ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                    SoundEvents.f_12317_, SoundSource.PLAYERS, 0.9f, 0.9f);
+            // 执行瞬移并同步朝向（锁敌背刺强制转向目标后背，自由跃迁保持玩家实时视角防抖动），清零坠落伤害
+            if (backstab && sp.f_8906_ != null) {
+                sp.f_8906_.m_9774_(destPos.f_82479_, destPos.f_82480_, destPos.f_82481_, newYaw, newPitch);
             } else {
-                ctx.cooldown(28);
-                float perShot = ctx.damage(0.42);
-                List<TargetUtil.Hit> hits = TargetUtil.ray(ctx.player, 26.0, 2, 0.45);
-                for (TargetUtil.Hit hit : hits) {
-                    for (int i = 0; i < 3; i++) {
-                        if (!hit.entity().m_6084_()) {
-                            break;
-                        }
-                        if (i > 0) {
-                            hit.entity().f_19802_ = 0; // 清零连发间隔无敌帧，保证三连光弹全部命中
-                        }
-                        TargetUtil.hurt(hit.entity(), ModDamageTypes.technique(ctx.player), perShot);
-                    }
-                }
-                ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
-                    SoundEvents.f_11736_, SoundSource.PLAYERS, 0.85f, 1.55f);
+                sp.m_6021_(destPos.f_82479_, destPos.f_82480_, destPos.f_82481_);
             }
+            sp.f_19789_ = 0.0f;
+            sp.m_20256_(Vec3.f_82478_);
+            sp.f_19864_ = true;
+
+            Vec3 toMid = destPos.m_82520_(0.0, sp.m_20206_() * 0.55, 0.0);
+            if (level instanceof ServerLevel sl) {
+                CronusNet.sendNear(sl, fromPos.f_82479_, fromPos.f_82480_, fromPos.f_82481_,
+                    new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, sp.m_19879_(),
+                        fromPos.f_82479_, fromPos.f_82480_ + 0.06, fromPos.f_82481_, 1.7f, 0));
+                CronusNet.sendNear(sl, destPos.f_82479_, destPos.f_82480_, destPos.f_82481_,
+                    new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, sp.m_19879_(),
+                        destPos.f_82479_, destPos.f_82480_ + 0.06, destPos.f_82481_, 2.0f, 1));
+                CronusNet.sendNear(sl, destPos.f_82479_, destPos.f_82480_, destPos.f_82481_,
+                    new CronusFxMsg(CronusFxMsg.KIND_BEAM_LINE, sp.m_19879_(),
+                        fromMid.f_82479_, fromMid.f_82480_, fromMid.f_82481_,
+                        toMid.f_82479_, toMid.f_82480_, toMid.f_82481_,
+                        1.0f, CronusFxMsg.BEAM_BLINK));
+            }
+            level.m_6263_(null, fromPos.f_82479_, fromPos.f_82480_, fromPos.f_82481_,
+                SoundEvents.f_11852_, SoundSource.PLAYERS, 0.75f, 1.45f);
+            level.m_6263_(null, destPos.f_82479_, destPos.f_82480_, destPos.f_82481_,
+                SoundEvents.f_11852_, SoundSource.PLAYERS, 0.85f, 1.85f);
+            if (backstab) {
+                Msg.actionBar(sp, Component.m_237115_("message.rpgtemplate.cronus.blink_backstab")
+                    .m_130940_(ChatFormatting.GREEN));
+            }
+        }
+
+        private static LivingEntity findBlinkTarget(ServerPlayer sp, double range) {
+            Vec3 eye = sp.m_146892_();
+            Vec3 look = sp.m_20154_().m_82541_();
+            AABB box = sp.m_20191_().m_82377_(range, range * 0.75, range);
+            LivingEntity best = null;
+            double bestScore = 0.88; // 约 28° 精准锁定锥
+            double rSq = range * range;
+            for (LivingEntity e : sp.m_9236_().m_45976_(LivingEntity.class, box)) {
+                if (e == sp || !e.m_6084_() || e.m_20280_(sp) > rSq) {
+                    continue;
+                }
+                Vec3 to = e.m_20191_().m_82399_().m_82546_(eye);
+                double dist = Math.max(0.5, to.m_82553_());
+                double dot = to.m_82490_(1.0 / dist).m_82526_(look);
+                if (dot > bestScore) {
+                    bestScore = dot;
+                    best = e;
+                }
+            }
+            return best;
+        }
+
+        private static Vec3 findSafeBlinkPos(Level level, ServerPlayer sp, Vec3 origin, Vec3 dir, double maxDist) {
+            Vec3 eye = sp.m_146892_();
+            Vec3 rawEnd = eye.m_82549_(dir.m_82490_(maxDist));
+            BlockHitResult hit = level.m_45547_(new ClipContext(
+                eye, rawEnd, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, sp));
+
+            Vec3 probe = hit.m_6662_() == HitResult.Type.MISS
+                ? origin.m_82549_(dir.m_82490_(maxDist))
+                : hit.m_82450_().m_82546_(dir.m_82490_(0.65));
+
+            // 沿命中点或终点向上/向回逐格检索可站立安全空间（绝不卡墙窒息）
+            Vec3 direct = resolveStandable(level, probe);
+            if (direct != null) {
+                return direct;
+            }
+            if (hit.m_6662_() != HitResult.Type.MISS) {
+                Vec3 atop = resolveStandable(level, Vec3.m_82539_(hit.m_82425_().m_7494_()));
+                if (atop != null) {
+                    return atop;
+                }
+            }
+            double totalDist = origin.m_82554_(probe);
+            for (double d = totalDist - 0.8; d >= 1.0; d -= 0.8) {
+                Vec3 step = origin.m_82549_(dir.m_82490_(d));
+                Vec3 ok = resolveStandable(level, step);
+                if (ok != null) {
+                    return ok;
+                }
+            }
+            return origin;
+        }
+
+        private static Vec3 resolveStandable(Level level, Vec3 pos) {
+            for (int dy = 0; dy <= 2; dy++) {
+                double y = pos.f_82480_ + dy;
+                BlockPos feet = BlockPos.m_274561_(pos.f_82479_, y, pos.f_82481_);
+                BlockPos head = feet.m_7494_();
+                if (!level.m_8055_(feet).m_280555_() && !level.m_8055_(head).m_280555_()) {
+                    return new Vec3(pos.f_82479_, y, pos.f_82481_);
+                }
+            }
+            return null;
         }
     }
 

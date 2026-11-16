@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rpgtemplate:item/buggle_driver_ii"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "rpgtemplate:driver_loaded": 1.0
+      },
+      "model": "rpgtemplate:item/buggle_driver_ii_loaded"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 package com.rpgtemplate.forge.system;
 
 import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.cronus.CronusGearManager;
 import com.rpgtemplate.forge.mask.PerceptionMaskManager;
 import java.util.Map;
 import java.util.Set;
@@ -57,6 +58,11 @@ public final class PanelActions {
             case "mask_equip" -> PerceptionMaskManager.handleEquip(player);
             case "mask_store" -> PerceptionMaskManager.handleStore(player);
             case "vault_open" -> TravelerVaultStorage.openVault(player);
+            case "cronus_driver_take" -> CronusGearManager.handleDriverTake(player);
+            case "cronus_driver_store" -> CronusGearManager.handleDriverStore(player);
+            case "cronus_gashat_take" -> CronusGearManager.handleGashatTake(player);
+            case "cronus_gashat_store" -> CronusGearManager.handleGashatStore(player);
+            case "cronus_set_take" -> CronusGearManager.handleTakeSet(player);
             default -> {
             }
         }

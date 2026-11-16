@@ -8,6 +8,9 @@ import com.rpgtemplate.core.template.CostType;
 import com.rpgtemplate.core.template.SkillEntry;
 import com.rpgtemplate.core.template.TemplateDefinition;
 import com.rpgtemplate.core.template.TemplateRegistry;
+import com.rpgtemplate.cronus.CronusGearManager;
+import com.rpgtemplate.cronus.CronusItems;
+import com.rpgtemplate.cronus.CronusKeys;
 import com.rpgtemplate.core.ui.UiLayout;
 import com.rpgtemplate.forge.ModConfigs;
 import com.rpgtemplate.forge.client.ClientKeys;
@@ -1111,6 +1114,115 @@ public final class SystemPanelScreen extends Screen {
             t("mask.tooltip"),
             maskDetails
         ));
+
+        // 拥有假面骑士 Cronus 模板后，自动在「物品」界面收纳【故障驱动器Ⅱ】与【假面骑士编年史转玩卡带】
+        if (CronusKeys.ownsCronusTemplate(data)) {
+            int dState = (int) Math.round(data.value(CronusKeys.KEY_DRIVER_STATE, 0.0));
+            boolean dHeld = dState == CronusGearManager.STATE_HELD;
+            boolean dDropped = dState == CronusGearManager.STATE_DROPPED_NEARBY;
+            boolean dLost = dState == CronusGearManager.STATE_LOST;
+
+            String dStatus = dHeld ? t("cronus_gear.state_held")
+                : (dDropped ? t("cronus_gear.state_dropped")
+                    : (dLost ? t("cronus_gear.state_lost") : t("cronus_gear.state_stored")));
+            int dStatusColor = dHeld ? UiTheme.E_JADE
+                : (dDropped ? UiTheme.E_GOLD_TEXT
+                    : (dLost ? UiTheme.E_RED : UiTheme.E_MUTED));
+            String dQuick = dHeld ? t("items.quick_store")
+                : (dDropped ? t("items.quick_dropped")
+                    : (dLost ? t("items.quick_reclaim") : t("items.quick_take")));
+            boolean dEnabled = !dDropped;
+            int dAccentBtn = dHeld ? UiTheme.E_CYAN : (dEnabled ? UiTheme.E_JADE : UiTheme.E_EDGE);
+            Runnable dAct = dHeld ? () -> send("cronus_driver_store", "") : () -> send("cronus_driver_take", "");
+            String dPrimary = dHeld ? t("cronus_gear.btn_store")
+                : (dDropped ? t("cronus_gear.btn_dropped")
+                    : (dLost ? t("cronus_gear.btn_reclaim") : t("cronus_gear.btn_take")));
+
+            int gState = (int) Math.round(data.value(CronusKeys.KEY_GASHAT_STATE, 0.0));
+            boolean gInDriver = gState == CronusGearManager.STATE_IN_DRIVER;
+            boolean gHeld = gState == CronusGearManager.STATE_HELD;
+            boolean gDropped = gState == CronusGearManager.STATE_DROPPED_NEARBY;
+            boolean gLost = gState == CronusGearManager.STATE_LOST;
+            boolean canTakeSet = (!dHeld && !dDropped) || (!gHeld && !gInDriver && !gDropped);
+
+            List<DetailSpec> driverDetails = List.of(
+                new DetailSpec(UiTheme.E_JADE, t("cronus_gear.driver_d1_tag"), t("cronus_gear.driver_d1_body")),
+                new DetailSpec(UiTheme.E_CYAN, t("cronus_gear.driver_d2_tag"), t("cronus_gear.driver_d2_body")),
+                new DetailSpec(UiTheme.E_GOLD_TEXT, t("cronus_gear.driver_d3_tag"), t("cronus_gear.driver_d3_body")),
+                new DetailSpec(UiTheme.E_VIOLET, t("cronus_gear.driver_d4_tag"), t("cronus_gear.driver_d4_body"))
+            );
+            out.add(new PanelItemEntry(
+                "buggle_driver_ii",
+                new ItemStack(CronusItems.BUGGLE_DRIVER_II.get()),
+                t("cronus_gear.driver_title"),
+                t("cronus_gear.origin"),
+                UiTheme.E_JADE,
+                dStatus,
+                dStatusColor,
+                dQuick,
+                dEnabled,
+                dAccentBtn,
+                dAct,
+                dPrimary,
+                dEnabled,
+                dAccentBtn,
+                dAct,
+                canTakeSet ? t("cronus_gear.btn_take_set") : "",
+                canTakeSet,
+                UiTheme.E_GOLD_TEXT,
+                () -> send("cronus_set_take", ""),
+                t("cronus_gear.driver_tooltip"),
+                driverDetails
+            ));
+
+            boolean gOut = gHeld || gInDriver;
+            String gStatus = gInDriver ? t("cronus_gear.state_in_driver")
+                : (gHeld ? t("cronus_gear.state_held")
+                    : (gDropped ? t("cronus_gear.state_dropped")
+                        : (gLost ? t("cronus_gear.state_lost") : t("cronus_gear.state_stored"))));
+            int gStatusColor = gInDriver ? UiTheme.E_CYAN
+                : (gHeld ? UiTheme.E_JADE
+                    : (gDropped ? UiTheme.E_GOLD_TEXT
+                        : (gLost ? UiTheme.E_RED : UiTheme.E_MUTED)));
+            String gQuick = gOut ? t("items.quick_store")
+                : (gDropped ? t("items.quick_dropped")
+                    : (gLost ? t("items.quick_reclaim") : t("items.quick_take")));
+            boolean gEnabled = !gDropped;
+            int gAccentBtn = gOut ? UiTheme.E_CYAN : (gEnabled ? UiTheme.E_JADE : UiTheme.E_EDGE);
+            Runnable gAct = gOut ? () -> send("cronus_gashat_store", "") : () -> send("cronus_gashat_take", "");
+            String gPrimary = gOut ? t("cronus_gear.btn_store")
+                : (gDropped ? t("cronus_gear.btn_dropped")
+                    : (gLost ? t("cronus_gear.btn_reclaim") : t("cronus_gear.btn_take")));
+
+            List<DetailSpec> gashatDetails = List.of(
+                new DetailSpec(UiTheme.E_JADE, t("cronus_gear.gashat_d1_tag"), t("cronus_gear.gashat_d1_body")),
+                new DetailSpec(UiTheme.E_CYAN, t("cronus_gear.gashat_d2_tag"), t("cronus_gear.gashat_d2_body")),
+                new DetailSpec(UiTheme.E_GOLD_TEXT, t("cronus_gear.gashat_d3_tag"), t("cronus_gear.gashat_d3_body"))
+            );
+            out.add(new PanelItemEntry(
+                "chronicle_gashat",
+                new ItemStack(CronusItems.CHRONICLE_GASHAT.get()),
+                t("cronus_gear.gashat_title"),
+                t("cronus_gear.origin"),
+                UiTheme.E_CYAN,
+                gStatus,
+                gStatusColor,
+                gQuick,
+                gEnabled,
+                gAccentBtn,
+                gAct,
+                gPrimary,
+                gEnabled,
+                gAccentBtn,
+                gAct,
+                canTakeSet ? t("cronus_gear.btn_take_set") : "",
+                canTakeSet,
+                UiTheme.E_GOLD_TEXT,
+                () -> send("cronus_set_take", ""),
+                t("cronus_gear.gashat_tooltip"),
+                gashatDetails
+            ));
+        }
         return out;
     }
 

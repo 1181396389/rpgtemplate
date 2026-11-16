@@ -28,7 +28,9 @@ public final class CronusSetup {
         event.enqueueWork(() -> {
             registerBoth("rpgtemplate:cronus_henshin", new CronusSkills.HenshinSkill());
             registerBoth("rpgtemplate:cronus_pause", new CronusSkills.PauseSkill());
-            registerBoth("rpgtemplate:cronus_zwei", new CronusSkills.ZweiWeaponSkill());
+            CronusSkills.ChronoBlinkSkill blinkSkill = new CronusSkills.ChronoBlinkSkill();
+            registerBoth("rpgtemplate:cronus_blink", blinkSkill);
+            registerBoth("rpgtemplate:cronus_zwei", blinkSkill); // 旧槽位兼容映射
             registerBoth("rpgtemplate:cronus_energy_item", new CronusSkills.EnergyItemSkill());
             registerBoth("rpgtemplate:cronus_crews_aid", new CronusSkills.CrewsAidSkill());
             registerBoth("rpgtemplate:cronus_kimewaza", new CronusSkills.KimewazaSkill());
