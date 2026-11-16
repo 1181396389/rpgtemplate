@@ -36,9 +36,17 @@ public final class CronusFxMsg {
     public static final byte KIND_HENSHIN_FAST = 11;
     /** 假面骑士 Cronus 3D 变身装甲外观状态同步（extra=1 变身态，0 人形态）。 */
     public static final byte KIND_SUIT_STATE = 12;
+    /** 光线枪模式（非时停）必杀技一：实时跟随准星的持续递增绿色激光射线（param=0..1 增伤蓄热进度）。 */
+    public static final byte KIND_CONTINUOUS_BEAM = 13;
+    /** 3D 翡翠/金绿体积能量爆炸球与双冲击波环（param=爆炸半径, extra=0 微闪 / 1 巨型绿爆 / 2 时停超频翠金巨爆）。 */
+    public static final byte KIND_ENERGY_BLAST = 14;
+    /** 电锯模式必杀技二：绿色高能缠绕电锯蓄力状态（param=剩余持续 ticks；<=0 表示爆发耗尽清除）。 */
+    public static final byte KIND_CHAINSAW_CHARGE = 15;
 
     public static final int BEAM_GUN = 0;
     public static final int BEAM_BLINK = 1;
+    /** 时停光线枪必杀技一：一次性巨型贯穿无视护甲绿色激光炮。 */
+    public static final int BEAM_PAUSE_CANNON = 2;
 
     public static final int ENERGY_SPEED = 0;
     public static final int ENERGY_MUSCLE = 1;
@@ -95,7 +103,7 @@ public final class CronusFxMsg {
         buf.writeDouble(m.z);
         buf.writeFloat(m.param);
         buf.m_130130_(m.extra);
-        if (m.kind == KIND_BEAM_LINE) {
+        if (m.kind == KIND_BEAM_LINE || m.kind == KIND_CONTINUOUS_BEAM) {
             buf.writeDouble(m.tx);
             buf.writeDouble(m.ty);
             buf.writeDouble(m.tz);
@@ -110,7 +118,7 @@ public final class CronusFxMsg {
         double z = buf.readDouble();
         float param = buf.readFloat();
         int extra = buf.m_130242_();
-        if (kind == KIND_BEAM_LINE) {
+        if (kind == KIND_BEAM_LINE || kind == KIND_CONTINUOUS_BEAM) {
             double tx = buf.readDouble();
             double ty = buf.readDouble();
             double tz = buf.readDouble();

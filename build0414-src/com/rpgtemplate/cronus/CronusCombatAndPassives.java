@@ -5,15 +5,20 @@ import com.rpgtemplate.core.stats.StatType;
 import com.rpgtemplate.forge.combat.ModDamageTypes;
 import com.rpgtemplate.forge.skill.TargetUtil;
 import com.rpgtemplate.forge.system.DrawAttunementUnlock;
+import com.rpgtemplate.forge.system.Msg;
 import com.rpgtemplate.forge.system.SystemDataManager;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -45,6 +50,55 @@ public final class CronusCombatAndPassives {
     private static final Map<UUID, Deque<RewindSnapshot>> REWIND_HISTORY = new HashMap<>();
     private static final Map<UUID, MuscleLaunch> MUSCLE_LAUNCHED = new HashMap<>();
     private static boolean resolvingMuscleSlam = false;
+    private static boolean suppressRapidPopup = false;
+
+    public static void setSuppressRapidPopup(boolean suppress) {
+        suppressRapidPopup = suppress;
+    }
+
+    public static boolean isRapidPopupSuppressed() {
+        return suppressRapidPopup;
+    }
+
+    /** 消耗【电锯必杀技二·绿能聚刃】充能并返回附加巨额伤害（无有效充能返回 0）。 */
+    public static float consumeChainsawOvercharge(ServerPlayer attacker, PlayerSystemData data, long now) {
+        if (attacker == null || data == null) {
+            return 0.0f;
+        }
+        double until = data.value(CronusKeys.KEY_CHAINSAW_OVERCHARGE_UNTIL, 0.0);
+        float bonus = (float) data.value(CronusKeys.KEY_CHAINSAW_OVERCHARGE_DMG, 0.0);
+        if (until <= (double) now || bonus <= 0.0f) {
+            return 0.0f;
+        }
+        data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_UNTIL, 0.0);
+        data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_DMG, 0.0);
+        SystemDataManager.markDirty((Player) attacker);
+        if (attacker.m_9236_() instanceof ServerLevel sl) {
+            CronusNet.sendNear(sl, attacker.m_20185_(), attacker.m_20186_(), attacker.m_20189_(),
+                new CronusFxMsg(CronusFxMsg.KIND_CHAINSAW_CHARGE, attacker.m_19879_(),
+                    attacker.m_20185_(), attacker.m_20186_(), attacker.m_20189_(), 0.0f, 0));
+        }
+        Msg.actionBar(attacker, Component.m_237115_("message.rpgtemplate.cronus.kime2_saw_detonate")
+            .m_130940_(ChatFormatting.GREEN));
+        return bonus;
+    }
+
+    /** 触发电锯必杀技二爆发瞬间的 3D 翡翠巨爆 + 天降绿雷 + 轰鸣斩击音效。 */
+    public static void emitChainsawOverchargeBurst(ServerPlayer attacker, LivingEntity victim) {
+        if (victim == null || !(victim.m_9236_() instanceof ServerLevel sl)) {
+            return;
+        }
+        double vx = victim.m_20185_();
+        double vy = victim.m_20186_() + victim.m_20206_() * 0.5;
+        double vz = victim.m_20189_();
+        CronusNet.sendNear(sl, vx, vy, vz,
+            new CronusFxMsg(CronusFxMsg.KIND_ENERGY_BLAST, -1, vx, vy, vz, 3.4f, 1));
+        CronusNet.sendNear(sl, vx, victim.m_20186_(), vz,
+            new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1, vx, victim.m_20186_(), vz,
+                1.25f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
+        sl.m_6263_(null, vx, vy, vz, SoundEvents.f_11913_, SoundSource.PLAYERS, 1.15f, 1.05f);
+        sl.m_6263_(null, vx, vy, vz, SoundEvents.f_12317_, SoundSource.PLAYERS, 1.15f, 0.62f);
+    }
 
     private record MuscleLaunch(UUID attackerId, float slamDamage, long expireTick) {
     }
@@ -142,13 +196,15 @@ public final class CronusCombatAndPassives {
         PlayerSystemData data = CronusKeys.activeData(player);
         if (data == null) {
             CronusPauseManager.forceClearFor(player.m_20148_());
+            CronusLaserBeamManager.stopFor(player.m_20148_());
             REWIND_HISTORY.remove(player.m_20148_());
             return;
         }
         long now = player.m_9236_().m_46467_();
 
-        // 1. 驱动【Pause】领域
+        // 1. 驱动【Pause】领域与光线枪必杀技一持续绿色激光
         CronusPauseManager.tickPlayerPause(player, data, now);
+        CronusLaserBeamManager.tickPlayer(player, data, now);
 
         // 2. 主动【Shift 滞空】服务端防坠落同步
         if (data.value(CronusKeys.KEY_HOVER_UNTIL, 0.0) > (double) now && !player.m_20096_()) {
@@ -262,11 +318,22 @@ public final class CronusCombatAndPassives {
                 atkData.setValue(CronusKeys.KEY_LAST_HIT_OUT, (double) now);
                 SystemDataManager.markDirty((Player) attacker);
 
-                // 应用缺陷护罩Ⅱ近战 1/3 技能攻击加成、拳套层数与肌肉强化道具乘区（仅非 Restart / 非肌肉落地二次结算阶段）
+                // 应用缺陷护罩Ⅱ近战 1/3 技能攻击加成、电锯聚能必杀、拳套层数与肌肉强化道具乘区（仅非 Restart / 非肌肉落地二次结算阶段）
                 boolean muscleActive = atkData.value(CronusKeys.KEY_ITEM_MUSCLE_UNTIL, 0.0) > (double) now;
                 if (!CronusPauseManager.isResolvingRestart() && !resolvingMuscleSlam) {
-                    if ("player".equals(source.m_19385_()) && CronusItems.isBugvisor(attacker.m_21205_())) {
+                    boolean isMeleeHit = "player".equals(source.m_19385_());
+                    boolean sawBurstTriggered = false;
+                    if (isMeleeHit && CronusItems.isBugvisor(attacker.m_21205_())) {
                         dmg += CronusKeys.bugvisorAttackBonus(atkData);
+                    }
+                    // 电锯模式必杀技二：绿色能量聚集于电锯，下一次近战攻击引爆巨额伤害！
+                    if (isMeleeHit && CronusKeys.weaponMode(atkData) == CronusKeys.MODE_CHAINSAW) {
+                        float overcharge = consumeChainsawOvercharge(attacker, atkData, now);
+                        if (overcharge > 0.0f) {
+                            dmg += overcharge;
+                            sawBurstTriggered = true;
+                            emitChainsawOverchargeBurst(attacker, victim);
+                        }
                     }
                     dmg *= (float) (1.0 + curStacks * 0.10);
                     if (muscleActive) {
@@ -277,13 +344,13 @@ public final class CronusCombatAndPassives {
                     }
                     event.setAmount(dmg);
 
-                    int popup = dmg >= 30.0f ? CronusFxMsg.POPUP_CRITICAL
+                    boolean armorPiercing = source.m_269533_(DamageTypeTags.f_268490_);
+                    int popup = (sawBurstTriggered || armorPiercing || dmg >= 30.0f) ? CronusFxMsg.POPUP_CRITICAL
                         : (muscleActive || nextStacks >= 3 || dmg >= 15.0f ? CronusFxMsg.POPUP_GREAT : CronusFxMsg.POPUP_HIT);
 
-                    // 若目标处于完全时停，转入悬停伤害蓄水池，留待 Restart 一并引爆（清零无敌帧避免连击被吞，并弹出打击贴图）
-                    if (CronusPauseManager.interceptDeferredDamage(attacker, atkData, victim, dmg)) {
+                    // 若目标处于完全时停，转入悬停伤害蓄水池（保留无视护甲标签），留待 Restart 一并引爆
+                    if (CronusPauseManager.interceptDeferredDamage(attacker, atkData, victim, dmg, armorPiercing)) {
                         victim.f_19802_ = 0;
-                        CronusNet.popupOn(victim, popup);
                         event.setAmount(0.0f);
                         event.setCanceled(true);
                         return;
@@ -299,8 +366,10 @@ public final class CronusCombatAndPassives {
                             new MuscleLaunch(attacker.m_20148_(), Math.max(3.0f, dmg * 0.25f), now + 55L));
                     }
 
-                    // 常态命中弹出原剧街机风 HIT! / GREAT! / CRITICAL!
-                    CronusNet.popupOn(victim, popup);
+                    // 常态命中弹出原剧街机风 HIT! / GREAT! / CRITICAL!（高频持续激光与回旋锯按节拍限流防刷屏）
+                    if (!suppressRapidPopup || sawBurstTriggered) {
+                        CronusNet.popupOn(victim, popup);
+                    }
                 }
             }
         }
@@ -446,6 +515,7 @@ public final class CronusCombatAndPassives {
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
             CronusPauseManager.forceClearFor(sp.m_20148_());
+            CronusLaserBeamManager.stopFor(sp.m_20148_());
             REWIND_HISTORY.remove(sp.m_20148_());
         }
     }

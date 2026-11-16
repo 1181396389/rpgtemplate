@@ -92,6 +92,10 @@ public final class CronusKeys {
     public static final String KEY_ITEM_IRON_UNTIL = "cr.item_iron";
     public static final String KEY_ITEM_JUMP_UNTIL = "cr.item_jump";
 
+    /** 电锯模式必杀技二：将绿色能量聚集于电锯，下一次攻击造成毁灭性巨额伤害（截止 tick 与附伤值）。 */
+    public static final String KEY_CHAINSAW_OVERCHARGE_UNTIL = "cr.saw_charge_until";
+    public static final String KEY_CHAINSAW_OVERCHARGE_DMG = "cr.saw_charge_dmg";
+
     public static final int MODE_CHAINSAW = 0;
     public static final int MODE_GUN = 1;
 

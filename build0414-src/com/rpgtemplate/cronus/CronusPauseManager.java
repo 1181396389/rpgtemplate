@@ -101,6 +101,8 @@ public final class CronusPauseManager {
         final Map<LivingEntity, RuleJudge.Tier> judgedTiers = new WeakHashMap<>();
         final Map<Projectile, FrozenProjectileState> frozenProjectiles = new WeakHashMap<>();
         final Map<LivingEntity, Float> deferredDamage = new WeakHashMap<>();
+        /** 时停中无视护甲（如光线枪必杀技一）所积蓄的悬停伤害，Restart 时以 sonic_boom 无视护甲源爆发结算。 */
+        final Map<LivingEntity, Float> deferredArmorPiercingDamage = new WeakHashMap<>();
         final List<SuspendedTrap> traps = new ArrayList<>();
 
         PauseDomain(ServerPlayer owner, double radius, long now) {
@@ -117,6 +119,11 @@ public final class CronusPauseManager {
         double totalDeferredDamage() {
             double sum = 0.0;
             for (Float v : deferredDamage.values()) {
+                if (v != null && v > 0f) {
+                    sum += v;
+                }
+            }
+            for (Float v : deferredArmorPiercingDamage.values()) {
                 if (v != null && v > 0f) {
                     sum += v;
                 }
@@ -203,6 +210,12 @@ public final class CronusPauseManager {
     /** 若攻击者处于时停且目标被完全冻结，将本次伤害压入时停悬停伤害池。返回 true 表示已拦截悬停。 */
     public static boolean interceptDeferredDamage(ServerPlayer attacker, PlayerSystemData data,
                                                   LivingEntity target, float amount) {
+        return interceptDeferredDamage(attacker, data, target, amount, false);
+    }
+
+    /** 若攻击者处于时停且目标被完全冻结，将本次伤害（保留是否无视护甲属性）压入时停悬停伤害池。 */
+    public static boolean interceptDeferredDamage(ServerPlayer attacker, PlayerSystemData data,
+                                                  LivingEntity target, float amount, boolean armorPiercing) {
         if (resolvingRestart || amount <= 0f) {
             return false;
         }
@@ -210,10 +223,16 @@ public final class CronusPauseManager {
         if (d == null || d.judgedTiers.get(target) != RuleJudge.Tier.FULL) {
             return false;
         }
-        d.deferredDamage.merge(target, amount, Float::sum);
+        if (armorPiercing) {
+            d.deferredArmorPiercingDamage.merge(target, amount, Float::sum);
+        } else {
+            d.deferredDamage.merge(target, amount, Float::sum);
+        }
         data.setValue(CronusKeys.KEY_PENDING_DMG, d.totalDeferredDamage());
         SystemDataManager.markDirty((Player) attacker);
-        CronusNet.popupOn(target, amount >= 18.0f ? CronusFxMsg.POPUP_GREAT : CronusFxMsg.POPUP_HIT);
+        if (!CronusCombatAndPassives.isRapidPopupSuppressed()) {
+            CronusNet.popupOn(target, (armorPiercing || amount >= 18.0f) ? CronusFxMsg.POPUP_GREAT : CronusFxMsg.POPUP_HIT);
+        }
         return true;
     }
 
@@ -272,6 +291,23 @@ public final class CronusPauseManager {
                                 new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
                                     victim.m_20185_(), victim.m_20186_(), victim.m_20189_(),
                                     1.0f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
+                        }
+                    }
+                }
+                // 结算时停期间积蓄的【无视护甲】悬停伤害（如时停光线枪必杀技一），以 sonic_boom 源完全穿透护甲与盾牌
+                for (Map.Entry<LivingEntity, Float> entry : d.deferredArmorPiercingDamage.entrySet()) {
+                    LivingEntity victim = entry.getKey();
+                    Float raw = entry.getValue();
+                    if (victim != null && victim.m_6084_() && raw != null && raw > 0.0f) {
+                        float finalBurst = (float) (raw * burstMultiplier);
+                        victim.f_19802_ = 0;
+                        TargetUtil.hurt(victim, player.m_269291_().m_269285_(player), finalBurst);
+                        CronusNet.popupOn(victim, CronusFxMsg.POPUP_CRITICAL);
+                        if (bolts++ < 8 && player.m_9236_() instanceof ServerLevel sl) {
+                            CronusNet.sendNear(sl, victim.m_20185_(), victim.m_20186_(), victim.m_20189_(),
+                                new CronusFxMsg(CronusFxMsg.KIND_ENERGY_BLAST, -1,
+                                    victim.m_20185_(), victim.m_20186_() + victim.m_20206_() * 0.5, victim.m_20189_(),
+                                    2.5f, 2));
                         }
                     }
                 }

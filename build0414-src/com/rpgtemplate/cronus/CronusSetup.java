@@ -34,6 +34,7 @@ public final class CronusSetup {
             registerBoth("rpgtemplate:cronus_energy_item", new CronusSkills.EnergyItemSkill());
             registerBoth("rpgtemplate:cronus_crews_aid", new CronusSkills.CrewsAidSkill());
             registerBoth("rpgtemplate:cronus_kimewaza", new CronusSkills.KimewazaSkill());
+            registerBoth("rpgtemplate:cronus_kimewaza_2", new CronusSkills.Kimewaza2Skill());
             registerBoth("rpgtemplate:cronus_reset", new CronusSkills.ResetSkill());
         });
     }

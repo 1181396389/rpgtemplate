@@ -62,12 +62,21 @@
     },
     {
       "id": "rpgtemplate:cronus_kimewaza",
-      "name": "编年史武装必杀",
+      "name": "编年史武装必杀Ⅰ",
       "cost_type": "MP",
       "base_cost": 10.5,
       "coefficient": 3.8,
       "cooldown_ticks": 200,
-      "description": "按【Gashacon 缺陷护罩Ⅱ】当前形态（蹲下右键切换）与时停状态自动派生四式必杀：①电锯常态【Critical Sacrifice】突进十字重斩；②电锯时停【断罪十字刻】在冻结目标四周悬停四柄光锯，Restart 时同步绞杀；③光线枪常态【Critical Judgement】扇形七重审判光束；④光线枪时停【全方位死角包围网】环绕目标悬停 12 枚光弹，Restart 时无死角轰击。"
+      "description": "按【Gashacon 缺陷护罩Ⅱ】形态与时停状态自动派生必杀技一：①光线枪·非时停：射出持续 3 秒的绿色激光射线，起手低伤但无视无敌帧，随持续照射伤害越来越高；②光线枪·时停中：将超粗绿色激光炮一次性贯穿射出，造成大量伤害且完全无视护甲；③电锯模式：斩出巨大绿色回旋刃形能量波，未命中持续飞出，命中敌人后将其死死压制在回旋刃下高频狂转持续绞杀。"
+    },
+    {
+      "id": "rpgtemplate:cronus_kimewaza_2",
+      "name": "编年史武装必杀Ⅱ",
+      "cost_type": "MP",
+      "base_cost": 11.5,
+      "coefficient": 3.9,
+      "cooldown_ticks": 220,
+      "description": "按【Gashacon 缺陷护罩Ⅱ】形态与时停状态自动派生必杀技二：①光线枪·非时停：发射 4 枚巨大绿色能量弹丸，缓慢弧线追踪敌人并在命中时引发大范围巨型爆炸与高额伤害；②光线枪·时停中：发射 4 枚超频绿色巨弹，极速强追踪敌人引爆巨型爆炸与高额伤害；③电锯模式：将炽烈绿色高能聚集缠绕于电锯上，使下一次近战攻击或电锯斩击造成毁灭性巨额伤害。"
     },
     {
       "id": "rpgtemplate:cronus_reset",

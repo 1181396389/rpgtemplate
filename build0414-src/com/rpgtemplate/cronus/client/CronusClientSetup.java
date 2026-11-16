@@ -1,5 +1,6 @@
 package com.rpgtemplate.cronus.client;
 
+import com.rpgtemplate.cronus.CronusEntities;
 import com.rpgtemplate.cronus.CronusItems;
 import com.rpgtemplate.cronus.CronusKeys;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
@@ -15,12 +16,26 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  * 假面骑士 Cronus 客户端初始化：
  * <ul>
  *   <li>物品动态模型谓词注册（{@code rpgtemplate:driver_loaded}、{@code rpgtemplate:bugvisor_mode}）。</li>
+ *   <li>注册光线枪激光弹、巨型绿色追踪爆炸弹丸与电锯回旋刃能量波的 3D 体积实体渲染器。</li>
  *   <li>将 3D 假面骑士 Cronus 装甲与腰带渲染层 {@link CronusSuitLayer} 挂载至全部玩家皮肤渲染器（default / slim）。</li>
  * </ul>
  */
 @Mod.EventBusSubscriber(modid = "rpgtemplate", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class CronusClientSetup {
     private CronusClientSetup() {
+    }
+
+    @SubscribeEvent
+    public static void onRegisterEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        if (CronusEntities.LASER_BOLT != null) {
+            event.registerEntityRenderer(CronusEntities.LASER_BOLT, CronusLaserBoltRenderer::new);
+        }
+        if (CronusEntities.ENERGY_ORB != null) {
+            event.registerEntityRenderer(CronusEntities.ENERGY_ORB, CronusEnergyOrbRenderer::new);
+        }
+        if (CronusEntities.SAW_WAVE != null) {
+            event.registerEntityRenderer(CronusEntities.SAW_WAVE, CronusSawWaveRenderer::new);
+        }
     }
 
     @SubscribeEvent

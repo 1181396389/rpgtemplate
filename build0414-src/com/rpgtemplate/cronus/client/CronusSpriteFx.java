@@ -88,7 +88,7 @@ public final class CronusSpriteFx {
     private static final ResourceLocation HIT_STICKERS_TEX =
         new ResourceLocation("rpgtemplate", "textures/fx/cronus_hit_stickers.png");
     private static final ResourceLocation WHITE_TEX =
-        new ResourceLocation("minecraft", "textures/misc/white.png");
+        new ResourceLocation("rpgtemplate", "textures/fx/cronus_white.png");
 
     /** 原速完整 7.8s 变身演出（234 帧 @ 30fps = 156 MC ticks）。 */
     private static final int HENSHIN_MAX_TICKS = 158;

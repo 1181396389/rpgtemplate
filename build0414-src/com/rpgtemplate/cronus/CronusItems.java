@@ -448,44 +448,8 @@ public final class CronusItems {
 
         private static void fireBeamGun(ServerPlayer sp, InteractionHand hand, float dmg) {
             sp.m_6674_(hand);
-            Vec3 eye = sp.m_146892_();
-            Vec3 look = sp.m_20154_().m_82541_();
-            double maxRange = 24.0;
-            Vec3 end = eye.m_82549_(look.m_82490_(maxRange));
-
-            BlockHitResult blockHit = sp.m_9236_().m_45547_(new ClipContext(
-                eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, sp));
-            double limitDist = maxRange;
-            if (blockHit.m_6662_() != HitResult.Type.MISS) {
-                end = blockHit.m_82450_();
-                limitDist = eye.m_82554_(end);
-            }
-
-            List<TargetUtil.Hit> hits = TargetUtil.ray(sp, Math.max(2.0, limitDist), 2, 0.45);
-            Vec3 visualEnd = end;
-            for (TargetUtil.Hit h : hits) {
-                if (h.entity().m_6084_()) {
-                    visualEnd = h.entity().m_20191_().m_82399_();
-                    TargetUtil.hurt(h.entity(), ModDamageTypes.technique(sp), dmg);
-                }
-            }
-
-            // 计算持枪手部枪口起点，广播 3D 双管翡翠光束（零廉价粒子）
-            Vec3 right = look.m_82537_(new Vec3(0.0, 1.0, 0.0));
-            if (right.m_82556_() < 1e-4) {
-                right = new Vec3(1.0, 0.0, 0.0);
-            } else {
-                right = right.m_82541_();
-            }
-            double sideSign = (hand == InteractionHand.MAIN_HAND) ? 0.34 : -0.34;
-            Vec3 muzzle = eye.m_82549_(right.m_82490_(sideSign)).m_82520_(0.0, -0.18, 0.0).m_82549_(look.m_82490_(0.65));
-            if (sp.m_9236_() instanceof ServerLevel sl) {
-                CronusNet.sendNear(sl, muzzle.f_82479_, muzzle.f_82480_, muzzle.f_82481_,
-                    new CronusFxMsg(CronusFxMsg.KIND_BEAM_LINE, sp.m_19879_(),
-                        muzzle.f_82479_, muzzle.f_82480_, muzzle.f_82481_,
-                        visualEnd.f_82479_, visualEnd.f_82480_, visualEnd.f_82481_,
-                        1.0f, CronusFxMsg.BEAM_GUN));
-            }
+            // 发射真实物理激光弹射物实体（3D 翡翠双轨光矛，射程 36 格，最多穿透 2 名敌人）
+            CronusLaserBoltEntity.launch(sp, hand, dmg);
             sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
                 SoundEvents.f_11736_, SoundSource.PLAYERS, 0.85f, 1.65f);
             sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
@@ -510,17 +474,32 @@ public final class CronusItems {
                     victims.add(e);
                 }
             }
-            for (LivingEntity v : victims) {
-                TargetUtil.hurt(v, ModDamageTypes.technique(sp), dmg);
+            // 若玩家正处于【电锯必杀技二·高能聚集】状态且本次弧斩命中敌人，则引爆全部附伤（首名全额，其余 65% 顺劈）
+            PlayerSystemData data = CronusKeys.activeData(sp);
+            long now = sp.m_9236_().m_46467_();
+            float overchargeBonus = 0.0f;
+            if (!victims.isEmpty() && data != null) {
+                overchargeBonus = CronusCombatAndPassives.consumeChainsawOvercharge(sp, data, now);
+            }
+            for (int i = 0; i < victims.size(); i++) {
+                LivingEntity v = victims.get(i);
+                float hitDmg = dmg + (overchargeBonus > 0.0f ? (i == 0 ? overchargeBonus : overchargeBonus * 0.65f) : 0.0f);
+                if (overchargeBonus > 0.0f) {
+                    v.f_19802_ = 0;
+                }
+                TargetUtil.hurt(v, ModDamageTypes.technique(sp), hitDmg);
+                if (overchargeBonus > 0.0f && i < 3) {
+                    CronusCombatAndPassives.emitChainsawOverchargeBurst(sp, v);
+                }
             }
             if (sp.m_9236_() instanceof ServerLevel sl) {
                 Vec3 slashPos = eye.m_82549_(look.m_82490_(1.65));
                 CronusNet.sendNear(sl, slashPos.f_82479_, slashPos.f_82480_, slashPos.f_82481_,
                     new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, sp.m_19879_(),
-                        sp.m_20185_(), sp.m_20186_() + 0.08, sp.m_20189_(), 2.1f, 0));
+                        sp.m_20185_(), sp.m_20186_() + 0.08, sp.m_20189_(), overchargeBonus > 0.0f ? 3.8f : 2.1f, 0));
             }
             sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
-                SoundEvents.f_12317_, SoundSource.PLAYERS, 0.90f, 0.92f);
+                SoundEvents.f_12317_, SoundSource.PLAYERS, 0.90f, overchargeBonus > 0.0f ? 0.65f : 0.92f);
         }
 
         @Override

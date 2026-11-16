@@ -21,6 +21,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -33,7 +34,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 假面骑士 Cronus（{@code rpgtemplate:cronus_1}）全部 7 个主动技能实现。
+ * 假面骑士 Cronus（{@code rpgtemplate:cronus_1}）全部 8 个主动技能实现。
  */
 public final class CronusSkills {
     /** 变身后赋予的长时夜视/水下呼吸基准时长（5 分钟，低于 2 分钟时静默续满，彻底杜绝原版夜视低时长闪屏）。 */
@@ -105,8 +106,16 @@ public final class CronusSkills {
         performHenshinOn(player, data, now, false);
     }
 
-    /** 统一解除变身执行（仅通过技能触发：终止时停、收回缺陷护罩Ⅱ、归还右键变身消耗的卡带、同步还原外观）。 */
+    /** 统一解除变身执行（仅通过技能触发：终止时停、停止持续激光、清除电锯聚能、收回缺陷护罩Ⅱ、归还卡带、同步还原外观）。 */
     public static void performHenshinOff(ServerPlayer player, PlayerSystemData data) {
+        CronusLaserBeamManager.stopFor(player.m_20148_());
+        data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_UNTIL, 0.0);
+        data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_DMG, 0.0);
+        if (player.m_9236_() instanceof ServerLevel sl) {
+            CronusNet.sendNear(sl, player.m_20185_(), player.m_20186_(), player.m_20189_(),
+                new CronusFxMsg(CronusFxMsg.KIND_CHAINSAW_CHARGE, player.m_19879_(),
+                    player.m_20185_(), player.m_20186_(), player.m_20189_(), 0.0f, 0));
+        }
         if (CronusKeys.isPaused(data)) {
             CronusPauseManager.restart(player, data, 1.20, false);
         }
@@ -594,12 +603,11 @@ public final class CronusSkills {
     }
 
     /**
-     * 技能 6：Kimewaza · 编年史武装必杀（根据「链锯/光束枪」×「常态/Pause」自动派生 4 种必杀形态）。
+     * 技能 6：Kimewaza Ⅰ · 编年史武装必杀Ⅰ（根据「光线枪/电锯」×「非时停/时停」派生全新实体必杀技）：
      * <ul>
-     *   <li>链锯 + 常态：Critical Sacrifice（突进十字重斩）</li>
-     *   <li>链锯 + 时停：断罪十字刻（在时停目标四周布下四柄悬停光锯，Restart 时同步绞杀）</li>
-     *   <li>光束枪 + 常态：Critical Judgement（扇形七重审判光束）</li>
-     *   <li>光束枪 + 时停：全方位死角包围网（在时停目标周围布下 12 枚悬停光弹，Restart 时全方位轰击）</li>
+     *   <li>光线枪 + 非时停：持续 3 秒递增绿色激光射线（起手低伤，无视无敌帧，随照射时间伤害越来越高）。</li>
+     *   <li>光线枪 + 时停：一次性射出巨型贯穿绿色激光炮，造成大量伤害且完全无视护甲与盾牌。</li>
+     *   <li>电锯（常态 & 时停）：斩出巨大绿色回旋刃形能量波，未命中持续飞出，命中后压制敌人高频旋转持续绞杀。</li>
      * </ul>
      */
     public static final class KimewazaSkill implements Skill {
@@ -623,69 +631,93 @@ public final class CronusSkills {
 
             int mode = CronusKeys.weaponMode(ctx.data);
             boolean paused = CronusKeys.isPaused(ctx.data);
+            float baseDmg = ctx.damage(1.0);
 
-            if (mode == CronusKeys.MODE_CHAINSAW && !paused) {
-                TemplateHelper.dashForward(ctx.player, 1.35, 0.15);
-                float dmg = ctx.damage(1.0);
-                int bolts = 0;
-                for (LivingEntity t : coneTargets(ctx.player, 6.2, 0.15)) {
-                    TargetUtil.hurt(t, ModDamageTypes.technique(ctx.player), dmg);
-                    if (bolts++ < 3 && ctx.player.m_9236_() instanceof ServerLevel sl) {
-                        CronusNet.sendNear(sl, t.m_20185_(), t.m_20186_(), t.m_20189_(),
-                            new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
-                                t.m_20185_(), t.m_20186_(), t.m_20189_(),
-                                1.0f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
-                    }
-                }
-                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime_sacrifice")
+            if (mode == CronusKeys.MODE_GUN && !paused) {
+                // 光线枪非时停必杀技一：持续递增无视无敌帧绿色激光
+                CronusLaserBeamManager.startContinuousLaser(ctx.player, baseDmg);
+                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime1_gun_beam")
                     .m_130940_(ChatFormatting.GREEN));
-            } else if (mode == CronusKeys.MODE_CHAINSAW) {
-                float trapDmg = ctx.damage(1.28);
-                List<LivingEntity> targets = coneTargets(ctx.player, 12.0, -0.2);
-                int count = 0;
-                for (LivingEntity t : targets) {
-                    CronusPauseManager.addSuspendedTrap(ctx.player, ctx.data, t, trapDmg, 0);
-                    if (++count >= 4) {
-                        break;
-                    }
-                }
-                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime_cross_trap")
+            } else if (mode == CronusKeys.MODE_GUN) {
+                // 时停光线枪必杀技一：一次性巨额无视护甲绿色激光炮
+                CronusLaserBeamManager.firePauseArmorPiercingLaser(ctx.player, baseDmg);
+                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime1_gun_pause")
                     .m_130940_(ChatFormatting.GOLD));
-            } else if (!paused) {
-                float dmg = ctx.damage(1.05);
-                List<TargetUtil.Hit> hits = TargetUtil.ray(ctx.player, 28.0, 4, 0.9);
-                int bolts = 0;
-                for (TargetUtil.Hit h : hits) {
-                    TargetUtil.hurt(h.entity(), ModDamageTypes.technique(ctx.player), dmg);
-                    if (bolts++ < 3 && ctx.player.m_9236_() instanceof ServerLevel sl) {
-                        CronusNet.sendNear(sl, h.entity().m_20185_(), h.entity().m_20186_(), h.entity().m_20189_(),
-                            new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1,
-                                h.entity().m_20185_(), h.entity().m_20186_(), h.entity().m_20189_(),
-                                1.05f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
-                    }
-                }
-                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime_judgement")
-                    .m_130940_(ChatFormatting.AQUA));
             } else {
-                float trapDmg = ctx.damage(1.32);
-                List<TargetUtil.Hit> hits = TargetUtil.ray(ctx.player, 24.0, 3, 1.1);
-                if (hits.isEmpty()) {
-                    for (LivingEntity t : coneTargets(ctx.player, 14.0, -0.3)) {
-                        CronusPauseManager.addSuspendedTrap(ctx.player, ctx.data, t, trapDmg, 1);
-                        break;
-                    }
-                } else {
-                    for (TargetUtil.Hit h : hits) {
-                        LivingEntity liv = TargetUtil.living(h.entity());
-                        if (liv != null) {
-                            CronusPauseManager.addSuspendedTrap(ctx.player, ctx.data, liv, trapDmg, 1);
-                        }
-                    }
-                }
-                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime_surround_trap")
-                    .m_130940_(ChatFormatting.GOLD));
+                // 电锯模式必杀技一：巨大绿色回旋刃能量波（未命中持续飞出，命中后压制高频旋转绞杀）
+                ctx.player.m_6674_(InteractionHand.MAIN_HAND);
+                CronusSawWaveEntity.launch(ctx.player, baseDmg, paused);
+                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime1_saw_wave")
+                    .m_130940_(ChatFormatting.GREEN));
             }
-            CronusKeys.addViralStrain(ctx.player, ctx.data, 14.0, ctx.now);
+            CronusKeys.addViralStrain(ctx.player, ctx.data, 12.0, ctx.now);
+        }
+    }
+
+    /**
+     * 技能 7：Kimewaza Ⅱ · 编年史武装必杀Ⅱ（根据「光线枪/电锯」×「非时停/时停」派生强力实体与聚能终结技）：
+     * <ul>
+     *   <li>光线枪 + 非时停：发射 4 发巨大绿色能量弹丸，缓慢弧线追踪敌人并在命中时引发巨型爆炸与高额伤害。</li>
+     *   <li>光线枪 + 时停：发射 4 发超频巨大绿色能量弹丸，高速强追踪敌人并引爆巨型爆炸与高额伤害。</li>
+     *   <li>电锯（常态 & 时停）：将大量绿色高能聚集缠绕于电锯上，下一次攻击造成毁灭性巨额爆发伤害。</li>
+     * </ul>
+     */
+    public static final class Kimewaza2Skill implements Skill {
+        @Override
+        public void onPress(SkillContext ctx, HeldState held) {
+            if (!CronusKeys.requireTransformed(ctx.player, ctx.data)
+                || !checkDriverReady(ctx.player, ctx.data, ctx.now)) {
+                return;
+            }
+            if (!ctx.consume(ctx.cost(11.5))) {
+                return;
+            }
+            ctx.cooldown(220);
+            CronusSounds.playKimewaza(ctx.player);
+            if (ctx.player.m_9236_() instanceof ServerLevel sl) {
+                CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                    new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, ctx.player.m_19879_(),
+                        ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                        1.20f, CronusFxMsg.SPRITE_LIGHTNING_ARC));
+            }
+
+            int mode = CronusKeys.weaponMode(ctx.data);
+            boolean paused = CronusKeys.isPaused(ctx.data);
+            float baseDmg = ctx.damage(1.0);
+
+            if (mode == CronusKeys.MODE_GUN && !paused) {
+                // 光线枪非时停必杀技二：4 发巨大绿色缓慢追踪爆炸弹丸
+                CronusEnergyOrbEntity.launchVolley(ctx.player, baseDmg * 0.72f, false);
+                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime2_gun_orbs")
+                    .m_130940_(ChatFormatting.GREEN));
+            } else if (mode == CronusKeys.MODE_GUN) {
+                // 时停光线枪必杀技二：4 发巨大绿色极速追踪爆炸弹丸
+                CronusEnergyOrbEntity.launchVolley(ctx.player, baseDmg * 0.88f, true);
+                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime2_gun_pause_orbs")
+                    .m_130940_(ChatFormatting.GOLD));
+            } else {
+                // 电锯模式必杀技二：将炽烈绿色高能聚集缠绕于电锯，下一次近战或弧斩引爆巨额伤害！
+                float bonusDmg = baseDmg * (paused ? 3.0f : 2.45f);
+                int durationTicks = 240; // 12 秒充能窗口
+                ctx.data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_UNTIL, (double) (ctx.now + durationTicks));
+                ctx.data.setValue(CronusKeys.KEY_CHAINSAW_OVERCHARGE_DMG, (double) bonusDmg);
+                SystemDataManager.markDirty((Player) ctx.player);
+                if (ctx.player.m_9236_() instanceof ServerLevel sl) {
+                    CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                        new CronusFxMsg(CronusFxMsg.KIND_CHAINSAW_CHARGE, ctx.player.m_19879_(),
+                            ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                            (float) durationTicks, paused ? 1 : 0));
+                    CronusNet.sendNear(sl, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                        new CronusFxMsg(CronusFxMsg.KIND_CLOCK_RIPPLE, ctx.player.m_19879_(),
+                            ctx.player.m_20185_(), ctx.player.m_20186_() + 0.08, ctx.player.m_20189_(),
+                            3.2f, 0));
+                }
+                ctx.player.m_9236_().m_6263_(null, ctx.player.m_20185_(), ctx.player.m_20186_(), ctx.player.m_20189_(),
+                    SoundEvents.f_11983_, SoundSource.PLAYERS, 1.0f, 1.45f);
+                Msg.actionBar(ctx.player, Component.m_237115_("message.rpgtemplate.cronus.kime2_saw_charge")
+                    .m_130940_(ChatFormatting.GREEN));
+            }
+            CronusKeys.addViralStrain(ctx.player, ctx.data, 13.0, ctx.now);
         }
     }
 
