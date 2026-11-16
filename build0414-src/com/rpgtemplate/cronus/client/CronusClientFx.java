@@ -54,6 +54,7 @@ public final class CronusClientFx {
     private static final Map<Integer, ContinuousBeamFx> CONTINUOUS_BEAMS = new HashMap<>();
     private static final List<EnergyBlastFx> BLASTS = new ArrayList<>();
     private static final Map<Integer, ChainsawChargeFx> SAW_CHARGES = new HashMap<>();
+    private static final List<FinisherPillarFx> FINISHER_PILLARS = new ArrayList<>();
     private static final List<RippleFx> RIPPLES = new ArrayList<>();
     private static final List<TrapFx> TRAPS = new ArrayList<>();
     private static long clientTick = 0L;
@@ -182,6 +183,28 @@ public final class CronusClientFx {
         }
     }
 
+    /** 必杀技发动瞬间包裹施法者的 3D 冲天翠绿能量焰柱、螺旋升腾光环与地面冲击法阵（还原原视频必杀发动气场）。 */
+    private static final class FinisherPillarFx {
+        final int ownerId;
+        double x, y, z;
+        final float scale;
+        final int style;
+        int age;
+        final int maxAge;
+
+        FinisherPillarFx(int ownerId, double x, double y, double z, float scale, int style) {
+            this.ownerId = ownerId;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.scale = Math.max(0.8f, scale);
+            this.style = style;
+            this.maxAge = (style == CronusFxMsg.FINISHER_SHUT_DOWN) ? 38
+                : ((style == CronusFxMsg.FINISHER_CRITICAL_JUDGMENT_PAUSE
+                    || style == CronusFxMsg.FINISHER_CRITICAL_CREWS_AID) ? 32 : 26);
+        }
+    }
+
     private static final class RippleFx {
         final double x, y, z;
         final float maxRadius;
@@ -303,6 +326,17 @@ public final class CronusClientFx {
                     SAW_CHARGES.put(msg.entityId, new ChainsawChargeFx(ticks, msg.extra != 0));
                 }
             }
+            case CronusFxMsg.KIND_FINISHER_FX -> {
+                if (FINISHER_PILLARS.size() < 24) {
+                    FINISHER_PILLARS.add(new FinisherPillarFx(
+                        msg.entityId, msg.x, msg.y, msg.z, msg.param, msg.extra));
+                }
+                Minecraft mc = Minecraft.m_91087_();
+                if (mc.f_91074_ != null && (msg.entityId == mc.f_91074_.m_19879_()
+                    || msg.extra == CronusFxMsg.FINISHER_SHUT_DOWN)) {
+                    CronusHudOverlay.triggerFinisherCutIn(msg.extra);
+                }
+            }
             default -> {
             }
         }
@@ -322,6 +356,7 @@ public final class CronusClientFx {
             CONTINUOUS_BEAMS.clear();
             BLASTS.clear();
             SAW_CHARGES.clear();
+            FINISHER_PILLARS.clear();
             RIPPLES.clear();
             TRAPS.clear();
             CronusSpriteFx.clear();
@@ -370,6 +405,21 @@ public final class CronusClientFx {
             }
         }
         SAW_CHARGES.entrySet().removeIf(e -> --e.getValue().remainingTicks <= 0);
+        Iterator<FinisherPillarFx> fpit = FINISHER_PILLARS.iterator();
+        while (fpit.hasNext()) {
+            FinisherPillarFx fp = fpit.next();
+            if (fp.ownerId >= 0) {
+                Entity e = mc.f_91073_.m_6815_(fp.ownerId);
+                if (e != null && e.m_6084_()) {
+                    fp.x = e.m_20185_();
+                    fp.y = e.m_20186_();
+                    fp.z = e.m_20189_();
+                }
+            }
+            if (++fp.age >= fp.maxAge) {
+                fpit.remove();
+            }
+        }
         Iterator<RippleFx> rit = RIPPLES.iterator();
         while (rit.hasNext()) {
             RippleFx r = rit.next();
@@ -408,7 +458,7 @@ public final class CronusClientFx {
             && CronusKeys.TEMPLATE_ID.equals(selfData.loadedTemplateId());
         if (!selfIsCronus && DOMAINS.isEmpty() && POPUPS.isEmpty() && IMPACTS.isEmpty()
             && BEAMS.isEmpty() && CONTINUOUS_BEAMS.isEmpty() && BLASTS.isEmpty() && SAW_CHARGES.isEmpty()
-            && RIPPLES.isEmpty() && TRAPS.isEmpty() && !CronusSpriteFx.hasActive()) {
+            && FINISHER_PILLARS.isEmpty() && RIPPLES.isEmpty() && TRAPS.isEmpty() && !CronusSpriteFx.hasActive()) {
             return;
         }
 
@@ -450,8 +500,8 @@ public final class CronusClientFx {
 
         src.m_109912_(type);
 
-        // 5. 打击瞬间 3D 冲击波、激光主炮/持续绿色激光、能量爆炸球与电锯聚能光环（先实色内核再加色辉光，白昼黑夜皆极高对比）
-        if (!BEAMS.isEmpty() || !CONTINUOUS_BEAMS.isEmpty() || !BLASTS.isEmpty()) {
+        // 5. 打击瞬间 3D 冲击波、激光主炮/持续绿色激光、能量爆炸球、必杀冲天翠绿焰柱与电锯聚能光环（先实色内核再加色辉光，白昼黑夜皆极高对比）
+        if (!BEAMS.isEmpty() || !CONTINUOUS_BEAMS.isEmpty() || !BLASTS.isEmpty() || !FINISHER_PILLARS.isEmpty()) {
             RenderType solidRt = CronusRenderTypes.translucent(WHITE);
             VertexConsumer svc = src.m_6299_(solidRt);
             for (BeamLineFx beam : BEAMS) {
@@ -465,10 +515,13 @@ public final class CronusClientFx {
             for (EnergyBlastFx bl : BLASTS) {
                 renderEnergyBlastCore(svc, mat, bl, pt);
             }
+            for (FinisherPillarFx fp : FINISHER_PILLARS) {
+                renderFinisherPillarCore(svc, mat, fp, pt);
+            }
             src.m_109912_(solidRt);
         }
         if (!IMPACTS.isEmpty() || !BEAMS.isEmpty() || !CONTINUOUS_BEAMS.isEmpty()
-            || !BLASTS.isEmpty() || !SAW_CHARGES.isEmpty()) {
+            || !BLASTS.isEmpty() || !SAW_CHARGES.isEmpty() || !FINISHER_PILLARS.isEmpty()) {
             RenderType impactRt = CronusRenderTypes.additive(WHITE);
             VertexConsumer ivc = src.m_6299_(impactRt);
             for (HitImpactFx imp : IMPACTS) {
@@ -482,6 +535,9 @@ public final class CronusClientFx {
             }
             for (EnergyBlastFx bl : BLASTS) {
                 renderEnergyBlastGlow(ivc, mat, bl, pt);
+            }
+            for (FinisherPillarFx fp : FINISHER_PILLARS) {
+                renderFinisherPillarGlow(ivc, mat, fp, pt);
             }
             for (Map.Entry<Integer, ChainsawChargeFx> e : SAW_CHARGES.entrySet()) {
                 Entity holder = mc.f_91073_.m_6815_(e.getKey());
@@ -1164,22 +1220,26 @@ public final class CronusClientFx {
             cb.ramp > 0.65f ? 0xC4FF66 : 0x18F582, 0.78f);
     }
 
-    /** 3D 体积能量爆炸实色内球（巨型追踪弹丸爆炸 / 电锯必杀二引爆）。 */
+    /** 3D 体积能量爆炸实色内球（巨型追踪弹丸爆炸 / 时停炮爆炸 / 电锯必杀二引爆：还原视频炽白金核 + 翡翠烈焰爆裂！）。 */
     private static void renderEnergyBlastCore(VertexConsumer vc, Matrix4f mat, EnergyBlastFx bl, float pt) {
         if (bl.style == 0) {
             return;
         }
         float t = Mth.m_14036_((bl.age + pt) / (float) bl.maxAge, 0.0f, 1.0f);
-        float alpha = (1.0f - t) * (1.0f - t) * 0.78f;
+        float alpha = (1.0f - t) * (1.0f - t) * 0.85f;
         if (alpha <= 0.02f) {
             return;
         }
         float r = bl.maxRadius * (0.28f + 0.58f * (float) Math.sqrt(t));
-        int rgb = (bl.style == 2) ? 0xD8FF8A : 0x58FF9A;
-        drawWireSphere(vc, mat, bl.x, bl.y, bl.z, r * 0.65f, 8, 12, rgb, alpha);
+        // 最内核炽白金火球（前期高亮白金 -> 渐变为烈金橙）
+        int coreRgb = (t < 0.35f) ? 0xFFFBE0 : ((bl.style == 2) ? 0xFFE066 : 0xFFD04A);
+        drawWireSphere(vc, mat, bl.x, bl.y, bl.z, r * 0.48f, 8, 12, coreRgb, alpha);
+        // 中层翡翠烈焰过渡球
+        int midRgb = (bl.style == 2) ? 0xC4FF66 : 0x38FF92;
+        drawWireSphere(vc, mat, bl.x, bl.y, bl.z, r * 0.72f, 8, 12, midRgb, alpha * 0.62f);
     }
 
-    /** 3D 体积能量爆炸加色辉光外球 + 双倾斜冲击波环。 */
+    /** 3D 体积能量爆炸加色辉光外球 + 双倾斜冲击波环 + 垂直冲天爆裂光柱。 */
     private static void renderEnergyBlastGlow(VertexConsumer vc, Matrix4f mat, EnergyBlastFx bl, float pt) {
         float t = Mth.m_14036_((bl.age + pt) / (float) bl.maxAge, 0.0f, 1.0f);
         float alpha = (1.0f - t) * (1.0f - t * 0.35f);
@@ -1187,18 +1247,115 @@ public final class CronusClientFx {
             return;
         }
         float expand = (float) Math.sqrt(t);
-        float r = bl.maxRadius * (0.30f + 0.78f * expand);
+        float r = bl.maxRadius * (0.30f + 0.82f * expand);
         int outerRgb = (bl.style == 2) ? 0xA8FF4A : 0x14F278;
-        int ringRgb = (bl.style == 2) ? 0xFFE66D : 0x45FF9E;
+        int ringRgb = (bl.style == 2) ? 0xFFE66D : 0xFFB845;
 
-        drawWireSphere(vc, mat, bl.x, bl.y, bl.z, r, 8, 12, outerRgb, alpha * 0.45f);
-        // 水平巨型冲击波环
+        drawWireSphere(vc, mat, bl.x, bl.y, bl.z, r, 8, 12, outerRgb, alpha * 0.48f);
+        // 水平巨型金绿冲击波环
         drawPerpRing(vc, mat, bl.x, bl.y, bl.z, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-            r * 0.82f, r * 1.24f, 24, ringRgb, alpha * 0.88f);
+            r * 0.82f, r * 1.28f, 24, ringRgb, alpha * 0.90f);
         if (bl.style != 0) {
-            // 45° 斜向交叉冲击波环
+            // 45° 双交叉倾斜冲击波环 + 中心炽白金爆炸冲天光柱（还原 6:00 & 6:12 大爆炸！）
             drawPerpRing(vc, mat, bl.x, bl.y, bl.z, 0.7071, 0.7071, 0.0, 0.0, 0.0, 1.0,
-                r * 0.76f, r * 1.16f, 20, 0x18F28A, alpha * 0.72f);
+                r * 0.76f, r * 1.18f, 20, 0x18F28A, alpha * 0.75f);
+            drawPerpRing(vc, mat, bl.x, bl.y, bl.z, 0.7071, -0.7071, 0.0, 0.0, 0.0, 1.0,
+                r * 0.62f, r * 0.96f, 20, 0xFFF29C, alpha * 0.65f);
+            float colH = r * (1.45f + 0.65f * expand);
+            float colW = Math.max(0.18f, r * 0.28f * (1.0f - t * 0.65f));
+            drawCrossBeamRibbon(vc, mat,
+                bl.x, bl.y - r * 0.35, bl.z,
+                bl.x, bl.y + colH, bl.z,
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                colW, bl.style == 2 ? 0xFFF08A : 0x52FFA2, alpha * 0.72f);
+        }
+    }
+
+    /** 必杀技发动 3D 翠绿冲天能量焰柱（实色半透内核，白天高亮清晰可见）。 */
+    private static void renderFinisherPillarCore(VertexConsumer vc, Matrix4f mat, FinisherPillarFx fp, float pt) {
+        float t = Mth.m_14036_((fp.age + pt) / (float) fp.maxAge, 0.0f, 1.0f);
+        float env = t < 0.16f ? (t / 0.16f) : (1.0f - (t - 0.16f) / 0.84f);
+        float alpha = env * env * 0.42f;
+        if (alpha <= 0.02f) {
+            return;
+        }
+        boolean goldAccent = (fp.style == CronusFxMsg.FINISHER_CRITICAL_JUDGMENT_PAUSE
+            || fp.style == CronusFxMsg.FINISHER_SHUT_DOWN);
+        float baseR = (0.78f + 0.32f * (1.0f - t)) * fp.scale;
+        float topR = baseR * (0.52f + 0.35f * t);
+        float h = (3.4f + 2.4f * (float) Math.sqrt(t)) * fp.scale;
+        int coreRgb = goldAccent ? 0x98FF82 : 0x16F27E;
+        int segs = 12;
+        for (int i = 0; i < segs; i++) {
+            double a0 = Math.PI * 2.0 * i / segs;
+            double a1 = Math.PI * 2.0 * (i + 1) / segs;
+            float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0);
+            float c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
+            emitAdditiveQuad(vc, mat,
+                (float) fp.x + c0 * baseR, (float) fp.y + 0.06f, (float) fp.z + s0 * baseR,
+                (float) fp.x + c1 * baseR, (float) fp.y + 0.06f, (float) fp.z + s1 * baseR,
+                (float) fp.x + c1 * topR, (float) fp.y + h, (float) fp.z + s1 * topR,
+                (float) fp.x + c0 * topR, (float) fp.y + h, (float) fp.z + s0 * topR,
+                coreRgb, alpha);
+        }
+    }
+
+    /** 必杀技发动 3D 翠绿升腾焰刃、螺旋气浪环与地面时计冲击波（还原视频 5:46 / 6:08 / 6:31 / 7:08 必杀气场）。 */
+    private static void renderFinisherPillarGlow(VertexConsumer vc, Matrix4f mat, FinisherPillarFx fp, float pt) {
+        float t = Mth.m_14036_((fp.age + pt) / (float) fp.maxAge, 0.0f, 1.0f);
+        float env = t < 0.14f ? (t / 0.14f) : (1.0f - (t - 0.14f) / 0.86f);
+        if (env <= 0.02f) {
+            return;
+        }
+        boolean goldAccent = (fp.style == CronusFxMsg.FINISHER_CRITICAL_JUDGMENT_PAUSE
+            || fp.style == CronusFxMsg.FINISHER_SHUT_DOWN);
+        boolean isSaw = (fp.style == CronusFxMsg.FINISHER_CRITICAL_SACRIFICE);
+        int mainRgb = isSaw ? 0x38FF72 : (goldAccent ? 0x62FFA0 : 0x14F588);
+        int subRgb = goldAccent ? 0xFFE66D : 0xC8FFE4;
+
+        float spin = (fp.age + pt) * 0.24f;
+        float h = (3.6f + 3.0f * (float) Math.sqrt(t)) * fp.scale;
+
+        // 1. 8 道环绕角色螺旋升腾的翠绿能量焰刃
+        int blades = 8;
+        for (int i = 0; i < blades; i++) {
+            double ang0 = spin + (Math.PI * 2.0 * i / blades);
+            double ang1 = ang0 + 0.55;
+            float rBot = (0.85f + 0.25f * Mth.m_14031_(spin * 2.0f + i)) * fp.scale;
+            float rTop = rBot * 0.55f;
+            float bladeW = (0.16f + 0.08f * env) * fp.scale;
+            double bx = fp.x + Math.cos(ang0) * rBot;
+            double bz = fp.z + Math.sin(ang0) * rBot;
+            double tx = fp.x + Math.cos(ang1) * rTop;
+            double tz = fp.z + Math.sin(ang1) * rTop;
+            double perpX = -Math.sin(ang0), perpZ = Math.cos(ang0);
+            int rgb = (i % 2 == 0) ? mainRgb : subRgb;
+            emitAdditiveQuad(vc, mat,
+                (float) (bx - perpX * bladeW), (float) fp.y + 0.08f, (float) (bz - perpZ * bladeW),
+                (float) (bx + perpX * bladeW), (float) fp.y + 0.08f, (float) (bz + perpZ * bladeW),
+                (float) (tx + perpX * bladeW * 0.28), (float) fp.y + h, (float) (tz + perpZ * bladeW * 0.28),
+                (float) (tx - perpX * bladeW * 0.28), (float) fp.y + h, (float) (tz - perpZ * bladeW * 0.28),
+                rgb, env * 0.78f);
+        }
+
+        // 2. 4 道逐级升腾的翠绿/金绿能量气浪环
+        for (int k = 0; k < 4; k++) {
+            float rp = (t * 1.45f + k * 0.25f) % 1.0f;
+            float ry = (float) fp.y + 0.15f + rp * h * 0.82f;
+            float ringR = (0.95f + rp * 1.25f) * fp.scale;
+            float band = (0.24f * (1.0f - rp * 0.6f)) * fp.scale;
+            float ra = env * (1.0f - rp) * 0.85f;
+            drawPerpRing(vc, mat, fp.x, ry, fp.z, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                Math.max(0.15f, ringR - band), ringR, 24, (k % 2 == 0) ? mainRgb : subRgb, ra);
+        }
+
+        // 3. 脚下急速扩张的翠绿/金绿地面冲击圆环
+        float groundR = (0.9f + 2.8f * (float) Math.sqrt(t)) * fp.scale;
+        drawPerpRing(vc, mat, fp.x, fp.y + 0.07, fp.z, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+            Math.max(0.2f, groundR - 0.42f * fp.scale), groundR, 28, mainRgb, env * 0.88f);
+        if (goldAccent) {
+            drawPerpRing(vc, mat, fp.x, fp.y + 0.09, fp.z, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                Math.max(0.15f, groundR * 0.72f - 0.22f * fp.scale), groundR * 0.72f, 24, 0xFFE66D, env * 0.82f);
         }
     }
 

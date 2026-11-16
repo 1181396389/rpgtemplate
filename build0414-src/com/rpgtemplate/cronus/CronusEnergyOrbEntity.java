@@ -107,11 +107,6 @@ public final class CronusEnergyOrbEntity extends Projectile {
             orb.applyVelocity(spreadDir.m_82490_(initSpeed));
             level.m_7967_(orb);
         }
-
-        level.m_6263_(null, eye.f_82479_, eye.f_82480_, eye.f_82481_,
-            SoundEvents.f_11736_, SoundSource.PLAYERS, 1.0f, fastMode ? 1.45f : 0.85f);
-        level.m_6263_(null, eye.f_82479_, eye.f_82480_, eye.f_82481_,
-            SoundEvents.f_11983_, SoundSource.PLAYERS, 0.9f, fastMode ? 1.65f : 1.05f);
     }
 
     private static List<LivingEntity> findCandidateTargets(ServerLevel level, ServerPlayer shooter, Vec3 eye, Vec3 look) {
@@ -295,10 +290,7 @@ public final class CronusEnergyOrbEntity extends Projectile {
                     center.f_82479_, center.f_82480_ - 0.8, center.f_82481_,
                     fast ? 1.15f : 1.0f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
 
-            sl.m_6263_(null, center.f_82479_, center.f_82480_, center.f_82481_,
-                SoundEvents.f_11913_, SoundSource.PLAYERS, 1.15f, fast ? 1.25f : 0.88f);
-            sl.m_6263_(null, center.f_82479_, center.f_82480_, center.f_82481_,
-                SoundEvents.f_12089_, SoundSource.PLAYERS, 0.65f, 1.35f);
+            CronusSounds.playOrbExplode(sl, center.f_82479_, center.f_82480_, center.f_82481_, fast);
         }
         this.m_146870_();
     }

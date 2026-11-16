@@ -42,6 +42,14 @@ public final class CronusFxMsg {
     public static final byte KIND_ENERGY_BLAST = 14;
     /** 电锯模式必杀技二：绿色高能缠绕电锯蓄力状态（param=剩余持续 ticks；<=0 表示爆发耗尽清除）。 */
     public static final byte KIND_CHAINSAW_CHARGE = 15;
+    /** 必杀技发动特摄渲染演出（对角线暗黑翠绿横幅切入 + 3D 翠绿冲天能量光柱 + 时计齿轮/碎屏绝版特效）。 */
+    public static final byte KIND_FINISHER_FX = 16;
+
+    public static final int FINISHER_CRITICAL_JUDGMENT = 0;
+    public static final int FINISHER_CRITICAL_JUDGMENT_PAUSE = 1;
+    public static final int FINISHER_CRITICAL_SACRIFICE = 2;
+    public static final int FINISHER_CRITICAL_CREWS_AID = 3;
+    public static final int FINISHER_SHUT_DOWN = 4;
 
     public static final int BEAM_GUN = 0;
     public static final int BEAM_BLINK = 1;

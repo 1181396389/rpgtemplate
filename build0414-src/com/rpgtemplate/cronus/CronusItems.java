@@ -415,8 +415,7 @@ public final class CronusItems {
                     SystemDataManager.markDirty((Player) sp);
                     SystemDataManager.sync(sp);
                 }
-                sp.m_9236_().m_6263_(null, sp.m_20185_(), sp.m_20186_(), sp.m_20189_(),
-                    SoundEvents.f_11736_, SoundSource.PLAYERS, 0.85f, next == CronusKeys.MODE_GUN ? 1.50f : 0.82f);
+                CronusSounds.playModeSwitch(sp);
                 Msg.actionBar(sp, Component.m_237115_(next == CronusKeys.MODE_GUN
                         ? "message.rpgtemplate.cronus.mode_gun"
                         : "message.rpgtemplate.cronus.mode_chainsaw")

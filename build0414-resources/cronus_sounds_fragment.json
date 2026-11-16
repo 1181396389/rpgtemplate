@@ -31,10 +31,98 @@
       }
     ]
   },
+  "cronus_reset": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_reset",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_blink": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_blink",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_mode_switch": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_mode_switch",
+        "stream": false
+      }
+    ]
+  },
   "cronus_kimewaza": {
     "sounds": [
       {
-        "name": "rpgtemplate:cronus_kimewaza",
+        "name": "rpgtemplate:cronus_kime_cj_beam",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cj_beam": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cj_beam",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cj_pause": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cj_pause",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cj_orbs": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cj_orbs",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_orb_explode": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_orb_explode",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cs_wave": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cs_wave",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cs_charge": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cs_charge",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_kime_cs_slash": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_kime_cs_slash",
+        "stream": false
+      }
+    ]
+  },
+  "cronus_crews_aid": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_crews_aid",
         "stream": false
       }
     ]
@@ -50,7 +138,8 @@
   "cronus_item_get": {
     "sounds": [
       {
-        "name": "rpgtemplate:cronus_item_get",
+        "name": "rpgtemplate:cronus_mode_switch",
+        "pitch": 1.32,
         "stream": false
       }
     ]

@@ -54,8 +54,6 @@ public final class CronusLaserBeamManager {
             return;
         }
         CHANNELS.put(player.m_20148_(), new ActiveChannel(baseSkillDamage));
-        player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
-            SoundEvents.f_11736_, SoundSource.PLAYERS, 1.0f, 0.85f);
     }
 
     public static void stopFor(UUID playerId) {
@@ -121,11 +119,6 @@ public final class CronusLaserBeamManager {
             } finally {
                 CronusCombatAndPassives.setSuppressRapidPopup(false);
             }
-
-            if (ch.ticksElapsed % 6 == 1) {
-                player.m_9236_().m_6263_(null, muzzle.f_82479_, muzzle.f_82480_, muzzle.f_82481_,
-                    SoundEvents.f_11871_, SoundSource.PLAYERS, 0.48f + progress * 0.32f, 0.80f + progress * 1.15f);
-            }
         }
 
         // 每 tick 同步连续激光射线坐标与当前炽热强度（0..1），客户端呈现丝滑 60fps 持续绿激光！
@@ -186,11 +179,6 @@ public final class CronusLaserBeamManager {
             new CronusFxMsg(CronusFxMsg.KIND_ENERGY_BLAST, -1,
                 beamEnd.f_82479_, beamEnd.f_82480_, beamEnd.f_82481_,
                 3.2f, 2));
-
-        sl.m_6263_(null, muzzle.f_82479_, muzzle.f_82480_, muzzle.f_82481_,
-            SoundEvents.f_215771_, SoundSource.PLAYERS, 1.35f, 1.15f); // WARDEN_SONIC_BOOM
-        sl.m_6263_(null, muzzle.f_82479_, muzzle.f_82480_, muzzle.f_82481_,
-            SoundEvents.f_12089_, SoundSource.PLAYERS, 0.90f, 1.35f);
     }
 
     public static Vec3 computeGunMuzzle(ServerPlayer player) {

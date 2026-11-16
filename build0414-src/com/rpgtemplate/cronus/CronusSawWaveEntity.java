@@ -94,10 +94,6 @@ public final class CronusSawWaveEntity extends Projectile {
         wave.f_19860_ = xRot;
 
         level.m_7967_(wave);
-        level.m_6263_(null, spawn.f_82479_, spawn.f_82480_, spawn.f_82481_,
-            SoundEvents.f_12317_, SoundSource.PLAYERS, 1.15f, 0.72f);
-        level.m_6263_(null, spawn.f_82479_, spawn.f_82480_, spawn.f_82481_,
-            SoundEvents.f_11983_, SoundSource.PLAYERS, 0.85f, 1.35f);
         return wave;
     }
 

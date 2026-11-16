@@ -83,7 +83,7 @@ public final class CronusCombatAndPassives {
         return bonus;
     }
 
-    /** 触发电锯必杀技二爆发瞬间的 3D 翡翠巨爆 + 天降绿雷 + 轰鸣斩击音效。 */
+    /** 触发电锯必杀技二爆发瞬间的 3D 翡翠巨爆 + 天降绿雷 + CRITICAL SACRIFICE 原声斩击。 */
     public static void emitChainsawOverchargeBurst(ServerPlayer attacker, LivingEntity victim) {
         if (victim == null || !(victim.m_9236_() instanceof ServerLevel sl)) {
             return;
@@ -96,8 +96,7 @@ public final class CronusCombatAndPassives {
         CronusNet.sendNear(sl, vx, victim.m_20186_(), vz,
             new CronusFxMsg(CronusFxMsg.KIND_SPRITE_FX, -1, vx, victim.m_20186_(), vz,
                 1.25f, CronusFxMsg.SPRITE_LIGHTNING_BOLT));
-        sl.m_6263_(null, vx, vy, vz, SoundEvents.f_11913_, SoundSource.PLAYERS, 1.15f, 1.05f);
-        sl.m_6263_(null, vx, vy, vz, SoundEvents.f_12317_, SoundSource.PLAYERS, 1.15f, 0.62f);
+        CronusSounds.playKimeCsSlash(sl, vx, vy, vz);
     }
 
     private record MuscleLaunch(UUID attackerId, float slamDamage, long expireTick) {

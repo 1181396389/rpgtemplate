@@ -1,7 +1,10 @@
 package com.rpgtemplate.cronus.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.rpgtemplate.core.data.PlayerSystemData;
+import com.rpgtemplate.cronus.CronusFxMsg;
 import com.rpgtemplate.cronus.CronusKeys;
 import com.rpgtemplate.forge.client.ClientSystemData;
 import java.util.List;
@@ -9,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
@@ -18,24 +22,65 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 假面骑士 Cronus 第一人称屏幕边缘时停滤镜、病毒过载噪点条纹与「绝版！」处决特摄横幅。
+ * 假面骑士 Cronus 第一人称 HUD 特效渲染器：
+ * <ul>
+ *   <li>【Pause】时停屏幕边缘翠绿暗角与精密金绿刻度</li>
+ *   <li>Bugster 病毒过载边缘故障扫描条</li>
+ *   <li>必杀技特摄演出：对角线暗黑翠绿横幅（{@code CRITICAL JUDGMENT / CRITICAL SACRIFICE / CRITICAL CREWS-AID}）、
+ *       巨型旋转编年史时计、翠绿碎屏时间裂缝以及「{@code SHUT DOWN!} / 绝版！」终结处决印章</li>
+ * </ul>
  */
 @Mod.EventBusSubscriber(modid = "rpgtemplate", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CronusHudOverlay {
-    private static int outBannerTicks = 0;
-    private static final int OUT_BANNER_MAX = 44;
+    private static final ResourceLocation FINISHER_BANNERS_TEX =
+        new ResourceLocation("rpgtemplate", "textures/fx/cronus_finisher_banners.png");
+    private static final ResourceLocation GLASS_SHATTER_TEX =
+        new ResourceLocation("rpgtemplate", "textures/fx/cronus_glass_shatter.png");
+    private static final ResourceLocation HENSHIN_CLOCK_TEX =
+        new ResourceLocation("rpgtemplate", "textures/fx/cronus_henshin_clock.png");
+
+    private static int finisherStyle = -1;
+    private static int finisherTicks = 0;
+    private static int finisherMaxTicks = 1;
 
     private CronusHudOverlay() {
     }
 
+    /** 触发必杀技对角线特摄切入演出（不干扰操作视角与战斗准星）。 */
+    public static void triggerFinisherCutIn(int style) {
+        finisherStyle = style;
+        finisherMaxTicks = switch (style) {
+            case CronusFxMsg.FINISHER_SHUT_DOWN -> 56;
+            case CronusFxMsg.FINISHER_CRITICAL_CREWS_AID -> 42;
+            case CronusFxMsg.FINISHER_CRITICAL_JUDGMENT_PAUSE -> 38;
+            default -> 34;
+        };
+        finisherTicks = finisherMaxTicks;
+    }
+
+    /** 兼容旧版「绝版！」横幅触发入口，直接衔接至完整的 SHUT DOWN! 处决演出。 */
     public static void triggerOutBanner() {
-        outBannerTicks = OUT_BANNER_MAX;
+        if (finisherStyle != CronusFxMsg.FINISHER_SHUT_DOWN || finisherTicks < 20) {
+            triggerFinisherCutIn(CronusFxMsg.FINISHER_SHUT_DOWN);
+        }
     }
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && outBannerTicks > 0) {
-            outBannerTicks--;
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        Minecraft mc = Minecraft.m_91087_();
+        if (mc.f_91073_ == null) {
+            finisherTicks = 0;
+            finisherStyle = -1;
+            return;
+        }
+        if (!mc.m_91104_() && finisherTicks > 0) {
+            finisherTicks--;
+            if (finisherTicks <= 0) {
+                finisherStyle = -1;
+            }
         }
     }
 
@@ -52,13 +97,14 @@ public final class CronusHudOverlay {
         boolean isCronus = data != null && data.isActivated()
             && CronusKeys.TEMPLATE_ID.equals(data.loadedTemplateId());
         List<CronusSpriteFx.EnergyIconFx> selfEnergyIcons = CronusSpriteFx.activeIconsFor(mc.f_91074_.m_19879_());
-        if (!isCronus && outBannerTicks <= 0 && selfEnergyIcons.isEmpty()) {
+        if (!isCronus && finisherTicks <= 0 && selfEnergyIcons.isEmpty()) {
             return;
         }
 
         GuiGraphics g = event.getGuiGraphics();
         int sw = event.getWindow().m_85445_();
         int sh = event.getWindow().m_85446_();
+        float pt = event.getPartialTick();
 
         // 0. 第一人称顶部中央显示当前生效的能量道具硬币图标与剩余时长条（第三人称直接由角色头顶 3D 图标呈现）
         if (!selfEnergyIcons.isEmpty() && mc.f_91066_.m_92176_().m_90612_()) {
@@ -90,24 +136,175 @@ public final class CronusHudOverlay {
             g.m_280509_(sw - 34, y2, sw, y2 + 2, 0x6618F29A);
         }
 
-        // 3. 「绝版！ / CRITICAL CREWS-AID」特摄处决横幅
-        if (outBannerTicks > 0) {
-            float prog = 1.0f - (outBannerTicks / (float) OUT_BANNER_MAX);
-            float alphaF = prog < 0.12f ? (prog / 0.12f) : (prog > 0.78f ? (1.0f - prog) / 0.22f : 1.0f);
-            int a = Mth.m_14045_((int) (alphaF * 235.0f), 0, 235);
-            if (a > 12) {
-                int cy = sh / 4;
-                g.m_280509_(0, cy - 15, sw, cy + 16, ((a * 3 / 4) << 24) | 0x051811);
-                g.m_280509_(0, cy - 16, sw, cy - 14, (a << 24) | 0x18F29A);
-                g.m_280509_(0, cy + 15, sw, cy + 17, (a << 24) | 0xFFE066);
+        // 3. 必杀技特摄对角线切入演出 + 编年史巨钟 + 翠绿碎屏时间裂缝 + SHUT DOWN! 处决印章
+        if (finisherTicks > 0 && finisherStyle >= 0) {
+            renderFinisherCutIn(g, mc.f_91062_, sw, sh, pt);
+        }
+    }
 
-                Font font = mc.f_91062_;
-                String mainTxt = Component.m_237115_("hud.rpgtemplate.cronus.out_banner").getString();
-                String subTxt = "KIMEWAZA  ·  CRITICAL CREWS-AID  ·  OUT!";
-                g.m_280056_(font, mainTxt, sw / 2 - font.m_92895_(mainTxt) / 2, cy - 9, (a << 24) | 0x38FF9C, true);
-                g.m_280056_(font, subTxt, sw / 2 - font.m_92895_(subTxt) / 2, cy + 3, (a << 24) | 0xFFE066, true);
+    private static void renderFinisherCutIn(GuiGraphics g, Font font, int sw, int sh, float pt) {
+        float elapsed = (finisherMaxTicks - finisherTicks) + pt;
+        float prog = Mth.m_14036_(elapsed / (float) Math.max(1, finisherMaxTicks), 0.0f, 1.0f);
+        boolean isShutDown = (finisherStyle == CronusFxMsg.FINISHER_SHUT_DOWN);
+        boolean isCrewsAid = (finisherStyle == CronusFxMsg.FINISHER_CRITICAL_CREWS_AID);
+        boolean isPauseCj = (finisherStyle == CronusFxMsg.FINISHER_CRITICAL_JUDGMENT_PAUSE);
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // A. 发动瞬间翠绿/翠金能量闪光（前 6 ticks 快速闪过，营造原视频发动必杀的瞬间冲击）
+        if (elapsed < 7.0f) {
+            float flash = (1.0f - elapsed / 7.0f);
+            int fa = Mth.m_14045_((int) (flash * flash * (isShutDown ? 110.0f : 72.0f)), 0, 120);
+            int flashRgb = (isPauseCj || isShutDown) ? 0x66FFAA : 0x18F29A;
+            g.m_280509_(0, 0, sw, sh, (fa << 24) | flashRgb);
+        }
+
+        // B. 屏幕上下极窄能量聚焦光条（强化特摄必杀构图，绝不遮挡准星）
+        float railAlpha = prog < 0.12f ? (prog / 0.12f) : (prog > 0.80f ? (1.0f - prog) / 0.20f : 1.0f);
+        int ra = Mth.m_14045_((int) (railAlpha * 185.0f), 0, 185);
+        int railRgb = (isPauseCj || isShutDown) ? 0xFFE066 : 0x18F29A;
+        g.m_280509_(0, 0, sw, 3, (ra << 24) | railRgb);
+        g.m_280509_(0, sh - 3, sw, sh, (ra << 24) | railRgb);
+
+        // C. 旋转编年史巨钟（时停光线枪必杀 / Critical Crews-Aid / SHUT DOWN! 专属背景层）
+        if (isPauseCj || isCrewsAid || isShutDown) {
+            float clockFade = prog < 0.14f ? (prog / 0.14f) : (prog > 0.72f ? (1.0f - prog) / 0.28f : 1.0f);
+            float clockAlpha = Mth.m_14036_(clockFade * (isShutDown ? 0.56f : 0.44f), 0.0f, 0.65f);
+            if (clockAlpha > 0.02f) {
+                int clockSize = Math.round(Math.min(sw, sh) * (isPauseCj ? 0.62f : 0.78f));
+                float cx = isPauseCj ? (sw * 0.78f) : (sw * 0.72f);
+                float cy = isPauseCj ? (sh * 0.56f) : (sh * 0.52f);
+                float spinDeg = elapsed * (isShutDown ? 3.8f : 2.6f);
+                float popScale = 0.86f + 0.16f * Math.min(1.0f, elapsed / 7.0f);
+
+                PoseStack pose = g.m_280168_();
+                pose.m_85836_();
+                pose.m_252880_(cx, cy, 0.0f);
+                pose.m_252781_(Axis.f_252403_.m_252977_(spinDeg));
+                pose.m_85841_(popScale, popScale, 1.0f);
+                g.m_280246_(0.78f, 1.0f, 0.86f, clockAlpha);
+                g.m_280411_(HENSHIN_CLOCK_TEX, -clockSize / 2, -clockSize / 2, clockSize, clockSize,
+                    0.0f, 0.0f, 512, 512, 512, 512);
+                g.m_280246_(1.0f, 1.0f, 1.0f, 1.0f);
+                pose.m_85849_();
             }
         }
+
+        // D. 翠绿时间碎屏玻璃裂缝层（Critical Crews-Aid 踢击爆裂瞬间 & SHUT DOWN! 绝版处决碎屏！）
+        if (isShutDown || isCrewsAid) {
+            float shatterStart = isShutDown ? 10.0f : 14.0f;
+            float shatterEnd = isShutDown ? 46.0f : 34.0f;
+            if (elapsed >= shatterStart && elapsed <= shatterEnd) {
+                float sp = (elapsed - shatterStart) / (shatterEnd - shatterStart);
+                float sa = sp < 0.15f ? (sp / 0.15f) : (1.0f - (sp - 0.15f) / 0.85f);
+                sa *= isShutDown ? 0.68f : 0.42f;
+                if (sa > 0.02f) {
+                    float driftScale = 1.0f + sp * 0.08f;
+                    PoseStack pose = g.m_280168_();
+                    pose.m_85836_();
+                    pose.m_252880_(sw * 0.5f, sh * 0.5f, 0.0f);
+                    pose.m_85841_(driftScale, driftScale, 1.0f);
+                    g.m_280246_(0.88f, 1.0f, 0.92f, Mth.m_14036_(sa, 0.0f, 0.80f));
+                    g.m_280411_(GLASS_SHATTER_TEX, -sw / 2, -sh / 2, sw, sh,
+                        0.0f, 0.0f, 512, 512, 512, 512);
+                    g.m_280246_(1.0f, 1.0f, 1.0f, 1.0f);
+                    pose.m_85849_();
+                }
+            }
+        }
+
+        // E. 标志性 -23° 对角线暗黑翠绿必杀切入横幅（CRITICAL JUDGMENT / CRITICAL SACRIFICE / CRITICAL CREWS-AID）
+        float ribbonMaxElapsed = isShutDown ? 28.0f : (float) finisherMaxTicks;
+        if (elapsed <= ribbonMaxElapsed) {
+            float rp = Mth.m_14036_(elapsed / ribbonMaxElapsed, 0.0f, 1.0f);
+            float alpha;
+            float slideX;
+            if (rp < 0.14f) {
+                float u = rp / 0.14f;
+                float ease = 1.0f - (1.0f - u) * (1.0f - u) * (1.0f - u);
+                alpha = u;
+                slideX = Mth.m_14179_(ease, -sw * 0.52f, -14.0f);
+            } else if (rp < 0.78f) {
+                float u = (rp - 0.14f) / 0.64f;
+                alpha = 0.94f;
+                slideX = Mth.m_14179_(u, -14.0f, 22.0f);
+            } else {
+                float u = (rp - 0.78f) / 0.22f;
+                alpha = (1.0f - u) * 0.94f;
+                slideX = Mth.m_14179_(u * u, 22.0f, sw * 0.58f);
+            }
+
+            if (alpha > 0.02f) {
+                int stripIdx = switch (finisherStyle) {
+                    case CronusFxMsg.FINISHER_CRITICAL_SACRIFICE -> 1;
+                    case CronusFxMsg.FINISHER_CRITICAL_CREWS_AID, CronusFxMsg.FINISHER_SHUT_DOWN -> 2;
+                    default -> 0;
+                };
+                // 宽幅覆盖对角全屏且居中偏向画面上中段，保留玩家视野中心透明清晰感
+                float diagLen = (float) Math.hypot(sw, sh) * 1.08f;
+                int bannerW = Math.max(360, Math.round(diagLen));
+                int bannerH = Math.max(38, Math.round(sh * 0.165f));
+                float anchorY = sh * (isCrewsAid || isShutDown ? 0.44f : 0.36f);
+
+                PoseStack pose = g.m_280168_();
+                pose.m_85836_();
+                pose.m_252880_(sw * 0.5f, anchorY, 0.0f);
+                pose.m_252781_(Axis.f_252403_.m_252977_(-22.5f));
+                pose.m_252880_(slideX, 0.0f, 0.0f);
+
+                // 主必杀技横幅（高清 1024x128 单元格）
+                g.m_280246_(1.0f, 1.0f, 1.0f, alpha);
+                g.m_280411_(FINISHER_BANNERS_TEX, -bannerW / 2, -bannerH / 2, bannerW, bannerH,
+                    0.0f, stripIdx * 128.0f, 1024, 128, 1024, 512);
+
+                // 高速扫光高光带（沿横幅划过的金属反光闪耀）
+                if (rp >= 0.14f && rp <= 0.62f) {
+                    float gp = (rp - 0.14f) / 0.48f;
+                    int gx = Math.round(Mth.m_14179_(gp, -bannerW * 0.45f, bannerW * 0.45f));
+                    int ga = Mth.m_14045_((int) (Math.sin(gp * Math.PI) * 125.0f * alpha), 0, 140);
+                    g.m_280509_(gx - 22, -bannerH / 2 + 6, gx + 22, bannerH / 2 - 6, (ga << 24) | 0xCCFFE8);
+                }
+
+                g.m_280246_(1.0f, 1.0f, 1.0f, 1.0f);
+                pose.m_85849_();
+            }
+        }
+
+        // F. 时停绝版处决高潮印章：「SHUT DOWN!」 + 「绝版！」副标（还原视频 7:34 处决终结一击！）
+        if (isShutDown && elapsed >= 18.0f) {
+            float sp = Mth.m_14036_((elapsed - 18.0f) / (finisherMaxTicks - 18.0f), 0.0f, 1.0f);
+            float punchScale = sp < 0.16f
+                ? Mth.m_14179_(1.0f - (1.0f - sp / 0.16f) * (1.0f - sp / 0.16f), 1.48f, 1.0f)
+                : 1.0f;
+            float sa = sp < 0.10f ? (sp / 0.10f) : (sp > 0.76f ? (1.0f - sp) / 0.24f : 1.0f);
+            if (sa > 0.02f) {
+                int stampW = Math.max(240, Math.round(sw * 0.62f));
+                int stampH = Math.max(32, Math.round(stampW * (128.0f / 1024.0f)));
+                float cy = sh * 0.27f;
+
+                PoseStack pose = g.m_280168_();
+                pose.m_85836_();
+                pose.m_252880_(sw * 0.5f, cy, 0.0f);
+                pose.m_85841_(punchScale, punchScale, 1.0f);
+                g.m_280246_(1.0f, 1.0f, 1.0f, Mth.m_14036_(sa, 0.0f, 1.0f));
+                g.m_280411_(FINISHER_BANNERS_TEX, -stampW / 2, -stampH / 2, stampW, stampH,
+                    0.0f, 3.0f * 128.0f, 1024, 128, 1024, 512);
+                g.m_280246_(1.0f, 1.0f, 1.0f, 1.0f);
+                pose.m_85849_();
+
+                int ta = Mth.m_14045_((int) (sa * 245.0f), 0, 245);
+                if (ta > 14) {
+                    String mainTxt = Component.m_237115_("hud.rpgtemplate.cronus.out_banner").getString();
+                    g.m_280056_(font, mainTxt,
+                        sw / 2 - font.m_92895_(mainTxt) / 2,
+                        Math.round(cy + stampH * 0.5f + 4.0f),
+                        (ta << 24) | 0x38FF9C, true);
+                }
+            }
+        }
+
+        RenderSystem.disableBlend();
     }
 
     private static void renderActiveEnergyIconsHud(GuiGraphics g, int sw, List<CronusSpriteFx.EnergyIconFx> icons) {
