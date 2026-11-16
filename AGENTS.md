@@ -13,7 +13,9 @@
 
 ## 关键参考文档索引
 
-- **角色模板制作总参考规范**：`docs/template-creation-reference.md`
-- **角色模板制作 Agent Skill**：`skills/rpg-template-creation/SKILL.md`
-- **一无所有（EX）设计文档**：`nothing-there/design/template-nothing-there-ex.md`
-- **殷红迷雾·原型拟态刀建模参考（独立非模板武器）**：`skills/nt-mimic-blade-modeling/SKILL.md`
+- **角色模板制作总参考规范**（新增/调整角色模板数值、副作用与克制判定时必读）：`docs/template-creation-reference.md`
+- **角色模板制作 Agent Skill**（任何新建或修改角色模板任务时加载；若未满足四大铁律须中止并修正）：`skills/rpg-template-creation/SKILL.md`
+- **Forge 1.20.1 直编工程与 AI 协作 Skill**（编写/重构 SRG 源码、Mixin、渲染器、音效、贴图或执行交付前分层验收时加载；未查证的 SRG 签名须先用 `javap` 实证，严禁猜测）：`skills/mc-forge1201-engineering/SKILL.md`
+- **`MC-AI-Coding-Assistant-Tool` 架构总结与本仓细考报告**（评估外部 MC AI 工具链、规划 `BuildMod.java` 资源审计升级或优化开发流程时按需查阅）：`docs/mc-ai-coding-assistant-tool-study.md`
+- **一无所有（EX）设计文档**（维护/扩展 Nothing There 模板时查阅）：`nothing-there/design/template-nothing-there-ex.md`
+- **殷红迷雾·原型拟态刀建模参考（独立非模板武器）**（维护 `nt_mimic_blade` 3D 模型与贴图时查阅）：`skills/nt-mimic-blade-modeling/SKILL.md`
