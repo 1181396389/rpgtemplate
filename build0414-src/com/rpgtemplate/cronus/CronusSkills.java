@@ -75,14 +75,10 @@ public final class CronusSkills {
         CronusNet.syncSuitState(player, true, revealDelay, beltGashatDelay);
 
         if (fast) {
-            // 快捷版变身干脆利落音效：卡带插入 + 时钟敲击 + 翠绿落雷
-            player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
-                SoundEvents.f_11983_, SoundSource.PLAYERS, 0.95f, 1.38f);
-            player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
-                SoundEvents.f_11736_, SoundSource.PLAYERS, 0.85f, 1.10f);
-            player.m_9236_().m_6263_(null, player.m_20185_(), player.m_20186_(), player.m_20189_(),
-                SoundEvents.f_12089_, SoundSource.PLAYERS, 0.65f, 1.28f);
+            // 快捷版快速变身：直接播放原视频 9 秒后的编年史变身音效
+            CronusSounds.playHenshinFast(player);
         } else {
+            // 技能 1 完整变身：直接播放原视频完整编年史变身音效
             CronusSounds.playHenshin(player);
         }
 

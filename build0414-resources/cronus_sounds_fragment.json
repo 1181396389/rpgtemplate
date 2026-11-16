@@ -7,6 +7,14 @@
       }
     ]
   },
+  "cronus_henshin_fast": {
+    "sounds": [
+      {
+        "name": "rpgtemplate:cronus_henshin_fast",
+        "stream": false
+      }
+    ]
+  },
   "cronus_pause": {
     "sounds": [
       {

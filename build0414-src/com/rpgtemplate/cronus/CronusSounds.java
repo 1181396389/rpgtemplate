@@ -20,6 +20,9 @@ public final class CronusSounds {
     public static final ResourceLocation HENSHIN_ID = new ResourceLocation("rpgtemplate", "cronus_henshin");
     public static SoundEvent HENSHIN;
 
+    public static final ResourceLocation HENSHIN_FAST_ID = new ResourceLocation("rpgtemplate", "cronus_henshin_fast");
+    public static SoundEvent HENSHIN_FAST;
+
     public static final ResourceLocation PAUSE_ID = new ResourceLocation("rpgtemplate", "cronus_pause");
     public static SoundEvent PAUSE;
 
@@ -42,6 +45,7 @@ public final class CronusSounds {
     public static void onRegister(RegisterEvent event) {
         event.register(ForgeRegistries.Keys.SOUND_EVENTS, helper -> {
             HENSHIN = registerOne(helper, HENSHIN_ID);
+            HENSHIN_FAST = registerOne(helper, HENSHIN_FAST_ID);
             PAUSE = registerOne(helper, PAUSE_ID);
             RESTART = registerOne(helper, RESTART_ID);
             KIMEWAZA = registerOne(helper, KIMEWAZA_ID);
@@ -56,10 +60,14 @@ public final class CronusSounds {
         return se;
     }
 
+    /** 完整变身（技能 1）：直接播放完整版原剧编年史变身音效（cronus_henshin.ogg）。 */
     public static void playHenshin(ServerPlayer p) {
         playCustom(p, HENSHIN);
-        p.m_9236_().m_6263_(null, p.m_20185_(), p.m_20186_(), p.m_20189_(),
-            SoundEvents.f_11705_, SoundSource.PLAYERS, 0.9f, 1.35f);
+    }
+
+    /** 快速变身（右键卡带）：直接播放 9 秒后切入的原剧编年史变身音效（cronus_henshin_fast.ogg）。 */
+    public static void playHenshinFast(ServerPlayer p) {
+        playCustom(p, HENSHIN_FAST);
     }
 
     public static void playPause(ServerPlayer p) {
