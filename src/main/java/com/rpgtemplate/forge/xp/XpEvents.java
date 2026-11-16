@@ -227,7 +227,7 @@ public final class XpEvents {
     }
 
     @SubscribeEvent
-    public static void onAdvancement(AdvancementEvent var0) {
+    public static void onAdvancement(AdvancementEvent.AdvancementEarnEvent var0) {
         ServerPlayer var1 = owner(var0.getEntity());
         if (var1 != null && var0.getAdvancement().value().display().isPresent()) {
             SystemActions.grantXp(var1, (Double)ModConfigs.SERVER.xpAdvancement.get(), SRC_ADVANCEMENT);
