@@ -18,10 +18,16 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 
 /**
- * 假面骑士 Cronus 高精度像素风 3D 变身装甲与腰带模型（128x128 逻辑 UV 映射 256x256 双倍高清像素贴图）。
- * <p>严格忠实还原假面骑士 Cronus 外观：后掠锯齿黑蓝绿头冠 + 两侧荧光绿耳翼 + Ex-Aid 螺旋复眼 + 胸口四点编年史仪表与电路纹 +
- * 双肩高耸翼状肩甲与钩状绿刃 + 腰间故障驱动器Ⅱ（含红/青发光按键与编年史卡带插槽） + 银边前开叉三片式动态长风衣摆 + 护胫战靴。</p>
- * <p>同时支持：全套变身外观渲染、人形态单独佩戴【故障驱动器Ⅱ】腰带渲染、以及第一人称装甲手臂渲染。</p>
+ * 假面骑士 Cronus 超精细 3D 变身装甲与腰带模型（256x256 逻辑 UV 映射 512x512 超高清像素贴图）。
+ * <ul>
+ *   <li><b>头部精细化（0.50x 亚体素精雕，16 部件）</b>：34x32 高清 Ex-Aid 螺旋复眼（漆黑瞳心+双圈荧光绿环）、
+ *       立体 V 型眉甲与眉心冠鳍、贴合式斜切颊甲、单线 ^ 型下颌面罩与尖锐下巴、4 片后掠皇室蓝黑发刺头冠、
+ *       以及阶梯闪电形双侧荧光绿耳翼。</li>
+ *   <li><b>腰带精细化（0.34x 亚体素精雕，28 部件忠实还原 DX 故障驱动器Ⅱ）</b>：高规格黑纹腰带与后扣、
+ *       八角切面银钛外框 + 金属翡翠青外壳、中央八角全息屏幕（变身点亮假面骑士 Cronus 绿光剪影；未变身为熏黑待机玻璃）、
+ *       左翼圆形浮雕红「A」键与双枪口喷嘴、右翼圆形浮雕青「B」键与锯齿链锯刀刃、顶部斜向插卡桥（含青色 LED、红色锁扣、青色三角饰块）
+ *       以及斜插镂空握把《假面骑士编年史》转玩卡带！</li>
+ * </ul>
  */
 public final class CronusSuitModel {
     private static final ResourceLocation SUIT_TEX =
@@ -34,9 +40,10 @@ public final class CronusSuitModel {
 
     private final ModelPart root;
     private final ModelPart head;
+    private final ModelPart headHd;
     private final ModelPart body;
     private final ModelPart beltGroup;
-    private final ModelPart beltGashat;
+    private final ModelPart beltGashatGroup;
     private final ModelPart coatBack;
     private final ModelPart coatRight;
     private final ModelPart coatLeft;
@@ -50,9 +57,18 @@ public final class CronusSuitModel {
     private CronusSuitModel() {
         this.root = createLayerDefinition().m_171564_();
         this.head = root.m_171324_("head");
+        this.headHd = head.m_171324_("head_hd");
+        this.headHd.f_233553_ = 0.50f;
+        this.headHd.f_233554_ = 0.50f;
+        this.headHd.f_233555_ = 0.50f;
+
         this.body = root.m_171324_("body");
         this.beltGroup = body.m_171324_("belt_group");
-        this.beltGashat = beltGroup.m_171324_("driver_gashat");
+        this.beltGroup.f_233553_ = 0.34f;
+        this.beltGroup.f_233554_ = 0.34f;
+        this.beltGroup.f_233555_ = 0.34f;
+        this.beltGashatGroup = beltGroup.m_171324_("driver_gashat_group");
+
         this.coatBack = body.m_171324_("coat_back");
         this.coatRight = body.m_171324_("coat_right");
         this.coatLeft = body.m_171324_("coat_left");
@@ -75,52 +91,74 @@ public final class CronusSuitModel {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.m_171576_();
 
-        // ==================== 1. HEAD（头盔、螺旋复眼、V型眉甲、下颌护盾、三层后掠锯齿头冠、双耳翼） ====================
-        PartDefinition head = root.m_171599_("head",
+        // ==================== 1. HEAD（0.50x 亚体素精雕头盔、螺旋复眼、眉甲、面罩、后掠发刺、闪电耳翼） ====================
+        PartDefinition head = root.m_171599_("head", CubeListBuilder.m_171558_(), PartPose.f_171404_);
+        PartDefinition headHd = head.m_171599_("head_hd",
             CubeListBuilder.m_171558_()
-                // 头盔主体（包裹原版头部，零穿模）
-                .m_171514_(0, 0).m_171488_(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f, new CubeDeformation(0.42f))
-                // 眉骨护额（精准位于复眼上方，不遮眼）
-                .m_171514_(32, 0).m_171488_(-4.5f, -8.35f, -4.75f, 9.0f, 2.0f, 1.0f, new CubeDeformation(0.08f))
-                // 尖锐下颌面罩（^-形荧光绿颌线）
-                .m_171514_(32, 5).m_171488_(-3.0f, -1.75f, -4.65f, 6.0f, 2.0f, 2.0f, new CubeDeformation(-0.02f)),
+                // 高精头盔主体（17x16x17 @ 0.50x，包裹原版头部且零穿模，正面 34x32 超清复眼）
+                .m_171514_(0, 84).m_171488_(-8.5f, -16.5f, -8.5f, 17.0f, 16.0f, 17.0f, new CubeDeformation(0.35f)),
             PartPose.f_171404_);
 
-        // 三段式标志性后掠锯齿尖刺头冠
-        head.m_171599_("crest_front",
-            CubeListBuilder.m_171558_().m_171514_(54, 0)
-                .m_171488_(-0.85f, -6.2f, -1.6f, 2.0f, 7.0f, 5.0f, new CubeDeformation(-0.15f)),
-            PartPose.m_171423_(0.0f, -7.6f, -2.5f, -0.34f, 0.0f, 0.0f));
-        head.m_171599_("crest_mid",
-            CubeListBuilder.m_171558_().m_171514_(54, 0)
-                .m_171488_(-0.95f, -6.8f, -1.2f, 2.0f, 7.0f, 5.0f, new CubeDeformation(-0.05f)),
-            PartPose.m_171423_(0.0f, -7.8f, 0.2f, -0.56f, 0.0f, 0.0f));
-        head.m_171599_("crest_back",
-            CubeListBuilder.m_171558_().m_171514_(54, 0)
-                .m_171488_(-0.85f, -5.6f, -1.0f, 2.0f, 7.0f, 5.0f, new CubeDeformation(-0.20f)),
-            PartPose.m_171423_(0.0f, -6.2f, 2.8f, -0.82f, 0.0f, 0.0f));
+        // 立体 V 型眉骨护额 + 中央 V 形额冠鳍
+        headHd.m_171599_("h_brow_r",
+            CubeListBuilder.m_171558_().m_171514_(70, 84).m_171481_(-4.5f, -1.0f, -1.0f, 9.0f, 2.0f, 2.0f),
+            PartPose.m_171423_(-4.5f, -13.2f, -9.0f, 0.10f, 0.14f, 0.28f));
+        headHd.m_171599_("h_brow_l",
+            CubeListBuilder.m_171558_().m_171514_(70, 84).m_171481_(-4.5f, -1.0f, -1.0f, 9.0f, 2.0f, 2.0f),
+            PartPose.m_171423_(4.5f, -13.2f, -9.0f, 0.10f, -0.14f, -0.28f));
+        headHd.m_171599_("h_forehead_v",
+            CubeListBuilder.m_171558_().m_171514_(94, 84).m_171481_(-2.0f, -1.2f, -1.0f, 4.0f, 6.0f, 2.0f),
+            PartPose.m_171423_(0.0f, -14.6f, -9.4f, -0.10f, 0.0f, 0.0f));
 
-        // 两侧斜后发刺翼片
-        head.m_171599_("crest_r",
-            CubeListBuilder.m_171558_().m_171514_(70, 0)
-                .m_171481_(-0.5f, -5.2f, -1.5f, 1.0f, 6.0f, 4.0f),
-            PartPose.m_171423_(-2.4f, -7.4f, -0.8f, -0.42f, 0.0f, -0.26f));
-        head.m_171599_("crest_l",
-            CubeListBuilder.m_171558_().m_171514_(70, 0)
-                .m_171481_(-0.5f, -5.2f, -1.5f, 1.0f, 6.0f, 4.0f),
-            PartPose.m_171423_(2.4f, -7.4f, -0.8f, -0.42f, 0.0f, 0.26f));
+        // 贴合式斜切侧颊甲 + 尖锐 ^ 型面罩与下巴尖
+        headHd.m_171599_("h_cheek_r",
+            CubeListBuilder.m_171558_().m_171514_(108, 84).m_171481_(-1.2f, -3.0f, -3.4f, 2.0f, 6.0f, 5.0f),
+            PartPose.m_171423_(-8.3f, -4.4f, -4.8f, 0.04f, 0.12f, -0.14f));
+        headHd.m_171599_("h_cheek_l",
+            CubeListBuilder.m_171558_().m_171514_(108, 84).m_171481_(-0.8f, -3.0f, -3.4f, 2.0f, 6.0f, 5.0f),
+            PartPose.m_171423_(8.3f, -4.4f, -4.8f, 0.04f, -0.12f, 0.14f));
+        headHd.m_171599_("h_jaw",
+            CubeListBuilder.m_171558_().m_171514_(126, 84).m_171481_(-5.0f, -2.2f, -1.4f, 10.0f, 4.0f, 3.0f),
+            PartPose.m_171423_(0.0f, -2.2f, -9.1f, 0.08f, 0.0f, 0.0f));
+        headHd.m_171599_("h_chin",
+            CubeListBuilder.m_171558_().m_171514_(154, 84).m_171481_(-2.5f, -1.4f, -1.1f, 5.0f, 3.0f, 2.0f),
+            PartPose.m_171423_(0.0f, -0.4f, -9.2f, -0.22f, 0.0f, 0.0f));
 
-        // 标志性荧光绿斜上耳翼尖角
-        head.m_171599_("ear_r",
-            CubeListBuilder.m_171558_().m_171514_(82, 0)
-                .m_171488_(-0.8f, -5.8f, -1.3f, 1.0f, 6.0f, 3.0f, new CubeDeformation(0.05f)),
-            PartPose.m_171423_(-4.4f, -5.0f, -0.6f, -0.18f, 0.0f, -0.34f));
-        head.m_171599_("ear_l",
-            CubeListBuilder.m_171558_().m_171514_(82, 0)
-                .m_171488_(-0.2f, -5.8f, -1.3f, 1.0f, 6.0f, 3.0f, new CubeDeformation(0.05f)),
-            PartPose.m_171423_(4.4f, -5.0f, -0.6f, -0.18f, 0.0f, 0.34f));
+        // 4 片标志性后掠新月发刺头冠（含皇室蓝光泽主刃 + 翠绿锋刃侧刺）
+        headHd.m_171599_("hair_hero_1",
+            CubeListBuilder.m_171558_().m_171514_(70, 96)
+                .m_171488_(-1.5f, -13.8f, -3.2f, 3.0f, 15.0f, 7.0f, new CubeDeformation(-0.10f)),
+            PartPose.m_171423_(-1.2f, -15.6f, -5.2f, -0.34f, 0.0f, 0.24f));
+        headHd.m_171599_("hair_hero_2",
+            CubeListBuilder.m_171558_().m_171514_(94, 96)
+                .m_171488_(-1.0f, -12.0f, -2.8f, 2.0f, 13.0f, 6.0f, new CubeDeformation(-0.05f)),
+            PartPose.m_171423_(1.4f, -15.6f, -0.6f, -0.58f, 0.0f, 0.18f));
+        headHd.m_171599_("hair_mid_r",
+            CubeListBuilder.m_171558_().m_171514_(94, 96)
+                .m_171488_(-1.0f, -10.0f, -2.6f, 2.0f, 13.0f, 6.0f, new CubeDeformation(-0.20f)),
+            PartPose.m_171423_(-4.4f, -15.0f, -5.0f, -0.28f, 0.16f, -0.28f));
+        headHd.m_171599_("hair_mid_l",
+            CubeListBuilder.m_171558_().m_171514_(94, 96)
+                .m_171488_(-1.0f, -10.8f, -2.6f, 2.0f, 13.0f, 6.0f, new CubeDeformation(-0.20f)),
+            PartPose.m_171423_(4.4f, -15.0f, -4.4f, -0.34f, -0.14f, 0.44f));
 
-        // ==================== 2. BODY（胸甲、四点仪表、绿色电路、腰带故障驱动器Ⅱ、三片式动态长风衣） ====================
+        // 两侧黑曜耳座 + 阶梯闪电形荧光绿耳翼尖刃
+        headHd.m_171599_("ear_pod_r",
+            CubeListBuilder.m_171558_().m_171514_(114, 96).m_171481_(-1.2f, -3.2f, -2.4f, 2.0f, 6.0f, 5.0f),
+            PartPose.m_171423_(-8.8f, -8.4f, -1.8f, 0.0f, 0.0f, -0.08f));
+        headHd.m_171599_("ear_blade_r",
+            CubeListBuilder.m_171558_().m_171514_(130, 96)
+                .m_171488_(-1.0f, -12.4f, -2.0f, 2.0f, 13.0f, 4.0f, new CubeDeformation(-0.12f)),
+            PartPose.m_171423_(-9.1f, -9.2f, -1.4f, -0.22f, 0.0f, -0.32f));
+        headHd.m_171599_("ear_pod_l",
+            CubeListBuilder.m_171558_().m_171514_(114, 96).m_171481_(-0.8f, -3.2f, -2.4f, 2.0f, 6.0f, 5.0f),
+            PartPose.m_171423_(8.8f, -8.4f, -1.8f, 0.0f, 0.0f, 0.08f));
+        headHd.m_171599_("ear_blade_l",
+            CubeListBuilder.m_171558_().m_171514_(130, 96)
+                .m_171488_(-1.0f, -12.4f, -2.0f, 2.0f, 13.0f, 4.0f, new CubeDeformation(-0.12f)),
+            PartPose.m_171423_(9.1f, -9.2f, -1.4f, -0.22f, 0.0f, 0.32f));
+
+        // ==================== 2. BODY（胸甲、四点仪表、绿色电路、0.34x 超精细故障驱动器Ⅱ腰带、动态长风衣） ====================
         PartDefinition body = root.m_171599_("body",
             CubeListBuilder.m_171558_()
                 .m_171514_(0, 18).m_171488_(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f, new CubeDeformation(0.30f))
@@ -131,21 +169,77 @@ public final class CronusSuitModel {
                 .m_171514_(102, 0).m_171488_(2.6f, 5.6f, -2.1f, 2.0f, 4.0f, 3.0f, new CubeDeformation(0.05f)),
             PartPose.f_171404_);
 
-        // 故障驱动器Ⅱ 3D 独立腰带组（支持未变身人形态单独佩戴渲染！）
+        // 0.34x 亚体素精雕【故障驱动器Ⅱ（Buggle Driver II）】独立腰带组（支持人形态单独佩戴与变身态全息激活！）
         PartDefinition belt = body.m_171599_("belt_group",
             CubeListBuilder.m_171558_()
-                .m_171514_(58, 30).m_171488_(-4.5f, 9.6f, -2.5f, 9.0f, 2.0f, 5.0f, new CubeDeformation(0.15f))
-                .m_171514_(100, 18).m_171488_(-3.0f, 9.2f, -3.65f, 6.0f, 3.0f, 2.0f, new CubeDeformation(-0.10f))
-                .m_171514_(100, 25).m_171488_(-2.8f, 9.7f, -4.10f, 2.0f, 2.0f, 1.0f, new CubeDeformation(-0.15f))
-                .m_171514_(108, 25).m_171488_(0.8f, 9.7f, -4.10f, 2.0f, 2.0f, 1.0f, new CubeDeformation(-0.15f))
-                .m_171514_(116, 25).m_171481_(2.7f, 10.1f, -3.55f, 2.0f, 1.0f, 1.0f),
-            PartPose.f_171404_);
+                // 高规格黑纹腰带环 + 后腰锁扣 + 两侧钛灰连接扣件
+                .m_171514_(0, 132).m_171488_(-12.5f, -2.5f, -7.2f, 25.0f, 5.0f, 2.0f, new CubeDeformation(0.08f))
+                .m_171514_(0, 132).m_171488_(-12.5f, -2.5f, 5.2f, 25.0f, 5.0f, 2.0f, new CubeDeformation(0.08f))
+                .m_171514_(60, 132).m_171488_(-13.1f, -2.5f, -6.5f, 2.0f, 5.0f, 13.0f, new CubeDeformation(0.05f))
+                .m_171514_(60, 132).m_171488_(11.1f, -2.5f, -6.5f, 2.0f, 5.0f, 13.0f, new CubeDeformation(0.05f))
+                .m_171514_(94, 132).m_171488_(-4.0f, -3.0f, 6.0f, 8.0f, 6.0f, 2.0f, new CubeDeformation(0.05f))
+                .m_171514_(116, 132).m_171481_(-11.4f, -3.0f, -8.4f, 3.0f, 6.0f, 2.0f)
+                .m_171514_(116, 132).m_171481_(8.4f, -3.0f, -8.4f, 3.0f, 6.0f, 2.0f)
 
-        // 中央插入态《假面骑士编年史》转玩卡带（未插卡/未变身时隐藏，变身后亮起显现！）
-        belt.m_171599_("driver_gashat",
-            CubeListBuilder.m_171558_().m_171514_(100, 30)
-                .m_171488_(-1.0f, 7.6f, -3.95f, 2.0f, 4.0f, 1.0f, new CubeDeformation(-0.08f)),
+                // 八角阶梯式钛银主框架 + 底部龙骨 + 顶部无缝拱桥
+                .m_171514_(0, 152).m_171481_(-9.5f, -3.0f, -10.3f, 18.0f, 6.0f, 3.0f)
+                .m_171514_(46, 152).m_171481_(-6.5f, -4.5f, -10.1f, 13.0f, 9.0f, 3.0f)
+                .m_171514_(80, 152).m_171488_(-5.0f, 3.5f, -10.3f, 10.0f, 2.0f, 3.0f, new CubeDeformation(-0.05f))
+                .m_171514_(142, 182).m_171481_(-4.5f, -6.4f, -10.1f, 9.0f, 3.0f, 3.0f)
+
+                // 金属翡翠青切面外壳（双阶立体层次）
+                .m_171514_(0, 168).m_171481_(-8.5f, -2.5f, -11.2f, 17.0f, 5.0f, 2.0f)
+                .m_171514_(42, 168).m_171481_(-5.0f, -4.0f, -11.4f, 10.0f, 8.0f, 2.0f)
+
+                // 中央八角透明青框 + 待机熏黑显示屏
+                .m_171514_(70, 168).m_171481_(-3.5f, -3.5f, -11.9f, 7.0f, 7.0f, 1.0f)
+                .m_171514_(88, 168).m_171481_(-3.0f, -3.0f, -12.25f, 6.0f, 6.0f, 1.0f)
+
+                // 顶部银桥冠饰 + 正中发光青色指示灯 LED
+                .m_171514_(168, 168).m_171481_(-2.5f, -5.6f, -10.5f, 5.0f, 2.0f, 2.0f)
+                .m_171514_(184, 168).m_171488_(-1.5f, -5.3f, -11.4f, 3.0f, 2.0f, 1.0f, new CubeDeformation(-0.05f))
+
+                // 左侧（-X）：圆形凹槽红「A」键 + 双管翡翠青光线枪喷嘴
+                .m_171514_(0, 182).m_171488_(-9.0f, -2.5f, -12.0f, 5.0f, 5.0f, 1.0f, new CubeDeformation(-0.10f))
+                .m_171514_(14, 182).m_171488_(-8.5f, -2.0f, -12.75f, 4.0f, 4.0f, 1.0f, new CubeDeformation(-0.15f))
+                .m_171514_(26, 182).m_171481_(-12.6f, -2.1f, -9.8f, 4.0f, 1.0f, 2.0f)
+                .m_171514_(26, 182).m_171481_(-12.6f, 0.4f, -9.8f, 4.0f, 1.0f, 2.0f)
+
+                // 右侧（+X）：圆形铆钉青「B」键 + 翡翠青锯齿链锯外缘 + 枪灰银芯锯刃
+                .m_171514_(40, 182).m_171488_(4.0f, -2.5f, -12.0f, 5.0f, 5.0f, 1.0f, new CubeDeformation(-0.10f))
+                .m_171514_(54, 182).m_171488_(4.5f, -2.0f, -12.75f, 4.0f, 4.0f, 1.0f, new CubeDeformation(-0.15f))
+                .m_171514_(68, 182).m_171481_(8.0f, -2.0f, -9.6f, 7.0f, 4.0f, 2.0f)
+                .m_171514_(88, 182).m_171481_(7.8f, -1.5f, -10.05f, 6.0f, 3.0f, 2.0f),
+            PartPose.m_171419_(0.0f, 10.45f, 0.0f));
+
+        // 顶部斜向卡槽桥 + 右肩导风斜坡 + 红色释放锁扣 + 左上青色三角宝石饰块
+        belt.m_171599_("drv_dock_main",
+            CubeListBuilder.m_171558_().m_171514_(120, 168).m_171481_(-4.5f, -2.0f, -1.5f, 9.0f, 4.0f, 3.0f),
+            PartPose.m_171423_(-4.4f, -5.8f, -9.1f, 0.0f, 0.0f, -0.52f));
+        belt.m_171599_("drv_dock_slope",
+            CubeListBuilder.m_171558_().m_171514_(146, 168).m_171481_(-3.5f, -1.5f, -1.4f, 7.0f, 3.0f, 3.0f),
+            PartPose.m_171423_(4.4f, -4.3f, -9.1f, 0.0f, 0.0f, 0.36f));
+        belt.m_171599_("drv_red_latch",
+            CubeListBuilder.m_171558_().m_171514_(194, 168)
+                .m_171488_(-1.0f, -1.4f, -1.0f, 2.0f, 2.0f, 2.0f, new CubeDeformation(-0.10f)),
+            PartPose.m_171423_(3.2f, -5.9f, -9.8f, 0.0f, 0.0f, 0.24f));
+        belt.m_171599_("drv_teal_tri",
+            CubeListBuilder.m_171558_().m_171514_(204, 168)
+                .m_171488_(-1.0f, -1.0f, -0.9f, 2.0f, 2.0f, 2.0f, new CubeDeformation(-0.15f)),
+            PartPose.m_171423_(-5.8f, -6.0f, -10.35f, 0.0f, 0.0f, -0.58f));
+
+        // 变身激活组：中央全亮发光 Cronus 全息屏 + 左上斜插镂空握把《假面骑士编年史》荧光绿转玩卡带！
+        PartDefinition gashatGroup = belt.m_171599_("driver_gashat_group",
+            CubeListBuilder.m_171558_()
+                .m_171514_(104, 168).m_171481_(-3.0f, -3.0f, -12.50f, 6.0f, 6.0f, 1.0f),
             PartPose.f_171404_);
+        gashatGroup.m_171599_("gashat_angled",
+            CubeListBuilder.m_171558_()
+                .m_171514_(108, 182).m_171481_(-1.8f, -7.8f, -1.0f, 4.0f, 8.0f, 2.0f)
+                .m_171514_(124, 182).m_171481_(-4.6f, -5.4f, -0.5f, 3.0f, 1.0f, 1.0f)
+                .m_171514_(134, 182).m_171481_(-4.8f, -4.8f, -0.5f, 1.0f, 6.0f, 1.0f)
+                .m_171514_(124, 182).m_171481_(-4.6f, 0.4f, -0.5f, 3.0f, 1.0f, 1.0f),
+            PartPose.m_171423_(-6.4f, -6.0f, -9.1f, 0.0f, 0.0f, -0.56f));
 
         // 标志性银边前开叉黑色绿纹长风衣（后摆 + 右摆 + 左摆，行走奔跑动态飘动）
         body.m_171599_("coat_back",
@@ -206,10 +300,10 @@ public final class CronusSuitModel {
                 .m_171488_(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f, new CubeDeformation(0.28f)),
             PartPose.m_171419_(1.9f, 12.0f, 0.0f));
 
-        return LayerDefinition.m_171565_(mesh, 128, 128);
+        return LayerDefinition.m_171565_(mesh, 256, 256);
     }
 
-    /** 渲染完整变身态假面骑士 Cronus 3D 装甲外观（含常态受光层 + 夜间全亮自发光层 + 动态风衣摆）。 */
+    /** 渲染完整变身态假面骑士 Cronus 超精细 3D 装甲外观（含受光层 + 夜间全亮自发光层 + 动态风衣摆）。 */
     public void renderFullSuit(PoseStack pose, MultiBufferSource buffers, int light, int overlay,
                                PlayerModel<AbstractClientPlayer> parent, AbstractClientPlayer player,
                                float limbSwing, float limbSwingAmount, float partialTick) {
@@ -221,9 +315,10 @@ public final class CronusSuitModel {
         this.leftLeg.m_104315_(parent.f_102814_);
 
         this.head.f_104207_ = true;
+        this.headHd.f_104207_ = true;
         this.body.f_104207_ = true;
         this.beltGroup.f_104207_ = true;
-        this.beltGashat.f_104207_ = true; // 变身态腰带永远显示已插入编年史卡带
+        this.beltGashatGroup.f_104207_ = true; // 变身态腰带永远显示全息 Cronus 屏 + 斜插编年史卡带
         this.coatBack.f_104207_ = true;
         this.coatRight.f_104207_ = true;
         this.coatLeft.f_104207_ = true;
@@ -248,22 +343,22 @@ public final class CronusSuitModel {
         this.coatBack.f_104203_ = 0.14f + speedFlare + airLift + sneakTilt * 0.6f
             + Math.max(0.0f, Math.max(swingR, swingL) * 0.35f);
 
-        // Pass 1：受世界光照的本体高清像素风装甲（双面无剔除，风衣/耳翼/头冠无背面穿帮）
+        // Pass 1：受世界光照的本体超高清装甲（双面无剔除，风衣/耳翼/头冠/卡带镂空握把零背面穿帮）
         VertexConsumer baseVc = buffers.m_6299_(RenderType.m_110458_(SUIT_TEX));
         this.root.m_104301_(pose, baseVc, light, overlay);
 
-        // Pass 2：全亮自发光层（荧光绿螺旋眼、胸口四点仪表与电路纹、驱动器红青灯、绿刃光边）
+        // Pass 2：全亮自发光层（螺旋眼、胸口四点仪表与电路纹、驱动器全息 Cronus 屏/红A/青B/青LED/链锯光边）
         VertexConsumer emisVc = buffers.m_6299_(RenderType.m_110488_(SUIT_EMISSIVE_TEX));
         this.root.m_104306_(pose, emisVc, FULL_BRIGHT, overlay, 0.92f, 0.96f, 0.92f, 0.95f);
     }
 
-    /** 人形态单独佩戴【故障驱动器Ⅱ】腰带时的 3D 腰部渲染（随躯干俯仰/潜行精确贴合）。 */
+    /** 人形态单独佩戴【故障驱动器Ⅱ】腰带时的超精细 3D 腰部渲染（随躯干俯仰/潜行精确贴合）。 */
     public void renderBeltOnly(PoseStack pose, MultiBufferSource buffers, int light, int overlay,
                                PlayerModel<AbstractClientPlayer> parent, boolean showGashat) {
         pose.m_85836_();
         parent.f_102810_.m_104299_(pose);
         this.beltGroup.f_104207_ = true;
-        this.beltGashat.f_104207_ = showGashat;
+        this.beltGashatGroup.f_104207_ = showGashat;
 
         VertexConsumer baseVc = buffers.m_6299_(RenderType.m_110458_(SUIT_TEX));
         this.beltGroup.m_104301_(pose, baseVc, light, overlay);
